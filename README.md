@@ -1,12 +1,12 @@
-## LaTeX Figure Caption Extractor
+## ProtoPy Agent: Multi‑Agent Research‑to‑Code System
 
-Extract figure image paths and their captions from LaTeX papers. This repo provides:
+ProtoPy Agent is a multi‑agent system that reads research papers and generates corresponding, runnable code artifacts. The end goal is an orchestrated pipeline where specialized agents parse papers, plan implementations, synthesize code, review/test it, and package results for experiments.
 
-- A small utility module (`src/utils.py`) to parse `figure`/`figure*` environments and recover each `\includegraphics{...}` path with its `\caption{...}` text (converted to plain text).
-- An example Jupyter notebook (`image_caption_extraction.ipynb`) that demonstrates end‑to‑end extraction on papers placed under `data/input/latex/`.
+This repository currently includes the first implemented component: Image–Caption extraction from LaTeX sources, which will feed downstream perception/grounding modules in the agent pipeline.
 
-### Why this exists
-Building datasets or analytics around research figures often requires linking images to their natural‑language captions. This project streamlines that step for LaTeX sources.
+### Current components
+- `src/utils.py`: Helpers for extracting figure blocks and pairing `\includegraphics` paths with their `\caption` text.
+- `image_caption_extraction.ipynb`: Example workflow operating on papers under `data/input/latex/`.
 
 ## Project structure
 
@@ -19,10 +19,15 @@ protopy_agent/
           *.tex
           figures/
             ...        # images referenced by \includegraphics
-    output/             # You can write your results here (optional)
+    output/             # Place exported datasets/manifests here (optional)
   src/
-    utils.py            # Extraction helpers
-  image_caption_extraction.ipynb  # Example workflow
+    utils.py            # Current: image–caption extraction helpers
+  image_caption_extraction.ipynb  # Current: example workflow
+  # Planned modules (to be added):
+  # agents/              # Planner, Designer, Reviewer, Tester, etc.
+  # orchestrator/        # Multi‑agent controller and message routing
+  # env_adapters/        # Interfaces to simulators or runtimes
+  # evaluation/          # Metrics, experiment harness, baselines
 ```
 
 An example paper is included at `data/input/latex/arXiv-2510.14980v1/` with LaTeX sources and a `figures/` directory.
