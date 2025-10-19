@@ -27,6 +27,22 @@ protopy_agent/
 
 An example paper is included at `data/input/latex/arXiv-2510.14980v1/` with LaTeX sources and a `figures/` directory.
 
+## Methodology: Image–Caption Extraction
+
+This section explains how figures and captions are identified and paired from LaTeX sources.
+
+- **Figure block detection**: We search each `.tex` file recursively for `\begin{figure}` or `\begin{figure*}` blocks and their matching `\end{figure}`/`\end{figure*}` using a DOTALL regex. Each match yields a raw figure snippet.
+- **Image path retrieval**: Within a figure snippet, we locate the line containing `\\includegraphics` and parse its first braced argument, which should be an image path (e.g., `figures/teaser.pdf`).
+- **Caption text extraction**: We locate the line containing `\\caption{...}` (optionally with a short form like `\\caption[short]{long}`) and use `pylatexenc` to convert LaTeX to plain text for the long caption.
+- **Pair construction**: For each figure snippet, we produce `(image_path, caption_text)`. The notebook shows example output and how to post‑process these pairs.
+
+Edge cases to consider in future improvements:
+
+- Multi‑line `\\includegraphics` options/paths and multi‑line `\\caption{...}` blocks
+- Images referenced via macros or discovered through `\\graphicspath`
+- Multiple images within a single figure block (e.g., subfigures)
+- Non‑standard environments or custom figure wrappers
+
 ## Requirements
 
 - Python 3.10+
