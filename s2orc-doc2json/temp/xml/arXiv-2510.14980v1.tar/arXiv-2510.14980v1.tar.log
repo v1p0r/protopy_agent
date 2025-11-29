@@ -1,0 +1,3395 @@
+Transcript file of tralics 2.14.4 for file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex
+Copyright INRIA/MIAOU/APICS/MARELLE 2002-2011, Jos\'e Grimm
+Tralics is licensed under the CeCILL Free Software Licensing Agreement
+Start compilation: 2025/11/29 06:00:55
+OS: Linux, machine O11XL
+Starting translation of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex.
+Using UTF8 encoding (idem transcript).
+Left quote is ` right quote is '
+Input path (temp/norm/arXiv-2510.14980v1.tar:)
+++ Input encoding is 0 for the main file
+++ file .tralics_rc does not exist.
+++ file /usr/share/tralics/.tralics_rc does not exist.
+Dummy default configuration file used.
+No type in configuration file
+Seen \documentclass article
+Potential type is article
+++ file article.tcf does not exist.
+++ file /usr/share/tralics/article.tcf does not exist.
+Using some default type
+dtd is std from classes.dtd (standard mode)
+OK with the configuration file, dealing with the TeX file...
+There are 3795 lines
+Starting translation
+\notrivialmath=1
+{\countdef \count@=\count255}
+{\countdef \c@page=\count0}
+{\dimendef \dimen@=\dimen0}
+{\dimendef \dimen@i=\dimen1}
+{\dimendef \dimen@ii=\dimen2}
+{\dimendef \epsfxsize=\dimen11}
+{\dimendef \epsfysize=\dimen12}
+{\chardef \@ne=\char1}
+{\chardef \tw@=\char2}
+{\chardef \thr@@=\char3}
+{\chardef \sixt@@n=\char16}
+{\chardef \@cclv=\char255}
+{\mathchardef \@cclvi=\mathchar256}
+{\mathchardef \@m=\mathchar1000}
+{\mathchardef \@M=\mathchar10000}
+{\mathchardef \@Mi=\mathchar10001}
+{\mathchardef \@Mii=\mathchar10002}
+{\mathchardef \@Miii=\mathchar10003}
+{\mathchardef \@Miv=\mathchar10004}
+{\mathchardef \@MM=\mathchar20000}
+{\chardef \active=\char13}
+{\tokesdef \toks@=\toks0}
+{\skipdef \skip@=\skip0}
+{\dimendef \z@=\dimen13}
+{\dimendef \p@=\dimen14}
+{\dimendef \oddsidemargin=\dimen15}
+{\dimendef \evensidemargin=\dimen16}
+{\dimendef \leftmargin=\dimen17}
+{\dimendef \rightmargin=\dimen18}
+{\dimendef \leftmargini=\dimen19}
+{\dimendef \leftmarginii=\dimen20}
+{\dimendef \leftmarginiii=\dimen21}
+{\dimendef \leftmarginiv=\dimen22}
+{\dimendef \leftmarginv=\dimen23}
+{\dimendef \leftmarginvi=\dimen24}
+{\dimendef \itemindent=\dimen25}
+{\dimendef \labelwidth=\dimen26}
+{\dimendef \fboxsep=\dimen27}
+{\dimendef \fboxrule=\dimen28}
+{\dimendef \arraycolsep=\dimen29}
+{\dimendef \tabcolsep=\dimen30}
+{\dimendef \arrayrulewidth=\dimen31}
+{\dimendef \doublerulesep=\dimen32}
+{\dimendef \@tempdima=\dimen33}
+{\dimendef \@tempdimb=\dimen34}
+{\dimendef \@tempdimc=\dimen35}
+{\dimendef \footnotesep=\dimen36}
+{\dimendef \topmargin=\dimen37}
+{\dimendef \headheight=\dimen38}
+{\dimendef \headsep=\dimen39}
+{\dimendef \footskip=\dimen40}
+{\dimendef \columnsep=\dimen41}
+{\dimendef \columnseprule=\dimen42}
+{\dimendef \marginparwidth=\dimen43}
+{\dimendef \marginparsep=\dimen44}
+{\dimendef \marginparpush=\dimen45}
+{\dimendef \maxdimen=\dimen46}
+{\dimendef \normallineskiplimit=\dimen47}
+{\dimendef \jot=\dimen48}
+{\dimendef \paperheight=\dimen49}
+{\dimendef \paperwidth=\dimen50}
+{\skipdef \topsep=\skip11}
+{\skipdef \partopsep=\skip12}
+{\skipdef \itemsep=\skip13}
+{\skipdef \labelsep=\skip14}
+{\skipdef \parsep=\skip15}
+{\skipdef \fill=\skip16}
+{\skipdef \@tempskipa=\skip17}
+{\skipdef \@tempskipb=\skip18}
+{\skipdef \@flushglue=\skip19}
+{\skipdef \listparindent=\skip20}
+{\skipdef \hideskip=\skip21}
+{\skipdef \z@skip=\skip22}
+{\skipdef \normalbaselineskip=\skip23}
+{\skipdef \normallineskip=\skip24}
+{\skipdef \smallskipamount=\skip25}
+{\skipdef \medskipamount=\skip26}
+{\skipdef \bigskipamount=\skip27}
+{\skipdef \floatsep=\skip28}
+{\skipdef \textfloatsep=\skip29}
+{\skipdef \intextsep=\skip30}
+{\skipdef \dblfloatsep=\skip31}
+{\skipdef \dbltextfloatsep=\skip32}
+{\countdef \m@ne=\count20}
+{\countdef \c@FancyVerbLine=\count21}
+{\countdef \c@enumi=\count22}
+{\countdef \c@enumii=\count23}
+{\countdef \c@enumiii=\count24}
+{\countdef \c@enumiv=\count25}
+{\countdef \c@enumv=\count26}
+{\countdef \c@enumvi=\count27}
+{\countdef \c@enumvii=\count28}
+{\countdef \c@enumviii=\count29}
+{\countdef \c@enumix=\count30}
+{\countdef \c@enumx=\count31}
+{\countdef \c@Enumi=\count32}
+{\countdef \c@Enumii=\count33}
+{\countdef \c@Enumiii=\count34}
+{\countdef \c@Enumiv=\count35}
+{\countdef \c@Enumv=\count36}
+{\countdef \c@Enumvi=\count37}
+{\countdef \c@Enumvii=\count38}
+{\countdef \c@Enumviii=\count39}
+{\countdef \c@Enumix=\count40}
+{\countdef \c@Enumx=\count41}
+{\countdef \c@tocdepth=\count42}
+{\countdef \c@footnote=\count43}
+{\countdef \c@part=\count44}
+{\countdef \c@chapter=\count45}
+{\countdef \c@section=\count46}
+{\countdef \c@subsection=\count47}
+{\countdef \c@subsubsection=\count48}
+{\countdef \c@paragraph=\count49}
+{\countdef \c@subparagraph=\count50}
+{\countdef \c@mpfootnote=\count51}
+{\countdef \c@table=\count52}
+{\countdef \c@figure=\count53}
+{\countdef \c@subfigure=\count54}
+{\countdef \c@equation=\count55}
+{\countdef \c@bottomnumber=\count56}
+{\countdef \c@topnumber=\count57}
+{\countdef \@tempcnta=\count58}
+{\countdef \@tempcntb=\count59}
+{\countdef \c@totalnumber=\count60}
+{\countdef \c@dbltopnumber=\count61}
+{\countdef \interfootnotelinepenalty=\count62}
+{\countdef \interdisplaylinepenalty=\count63}
+{\toksdef \@temptokena=\toks11}
+{\chardef \@tempboxa=\char11}
+{\chardef \voidb@x=\char12}
+++ file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.ult does not exist.
+++ file article.clt does not exist.
+++ file /usr/share/tralics/article.clt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/article.clt; it has 34 lines
+Document class: article 2011/05/09 v1.2 Article document class for Tralics
+++ file std.clt does not exist.
+++ file /usr/share/tralics/std.clt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/std.clt; it has 91 lines
+File :std 2008/10/23 v1.1 Standard LaTeX document class, for Tralics
+++ End of file /usr/share/tralics/std.clt
+++ cur_file_pos restored to 1
+{Options to execute->letterpaper,10pt,oneside,onecolumn,final}
+{Options to execute->}
+++ End of file /usr/share/tralics/article.clt
+++ cur_file_pos restored to 0
+++ file iclr2026_conference.plt does not exist.
+++ file /usr/share/tralics/iclr2026_conference.plt does not exist.
+Package iclr2026_conference unknown
+++ file times.plt does not exist.
+++ file /usr/share/tralics/times.plt does not exist.
+Package times unknown
+++ file amsmath.plt does not exist.
+++ file /usr/share/tralics/amsmath.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/amsmath.plt; it has 296 lines
+++ file amsfonts.plt does not exist.
+++ file /usr/share/tralics/amsfonts.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/amsfonts.plt; it has 7 lines
+++ file bm.plt does not exist.
+++ file /usr/share/tralics/bm.plt does not exist.
+Package bm unknown
+Package: amsfonts 2007/03/24 v1.0 Euler Script font
+{Options to execute->}
+++ End of file /usr/share/tralics/amsfonts.plt
+++ cur_file_pos restored to 4
+Package: amsmath 2011/04/11 v1.5 AMS math features for Tralics
+{Options to execute->nointlimits,sumlimits,namelimits,centertags}
+{Options to execute->}
+++ file amsbsy.plt does not exist.
+++ file /usr/share/tralics/amsbsy.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/amsbsy.plt; it has 8 lines
+Package: amsbsy 2007/03/24 v1.0 Bold symbol for Tralics
+++ file amsgen.plt does not exist.
+++ file /usr/share/tralics/amsgen.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/amsgen.plt; it has 10 lines
+File :amsgen 2007/03/24 v1.0 Ams primitives for Tralics
+++ End of file /usr/share/tralics/amsgen.plt
+++ cur_file_pos restored to 8
+++ End of file /usr/share/tralics/amsbsy.plt
+++ cur_file_pos restored to 4
+++ file amsopn.plt does not exist.
+++ file /usr/share/tralics/amsopn.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/amsopn.plt; it has 51 lines
+Package: amsopn 2007/03/24 v1.0 operator names for Tralics
+{Options to execute->}
+{Options to execute->namelimits}
+++ End of file /usr/share/tralics/amsopn.plt
+++ cur_file_pos restored to 4
+{\skipdef \mathindent=\skip33}
+{\skipdef \multlinegap=\skip34}
+{\countdef \c@MaxMatrixCols=\count64}
+++ End of file /usr/share/tralics/amsmath.plt
+++ cur_file_pos restored to 0
+Error signaled at line 287 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unimplemented NFSS command \SetMathAlphabet.
+++ file graphicx.plt does not exist.
+++ file /usr/share/tralics/graphicx.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/graphicx.plt; it has 29 lines
+Package: graphicx 2008/11/06 v1.0 Enhanced Graphics in Tralics
+{Options to execute->}
+++ file graphics.plt does not exist.
+++ file /usr/share/tralics/graphics.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/graphics.plt; it has 64 lines
+Package: graphics 2008/11/06 v1.0 Graphics in Tralics
+{Options to execute->}
+++ End of file /usr/share/tralics/graphics.plt
+++ cur_file_pos restored to 10
+++ file keyval.plt does not exist.
+++ file /usr/share/tralics/keyval.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/keyval.plt; it has 50 lines
+Package: keyval 2008/02/23 v1.2 key=value parser for Tralics (DPC)
+{Options to execute->unknownkeyserror}
+{Options to execute->}
+++ End of file /usr/share/tralics/keyval.plt
+++ cur_file_pos restored to 10
+++ End of file /usr/share/tralics/graphicx.plt
+++ cur_file_pos restored to 0
+++ file wrapfig.plt does not exist.
+++ file /usr/share/tralics/wrapfig.plt does not exist.
+Package wrapfig unknown
+++ file hyperref.plt does not exist.
+++ file /usr/share/tralics/hyperref.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/hyperref.plt; it has 4 lines
+Package: hyperref 2011/04/06 v1.0 Hyperref: Addition to Tralics
+++ End of file /usr/share/tralics/hyperref.plt
+Warning: package hyperref has no \ProcessOptions
+++ cur_file_pos restored to 0
+++ file url.plt does not exist.
+++ file /usr/share/tralics/url.plt does not exist.
+Package url unknown
+Error signaled at line 474 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \hypersetup.
+Error signaled at line 475 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \hypersetup.
+Error signaled at line 476 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \hypersetup.
+++ file xspace.plt does not exist.
+++ file /usr/share/tralics/xspace.plt does not exist.
+Package xspace unknown
+++ file slashed.plt does not exist.
+++ file /usr/share/tralics/slashed.plt does not exist.
+Package slashed unknown
+++ file multirow.plt does not exist.
+++ file /usr/share/tralics/multirow.plt does not exist.
+Package multirow unknown
+++ file makecell.plt does not exist.
+++ file /usr/share/tralics/makecell.plt does not exist.
+Package makecell unknown
+++ file tabularx.plt does not exist.
+++ file /usr/share/tralics/tabularx.plt does not exist.
+Package tabularx unknown
+++ file algorithm.plt does not exist.
+++ file /usr/share/tralics/algorithm.plt does not exist.
+Package algorithm unknown
+++ file algpseudocode.plt does not exist.
+++ file /usr/share/tralics/algpseudocode.plt does not exist.
+Package algpseudocode unknown
+++ file booktabs.plt does not exist.
+++ file /usr/share/tralics/booktabs.plt does not exist.
+Package booktabs unknown
+++ file siunitx.plt does not exist.
+++ file /usr/share/tralics/siunitx.plt does not exist.
+Package siunitx unknown
+++ file amsthm.plt does not exist.
+++ file /usr/share/tralics/amsthm.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/amsthm.plt; it has 5 lines
+Package: amsthm 2007/03/24 v1.0 Theorem
+++ End of file /usr/share/tralics/amsthm.plt
+++ cur_file_pos restored to 0
+++ file adjustbox.plt does not exist.
+++ file /usr/share/tralics/adjustbox.plt does not exist.
+Package adjustbox unknown
+++ file scalerel.plt does not exist.
+++ file /usr/share/tralics/scalerel.plt does not exist.
+Package scalerel unknown
+++ file enumitem.plt does not exist.
+++ file /usr/share/tralics/enumitem.plt does not exist.
+Package enumitem unknown
+++ file listings.plt does not exist.
+++ file /usr/share/tralics/listings.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/listings.plt; it has 64 lines
+Package: listings 2011/05/02 v1.1 Listings for Tralics
+{\chardef \listingfile=\char1}
+++ End of file /usr/share/tralics/listings.plt
+++ cur_file_pos restored to 0
+++ file epigraph.plt does not exist.
+++ file /usr/share/tralics/epigraph.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/epigraph.plt; it has 49 lines
+Package: epigraph 2008/11/03 v1.1 typesetting epigraphs
+{\skipdef \beforeepigraphskip=\skip35}
+{\skipdef \afterepigraphskip=\skip36}
+{\skipdef \epigraphwidth=\skip37}
+{\skipdef \epigraphrule=\skip38}
+++ End of file /usr/share/tralics/epigraph.plt
+++ cur_file_pos restored to 0
+++ file mdframed.plt does not exist.
+++ file /usr/share/tralics/mdframed.plt does not exist.
+Package mdframed unknown
+Error signaled at line 508 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \usetikzlibrary.
+++ file placeins.plt does not exist.
+++ file /usr/share/tralics/placeins.plt does not exist.
+Package placeins unknown
+++ file amssymb.plt does not exist.
+++ file /usr/share/tralics/amssymb.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/amssymb.plt; it has 9 lines
+Package: amssymb 2007/03/24 v1.0 Euler Fraktur font
+{Options to execute->}
+++ End of file /usr/share/tralics/amssymb.plt
+++ cur_file_pos restored to 0
+++ file mathtools.plt does not exist.
+++ file /usr/share/tralics/mathtools.plt does not exist.
+Package mathtools unknown
+++ file float.plt does not exist.
+++ file /usr/share/tralics/float.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/float.plt; it has 91 lines
+Package: float 2009/01/03 v1.0 Float enhancements (AL)
+{\countdef \c@float@type=\count65}
+{\toksdef \float@exts=\toks12}
+{\toksdef \@float@everytoks=\toks13}
+{\toksdef \@float@every@figure=\toks14}
+{\toksdef \@float@every@table=\toks15}
+++ End of file /usr/share/tralics/float.plt
+++ cur_file_pos restored to 0
+++ file color.plt does not exist.
+++ file /usr/share/tralics/color.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/color.plt; it has 132 lines
+Package: color 2008/11/06 v1.0 Basic Colors 
+{Options to execute->}
+++ End of file /usr/share/tralics/color.plt
+++ cur_file_pos restored to 0
+++ file colortbl.plt does not exist.
+++ file /usr/share/tralics/colortbl.plt does not exist.
+Package colortbl unknown
+++ file caption.plt does not exist.
+++ file /usr/share/tralics/caption.plt does not exist.
+Package caption unknown
+++ file tocloft.plt does not exist.
+++ file /usr/share/tralics/tocloft.plt does not exist.
+Package tocloft unknown
+++ file appendix.plt does not exist.
+++ file /usr/share/tralics/appendix.plt does not exist.
+Package appendix unknown
+++ file minitoc.plt does not exist.
+++ file /usr/share/tralics/minitoc.plt does not exist.
+Package minitoc unknown
+Error signaled at line 527 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+\renewcommand: Cannot define \ptifont; token is undefined.
+Error signaled at line 529 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+\renewcommand: Cannot define \partname; token is undefined.
+++ file fontenc.plt does not exist.
+++ file /usr/share/tralics/fontenc.plt exists.
+++ Made @ a letter
+++ Opened file /usr/share/tralics/fontenc.plt; it has 12 lines
+Package: fontenc 2006/10/06 v1.0 Standard Latex
+{Options to execute->}
+output encoding option T1 seen
+++ End of file /usr/share/tralics/fontenc.plt
+++ cur_file_pos restored to 0
+Error signaled at line 532 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+\renewcommand: Cannot define \captionlabelfont; token is undefined.
+{\skipdef \savewidth=\skip39}
+{\countdef \c@theorem=\count66}
+Error signaled at line 583 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \preprintcopy.
+++ End of virtual file.
+++ cur_file_pos restored to 0
+Error signaled at line 588 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \doparttoc.
+Error signaled at line 588 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \faketableofcontents.
+Error signaled at line 589 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Bad use of \\.
+Error signaled at line 589 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Bad use of \\.
+Error signaled at line 602 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment abstract.
+Translating div0: Introduction.
+Error signaled at line 622 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment mdframed.
+Error signaled at line 633 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment mdframed.
+Translating div0: Compositional Machine Design.
+Translating div0: BesiegeField: Playground for Compositional Machine Design.
+Translating div0: Benchmarking LLMs for Compositional Machine Design.
+Translating div1: Benchmark Settings.
+Error signaled at line 708 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \captionsetup.
+Error signaled at line 723 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \captionsetup.
+Error signaled at line 739 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \captionsetup.
+Error signaled at line 748 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \captionsetup.
+Translating div1: Agentic Workflow Design.
+Error signaled at line 769 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero.
+Error signaled at line 769 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) \invalid..
+Error signaled at line 785 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \includegraphics.
+Error signaled at line 785 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) {Character { of catcode 1}.
+Error signaled at line 785 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \includegraphics.
+Error signaled at line 785 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \includegraphics.
+Error signaled at line 785 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \includegraphics.
+Error signaled at line 786 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \captionsetup.
+Error signaled at line 797 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \abovecaptionskip.
+Error signaled at line 798 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \belowcaptionskip.
+Error signaled at line 804 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment tabularx.
+Error signaled at line 804 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \textwidth.
+Error signaled at line 804 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) {Character } of catcode 2}.
+Error signaled at line 804 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 805 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multirow.
+Error signaled at line 806 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 806 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 806 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 806 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 806 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 806 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 807 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 807 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 807 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 807 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 807 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 807 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 807 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 807 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 807 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 808 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unimplemented command \noalign.
+Error signaled at line 808 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Current command should occur in tables only.
+Error signaled at line 808 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unimplemented command \noalign.
+Error signaled at line 809 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 811 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 811 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 811 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 812 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 812 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 812 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 813 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 813 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 813 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 816 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 816 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 816 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 817 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 817 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 817 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 818 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 818 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 818 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 822 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 822 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 822 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 823 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 823 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 823 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 824 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 824 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 824 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 828 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 828 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 828 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 829 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 829 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 829 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 830 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 830 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 830 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 834 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 834 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 834 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 835 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 835 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 835 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 836 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 836 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 836 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 840 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 840 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 840 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 841 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 841 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 841 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 842 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 842 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 842 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 846 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 846 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 846 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 847 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 847 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 847 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 848 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 848 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 848 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 852 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 852 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 852 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 853 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 853 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 853 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 854 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 854 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 854 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 855 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Current command should occur in tables only.
+Error signaled at line 856 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 858 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 858 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 858 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 859 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 859 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 859 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 860 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 860 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 860 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 862 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 862 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 862 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 863 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 863 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 863 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 864 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 864 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 864 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 866 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 866 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 866 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 867 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 867 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 867 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 868 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 868 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 868 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 870 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 870 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 870 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 871 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 871 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 871 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 872 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 872 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 872 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 874 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 874 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 874 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 875 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 875 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 875 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 876 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 876 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 876 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 878 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 878 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 878 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 879 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 879 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 879 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 880 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 880 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 880 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 882 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 882 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 882 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 883 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 883 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 883 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 884 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 884 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 884 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 887 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 887 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 887 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 888 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 888 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 888 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 889 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 889 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 889 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Translating div1: Key Empirical Observations.
+Translating div0: Towards Machine Design through Reinforcement Learning.
+Translating div1: Experimental Settings.
+Realloc xml math table to 20
+Error signaled at line 956 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment tabularx.
+Error signaled at line 956 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \textwidth.
+Error signaled at line 956 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) {Character } of catcode 2}.
+Error signaled at line 958 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 959 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 961 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multirow.
+Error signaled at line 962 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 962 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 963 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 963 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 964 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 964 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 964 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 965 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 965 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 965 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 966 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unimplemented command \noalign.
+Error signaled at line 966 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Current command should occur in tables only.
+Error signaled at line 966 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unimplemented command \noalign.
+Error signaled at line 967 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 967 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 967 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 967 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 967 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 967 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 968 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 968 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 968 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 968 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 968 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 968 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 969 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 969 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 969 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 969 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 969 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 969 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 970 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 970 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 970 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 970 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 970 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 970 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Translating div1: Main Results and Observations.
+Error signaled at line 990 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero.
+Error signaled at line 990 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) \invalid..
+Error signaled at line 992 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \captionsetup.
+Warning: junk in figure
+detected on line 995 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex.
+Translating div0: Discussions and Intriguing Insights.
+Translating div0: Related Work and Concluding Remarks.
+Translating div0: Acknowledgment.
+Error signaled at line 1422 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \addcontentsline.
+Error signaled at line 1422 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+\renewcommand: Cannot define \partname; token is undefined.
+Translating div0: <line/>.
+Error signaled at line 1424 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \parttoc.
+Translating div0: Supplementary Tables.
+Error signaled at line 1434 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment tabularx.
+Error signaled at line 1434 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \textwidth.
+Error signaled at line 1434 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) {Character } of catcode 2}.
+Error signaled at line 1434 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 1434 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \toprule.
+Error signaled at line 1435 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multirow.
+Error signaled at line 1435 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1435 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1435 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1435 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1435 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1435 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1436 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1436 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1436 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1437 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1437 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1437 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1437 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1437 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1437 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1437 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1437 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1437 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1438 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1439 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1440 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1441 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1441 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1441 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1441 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1441 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1441 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1441 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1441 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1441 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1442 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1442 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1442 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1442 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1442 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1442 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1442 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1442 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1442 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1443 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1443 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1443 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1443 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1443 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1443 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1443 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1443 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1443 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1444 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1444 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1444 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1444 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1444 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1444 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1444 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1444 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1444 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1445 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1445 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1445 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1445 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1445 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1445 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1445 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1445 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1445 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1446 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1446 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1446 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1446 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1446 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1446 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1446 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1446 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1446 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1447 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1447 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1447 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1447 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1447 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1447 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1447 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1447 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1447 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1448 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1448 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1448 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1448 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1448 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1448 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1448 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1448 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1448 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1449 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1449 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1449 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1449 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1449 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1449 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1449 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1449 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1449 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1450 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1451 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1452 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1453 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1453 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1453 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1453 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1453 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1453 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1453 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1453 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1453 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1454 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1454 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1454 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1454 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1454 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1454 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1454 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1454 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1454 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1455 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1455 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1455 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1455 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1455 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1455 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1455 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1455 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1455 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1456 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1456 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1456 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1456 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1456 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1456 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1456 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1456 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1456 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1457 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1457 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1457 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1457 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1457 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1457 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1457 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1457 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1457 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1458 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1458 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1458 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1458 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1458 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1458 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1458 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1458 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1458 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1459 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1459 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1459 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1459 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1459 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1459 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1459 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1459 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1459 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1460 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1460 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1460 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1460 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1460 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1460 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1460 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1460 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1460 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1461 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1461 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1461 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1461 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1461 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1461 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1461 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1461 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1461 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1462 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \bottomrule.
+Error signaled at line 1471 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment tabularx.
+Error signaled at line 1471 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \textwidth.
+Error signaled at line 1471 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) {Character } of catcode 2}.
+Error signaled at line 1471 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 1471 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \toprule.
+Error signaled at line 1472 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multirow.
+Error signaled at line 1472 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1472 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1472 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1472 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1472 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1472 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1474 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1474 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1474 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1475 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1475 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1475 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1475 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1475 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1475 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1475 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1475 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1475 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1476 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1477 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1478 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1479 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1479 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1479 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1479 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1479 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1479 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1479 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1479 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1479 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1480 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1480 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1480 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1480 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1480 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1480 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1480 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1480 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1480 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1481 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1481 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1481 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1481 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1481 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1481 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1481 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1481 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1481 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1482 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1482 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1482 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1482 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1482 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1482 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1482 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1482 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1482 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1483 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1483 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1483 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1483 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1483 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1483 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1483 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1483 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1483 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1484 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1484 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1484 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1484 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1484 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1484 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1484 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1484 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1484 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1485 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1485 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1485 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1485 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1485 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1485 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1485 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1485 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1485 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1486 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1486 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1486 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1486 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1486 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1486 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1486 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1486 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1486 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1487 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1487 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1487 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1487 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1487 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1487 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1487 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1487 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1487 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1488 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \bottomrule.
+Error signaled at line 1504 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment tabularx.
+Error signaled at line 1504 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \textwidth.
+Error signaled at line 1504 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) {Character } of catcode 2}.
+Error signaled at line 1504 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 1505 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \toprule.
+Error signaled at line 1506 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1506 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multirow.
+Error signaled at line 1507 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1507 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1508 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1508 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1509 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1509 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1510 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1510 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1510 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1511 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1511 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1511 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1512 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1514 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1514 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1514 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1515 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1515 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1515 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1517 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1517 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1517 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1518 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1518 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1518 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1520 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1520 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1520 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1521 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1521 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1521 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1523 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1523 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1523 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1524 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1524 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1524 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1525 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \bottomrule.
+Error signaled at line 1536 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment tabularx.
+Error signaled at line 1536 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \textwidth.
+Error signaled at line 1536 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) {Character } of catcode 2}.
+Error signaled at line 1536 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 1536 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \toprule.
+Error signaled at line 1537 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multirow.
+Error signaled at line 1537 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1537 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1537 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1537 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1538 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1538 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1539 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1539 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1539 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1539 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1539 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1540 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1540 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1540 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1540 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1541 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1541 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1541 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1541 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1542 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1542 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1542 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1542 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1543 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1543 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1543 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1543 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1544 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1544 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1544 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1544 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1545 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1545 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1545 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1545 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1546 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \bottomrule.
+Error signaled at line 1561 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment tabularx.
+Error signaled at line 1561 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \textwidth.
+Error signaled at line 1561 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) {Character } of catcode 2}.
+Error signaled at line 1561 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 1561 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 1562 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \toprule.
+Error signaled at line 1563 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multirow.
+Error signaled at line 1564 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1564 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1565 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1565 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1566 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1566 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1567 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1567 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1567 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1567 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1567 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1568 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1569 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1570 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1571 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1571 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1571 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1571 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1571 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1572 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1572 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1572 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1572 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1572 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1573 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1573 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1573 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1573 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1573 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1574 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1574 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1574 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1574 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1574 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1575 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1575 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1575 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1575 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1575 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1576 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1576 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1576 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1576 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1576 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1577 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1577 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1577 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1577 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1577 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1578 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1578 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1578 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1578 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1578 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1579 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1580 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1581 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1582 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1582 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1582 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1582 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1582 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1583 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1583 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1583 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1583 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1583 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1584 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1584 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1584 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1584 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1584 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1585 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1585 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1585 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1585 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1585 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1586 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1586 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1586 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1586 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1586 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1587 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \bottomrule.
+Translating div0: Details on the BesiegeField Environment.
+Translating div1: Construction Rule.
+Translating div1: Simulation.
+Translating div1: Blocks.
+Translating div1: Tasks.
+Translating div0: Search Strategies in Machine Modification Loops.
+Error signaled at line 1762 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment algorithm.
+Error signaled at line 1765 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment algorithmic.
+Error signaled at line 1766 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Require.
+Error signaled at line 1767 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Require.
+Error signaled at line 1768 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Require.
+Error signaled at line 1769 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Ensure.
+Error signaled at line 1771 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1772 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1773 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Realloc xml math table to 40
+Error signaled at line 1775 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \For.
+Error signaled at line 1776 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1777 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1778 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \While.
+Error signaled at line 1779 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1780 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Realloc xml math table to 80
+Error signaled at line 1781 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \If.
+Error signaled at line 1782 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1783 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \EndIf.
+Error signaled at line 1784 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \EndWhile.
+Error signaled at line 1785 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1786 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1787 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \EndFor.
+Error signaled at line 1789 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1789 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Return.
+Error signaled at line 1794 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment algorithm.
+Error signaled at line 1797 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment algorithmic.
+Error signaled at line 1798 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Require.
+Error signaled at line 1799 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Require.
+Error signaled at line 1800 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Require.
+Error signaled at line 1801 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Ensure.
+Error signaled at line 1803 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1804 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1805 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1806 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1808 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \For.
+Error signaled at line 1809 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1810 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1811 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \For.
+Error signaled at line 1812 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1813 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \While.
+Error signaled at line 1814 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1815 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1816 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \If.
+Error signaled at line 1817 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1818 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \EndIf.
+Error signaled at line 1819 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \EndWhile.
+Error signaled at line 1820 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1821 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \If.
+Error signaled at line 1822 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1823 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1824 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \EndIf.
+Error signaled at line 1825 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \EndFor.
+Error signaled at line 1826 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \EndFor.
+Error signaled at line 1828 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1828 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Return.
+Error signaled at line 1833 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment algorithm.
+Error signaled at line 1836 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment algorithmic.
+Error signaled at line 1837 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Require.
+Error signaled at line 1838 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Require.
+Error signaled at line 1839 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Require.
+Error signaled at line 1840 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Require.
+Error signaled at line 1841 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Require.
+Error signaled at line 1842 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Require.
+Error signaled at line 1843 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Require.
+Error signaled at line 1844 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Ensure.
+Error signaled at line 1846 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1847 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1848 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \For.
+Error signaled at line 1849 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1850 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1850 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Comment.
+Error signaled at line 1851 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \If.
+Error signaled at line 1852 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1853 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \EndIf.
+Error signaled at line 1854 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \If.
+Error signaled at line 1855 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1855 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Comment.
+Error signaled at line 1856 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \EndIf.
+Error signaled at line 1857 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \While.
+Error signaled at line 1858 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1859 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1859 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Comment.
+Error signaled at line 1860 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \If.
+Error signaled at line 1861 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1862 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \EndIf.
+Error signaled at line 1863 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \EndWhile.
+Error signaled at line 1864 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1864 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Comment.
+Error signaled at line 1865 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1865 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Comment.
+Error signaled at line 1866 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \EndFor.
+Error signaled at line 1867 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \State.
+Error signaled at line 1867 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \Comment.
+Error signaled at line 1877 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment tabularx.
+Error signaled at line 1877 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \textwidth.
+Error signaled at line 1877 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) {Character } of catcode 2}.
+Error signaled at line 1877 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 1877 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \toprule.
+Error signaled at line 1878 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multirow.
+Error signaled at line 1878 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1878 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1878 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1878 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1878 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1878 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1879 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1879 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1879 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1880 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1880 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1880 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1880 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1880 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1880 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1880 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1880 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1880 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1881 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1882 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1882 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1882 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1882 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1882 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1882 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1882 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1882 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1882 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1883 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1883 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1883 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1883 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1883 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1883 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1883 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1883 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1883 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1884 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1884 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1884 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1884 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1884 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1884 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1884 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1884 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1884 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1885 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1885 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1885 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1885 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1885 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1885 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1885 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1885 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1885 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1886 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \bottomrule.
+Error signaled at line 1897 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment tabularx.
+Error signaled at line 1897 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \textwidth.
+Error signaled at line 1897 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) {Character } of catcode 2}.
+Error signaled at line 1897 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 1897 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \toprule.
+Error signaled at line 1898 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multirow.
+Error signaled at line 1898 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1898 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1898 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1898 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1898 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1898 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1899 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1899 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1899 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 1900 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1900 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1900 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1900 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1900 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1900 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 1900 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1900 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1901 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 1902 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1902 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1902 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1902 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1902 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1902 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1903 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1903 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1903 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1903 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1903 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1903 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1904 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1904 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1904 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1904 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1904 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1904 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1905 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1905 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1905 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1905 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1905 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1905 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 1906 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \bottomrule.
+Translating div0: Environment Settings for Agentic Design and RL Finetuning.
+Translating div1: Machine Representation.
+Translating div1: Global Position-based Representation.
+Error signaled at line 1939 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 1939 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 1939 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 1939 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 1939 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 1939 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div1: Construction Tree Representation.
+Error signaled at line 1956 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 1956 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 1956 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 1956 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 1956 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 1956 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div1: Reward Setting.
+Translating div1: Environment Feedback.
+Translating div0: Challenges in Compositional Machine Design.
+Translating div1: Failure Patterns.
+Translating div1: Need for Precision.
+Translating div1: Appearance vs. Performance.
+Translating div0: Settings for RL Finetuning.
+Translating div1: Cold-Start Dataset Curation.
+Error signaled at line 2068 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 2068 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 2068 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 2068 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 2068 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 2068 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Error signaled at line 2078 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 2078 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 2078 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 2078 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 2078 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 2078 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div1: Cold-Start Details.
+Translating div1: RL Experiment Details.
+Translating div0: Additional Ablation Studies.
+Error signaled at line 2162 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment tabularx.
+Error signaled at line 2162 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \textwidth.
+Error signaled at line 2162 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) {Character } of catcode 2}.
+Error signaled at line 2162 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 2162 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 2163 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \toprule.
+Error signaled at line 2164 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multirow.
+Error signaled at line 2165 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2165 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2166 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2166 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2167 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 2167 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 2168 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2168 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2168 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2168 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2168 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2169 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 2170 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2171 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 2172 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2172 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2172 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2172 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2172 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2173 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2173 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2173 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2173 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2173 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2174 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2174 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2174 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2174 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2174 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2175 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2175 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2175 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2175 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2175 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2176 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2176 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2176 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2176 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2176 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2177 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2177 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2177 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2177 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2177 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2178 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2178 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2178 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2178 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2178 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2179 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2179 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2179 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2179 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2179 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2180 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 2181 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2182 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 2183 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2183 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2183 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2183 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2183 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2184 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2184 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2184 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2184 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2184 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2185 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2185 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2185 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2185 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2185 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2186 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2186 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2186 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2186 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2186 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2187 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2187 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2187 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2187 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2187 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2188 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2188 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2188 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2188 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2188 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2189 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2189 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2189 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2189 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2189 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2190 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2190 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2190 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2190 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2190 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2191 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 2192 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2193 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 2194 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2194 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2194 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2194 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2194 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2195 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2195 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2195 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2195 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2195 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2196 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2196 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2196 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2196 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2196 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2197 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2197 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2197 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2197 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2197 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2198 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2198 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2198 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2198 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2198 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2199 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2199 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2199 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2199 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2199 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2200 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2200 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2200 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2200 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2200 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2201 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2201 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2201 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2201 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2201 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2202 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \bottomrule.
+Error signaled at line 2222 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment tabularx.
+Error signaled at line 2222 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \textwidth.
+Error signaled at line 2222 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) {Character } of catcode 2}.
+Error signaled at line 2222 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 2223 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \toprule.
+Error signaled at line 2224 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2224 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multirow.
+Error signaled at line 2225 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2225 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2226 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 2227 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2227 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2228 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2228 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2229 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 2229 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 2230 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2230 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2230 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2230 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2230 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2230 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2231 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 2233 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2233 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2233 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2234 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2234 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2234 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2236 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2236 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2236 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2237 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2237 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2237 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2239 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2239 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2239 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2240 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2240 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2240 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2242 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2242 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2242 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2243 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2243 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2243 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2245 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2245 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2245 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2246 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2246 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2246 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2248 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2248 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2248 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2249 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2249 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2249 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2251 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2251 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2251 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2252 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2252 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2252 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2254 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2254 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2254 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2255 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2255 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2255 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2256 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \bottomrule.
+Error signaled at line 2270 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined environment tabularx.
+Error signaled at line 2270 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing number, treated as zero scanned by \textwidth.
+Error signaled at line 2270 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Missing unit (replaced by pt) {Character } of catcode 2}.
+Error signaled at line 2270 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \arraybackslash.
+Error signaled at line 2271 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \toprule.
+Error signaled at line 2272 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2272 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multirow.
+Error signaled at line 2273 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2273 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2274 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 2275 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2275 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2276 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2276 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2277 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2277 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \multicolumn; command code = 27.
+Error signaled at line 2278 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 2278 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 2278 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \cmidrule.
+Error signaled at line 2279 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2279 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2279 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2279 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2279 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2279 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2279 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2279 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2279 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2280 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \midrule.
+Error signaled at line 2282 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2282 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2282 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2283 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2283 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2283 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2284 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2284 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2284 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2286 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2286 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2286 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2287 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2287 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2287 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2288 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2288 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2288 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2290 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2290 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2290 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2291 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2291 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2291 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2292 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2292 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2292 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2294 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2294 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2294 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2295 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2295 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2295 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2296 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2296 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2296 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2298 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2298 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2298 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2299 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2299 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2299 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2300 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2300 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2300 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2302 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2302 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2302 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2303 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2303 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2303 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2304 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2304 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2304 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Unexpected &.
+Error signaled at line 2305 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Undefined command \bottomrule.
+Translating div0: Generated Samples.
+Translating div1: From RL-finetuned Models.
+Translating div1: From Agentic Workflow.
+Translating div0: Relations between CoT and Machines.
+Translating div0: CoT Samples from Gemini 2.5 Pro.
+Translating div1: Single Agent.
+Error signaled at line 2527 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 2527 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 2527 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 2527 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 2527 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 2527 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div1: Meta Designer.
+Error signaled at line 2591 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 2591 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 2591 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 2591 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 2591 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 2591 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div1: Designer.
+Error signaled at line 2646 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 2646 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 2646 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 2646 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 2646 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 2646 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div1: Inspector.
+Error signaled at line 2712 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 2712 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 2712 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 2712 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 2712 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 2712 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div1: Environment Querier.
+Error signaled at line 2802 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 2802 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 2802 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 2802 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 2802 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 2802 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div1: Refiner.
+Error signaled at line 2908 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 2908 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 2908 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 2908 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 2908 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 2908 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div0: Single-Agent Prompt.
+Error signaled at line 2964 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 2964 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 2964 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 2964 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 2964 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 2964 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div0: Multi-Agent Prompts.
+Translating div1: Shared Prompts.
+Translating div2: Game Introduction With 3D Knowledge.
+Error signaled at line 2978 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 2978 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 2978 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 2978 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 2978 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 2978 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div2: Machine 3D JSON Format.
+Error signaled at line 3000 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 3000 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 3000 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 3000 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 3000 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 3000 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div2: Build Guidance.
+Error signaled at line 3030 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 3030 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 3030 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 3030 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 3030 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 3030 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div2: Meta Designer System Prompt.
+Error signaled at line 3123 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 3123 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 3123 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 3123 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 3123 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 3123 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div1: Designer System And User Prompt.
+Error signaled at line 3160 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 3160 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 3160 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 3160 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 3160 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 3160 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div1: Inspector System And User Prompt.
+Error signaled at line 3231 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 3231 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 3231 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 3231 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 3231 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 3231 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div1: Refiner System Prompt.
+Error signaled at line 3312 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 3312 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 3312 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 3312 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 3312 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 3312 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div1: Environment Querier System Prompt.
+Error signaled at line 3360 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 3360 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 3360 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 3360 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 3360 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 3360 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Translating div1: Block Informations.
+Error signaled at line 3794 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change tt.
+Error signaled at line 3794 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+unexpected font change small.
+Error signaled at line 3794 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@breakindent undefined.
+Error signaled at line 3794 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@xleftmargin undefined.
+Error signaled at line 3794 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@columns undefined.
+Error signaled at line 3794 of file temp/norm/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.tex:
+Package keyval Error: KV@lst@keepspaces undefined.
+Bib stats: seen 71(71) entries.
+Math stats: formulas 83, kernels 9, trivial 3, \mbox 5, large 0, small 2.
+Buffer realloc 25, string 12038, size 521276, merge 1275
+Macros created 1081, deleted 197; hash size 3204; foonotes 3.
+Save stack +4772 -4772.
+Attribute list search 8339(1502) found 4553 in 6385 elements (1119 at boot).
+Number of ref 55, of used labels 45, of defined labels 59, of ext. ref. 2.
+Input conversion: 16 lines converted.
+++ file figures/teaser_final_new.ps does not exist.
+++ file figures/teaser_final_new.eps does not exist.
+++ file figures/teaser_final_new.epsi does not exist.
+++ file figures/teaser_final_new.epsf does not exist.
+++ file figures/teaser_final_new.pdf does not exist.
+++ file figures/teaser_final_new.png does not exist.
+++ file figures/teaser_final_new.gif does not exist.
+++ file figures/environment_intro_cropped.ps does not exist.
+++ file figures/environment_intro_cropped.eps does not exist.
+++ file figures/environment_intro_cropped.epsi does not exist.
+++ file figures/environment_intro_cropped.epsf does not exist.
+++ file figures/environment_intro_cropped.pdf does not exist.
+++ file figures/environment_intro_cropped.png does not exist.
+++ file figures/environment_intro_cropped.gif does not exist.
+++ file figures/xml_intro_v2_cropped.ps does not exist.
+++ file figures/xml_intro_v2_cropped.eps does not exist.
+++ file figures/xml_intro_v2_cropped.epsi does not exist.
+++ file figures/xml_intro_v2_cropped.epsf does not exist.
+++ file figures/xml_intro_v2_cropped.pdf does not exist.
+++ file figures/xml_intro_v2_cropped.png does not exist.
+++ file figures/xml_intro_v2_cropped.gif does not exist.
+++ file figures/gemini_cot_example_v3.ps does not exist.
+++ file figures/gemini_cot_example_v3.eps does not exist.
+++ file figures/gemini_cot_example_v3.epsi does not exist.
+++ file figures/gemini_cot_example_v3.epsf does not exist.
+++ file figures/gemini_cot_example_v3.pdf does not exist.
+++ file figures/gemini_cot_example_v3.png does not exist.
+++ file figures/gemini_cot_example_v3.gif does not exist.
+++ file figures/o3_cot_example_v4_green_cropped.ps does not exist.
+++ file figures/o3_cot_example_v4_green_cropped.eps does not exist.
+++ file figures/o3_cot_example_v4_green_cropped.epsi does not exist.
+++ file figures/o3_cot_example_v4_green_cropped.epsf does not exist.
+++ file figures/o3_cot_example_v4_green_cropped.pdf does not exist.
+++ file figures/o3_cot_example_v4_green_cropped.png does not exist.
+++ file figures/o3_cot_example_v4_green_cropped.gif does not exist.
+++ file figures/besiegefield_pipeline_compressed.ps does not exist.
+++ file figures/besiegefield_pipeline_compressed.eps does not exist.
+++ file figures/besiegefield_pipeline_compressed.epsi does not exist.
+++ file figures/besiegefield_pipeline_compressed.epsf does not exist.
+++ file figures/besiegefield_pipeline_compressed.pdf does not exist.
+++ file figures/besiegefield_pipeline_compressed.png does not exist.
+++ file figures/besiegefield_pipeline_compressed.gif does not exist.
+++ file figures/LLM_Comp_v4_cropped.ps does not exist.
+++ file figures/LLM_Comp_v4_cropped.eps does not exist.
+++ file figures/LLM_Comp_v4_cropped.epsi does not exist.
+++ file figures/LLM_Comp_v4_cropped.epsf does not exist.
+++ file figures/LLM_Comp_v4_cropped.pdf does not exist.
+++ file figures/LLM_Comp_v4_cropped.png does not exist.
+++ file figures/LLM_Comp_v4_cropped.gif does not exist.
+++ file figures/14b_model_sample_v4_cropped.ps does not exist.
+++ file figures/14b_model_sample_v4_cropped.eps does not exist.
+++ file figures/14b_model_sample_v4_cropped.epsi does not exist.
+++ file figures/14b_model_sample_v4_cropped.epsf does not exist.
+++ file figures/14b_model_sample_v4_cropped.pdf does not exist.
+++ file figures/14b_model_sample_v4_cropped.png does not exist.
+++ file figures/14b_model_sample_v4_cropped.gif does not exist.
+++ file figures/game_editor_view.ps does not exist.
+++ file figures/game_editor_view.eps does not exist.
+++ file figures/game_editor_view.epsi does not exist.
+++ file figures/game_editor_view.epsf does not exist.
+++ file figures/game_editor_view.pdf does not exist.
+++ file figures/game_editor_view.png does not exist.
+++ file figures/game_editor_view.gif does not exist.
+++ file figures/block_stats.ps does not exist.
+++ file figures/block_stats.eps does not exist.
+++ file figures/block_stats.epsi does not exist.
+++ file figures/block_stats.epsf does not exist.
+++ file figures/block_stats.pdf does not exist.
+++ file figures/block_stats.png does not exist.
+++ file figures/block_stats.gif does not exist.
+++ file figures/tasks/movement_rocky.ps does not exist.
+++ file figures/tasks/movement_rocky.eps does not exist.
+++ file figures/tasks/movement_rocky.epsi does not exist.
+++ file figures/tasks/movement_rocky.epsf does not exist.
+++ file figures/tasks/movement_rocky.pdf does not exist.
+++ file figures/tasks/movement_rocky.png does not exist.
+++ file figures/tasks/movement_rocky.gif does not exist.
+++ file figures/tasks/throw.ps does not exist.
+++ file figures/tasks/throw.eps does not exist.
+++ file figures/tasks/throw.epsi does not exist.
+++ file figures/tasks/throw.epsf does not exist.
+++ file figures/tasks/throw.pdf does not exist.
+++ file figures/tasks/throw.png does not exist.
+++ file figures/tasks/throw.gif does not exist.
+++ file figures/tasks/pick.ps does not exist.
+++ file figures/tasks/pick.eps does not exist.
+++ file figures/tasks/pick.epsi does not exist.
+++ file figures/tasks/pick.epsf does not exist.
+++ file figures/tasks/pick.pdf does not exist.
+++ file figures/tasks/pick.png does not exist.
+++ file figures/tasks/pick.gif does not exist.
+++ file figures/tasks/delivery.ps does not exist.
+++ file figures/tasks/delivery.eps does not exist.
+++ file figures/tasks/delivery.epsi does not exist.
+++ file figures/tasks/delivery.epsf does not exist.
+++ file figures/tasks/delivery.pdf does not exist.
+++ file figures/tasks/delivery.png does not exist.
+++ file figures/tasks/delivery.gif does not exist.
+++ file figures/tasks/thru_ring.ps does not exist.
+++ file figures/tasks/thru_ring.eps does not exist.
+++ file figures/tasks/thru_ring.epsi does not exist.
+++ file figures/tasks/thru_ring.epsf does not exist.
+++ file figures/tasks/thru_ring.pdf does not exist.
+++ file figures/tasks/thru_ring.png does not exist.
+++ file figures/tasks/thru_ring.gif does not exist.
+++ file figures/tasks/curved_track.ps does not exist.
+++ file figures/tasks/curved_track.eps does not exist.
+++ file figures/tasks/curved_track.epsi does not exist.
+++ file figures/tasks/curved_track.epsf does not exist.
+++ file figures/tasks/curved_track.pdf does not exist.
+++ file figures/tasks/curved_track.png does not exist.
+++ file figures/tasks/curved_track.gif does not exist.
+++ file figures/RL_Metrics/search_strategy.ps does not exist.
+++ file figures/RL_Metrics/search_strategy.eps does not exist.
+++ file figures/RL_Metrics/search_strategy.epsi does not exist.
+++ file figures/RL_Metrics/search_strategy.epsf does not exist.
+++ file figures/RL_Metrics/search_strategy.pdf does not exist.
+++ file figures/RL_Metrics/search_strategy.png does not exist.
+++ file figures/RL_Metrics/search_strategy.gif does not exist.
+++ file figures/failure_mode_v3_cropped.ps does not exist.
+++ file figures/failure_mode_v3_cropped.eps does not exist.
+++ file figures/failure_mode_v3_cropped.epsi does not exist.
+++ file figures/failure_mode_v3_cropped.epsf does not exist.
+++ file figures/failure_mode_v3_cropped.pdf does not exist.
+++ file figures/failure_mode_v3_cropped.png does not exist.
+++ file figures/failure_mode_v3_cropped.gif does not exist.
+++ file figures/tiny_modify_v3_cropped.ps does not exist.
+++ file figures/tiny_modify_v3_cropped.eps does not exist.
+++ file figures/tiny_modify_v3_cropped.epsi does not exist.
+++ file figures/tiny_modify_v3_cropped.epsf does not exist.
+++ file figures/tiny_modify_v3_cropped.pdf does not exist.
+++ file figures/tiny_modify_v3_cropped.png does not exist.
+++ file figures/tiny_modify_v3_cropped.gif does not exist.
+++ file figures/throw_comp_v4_cropped.ps does not exist.
+++ file figures/throw_comp_v4_cropped.eps does not exist.
+++ file figures/throw_comp_v4_cropped.epsi does not exist.
+++ file figures/throw_comp_v4_cropped.epsf does not exist.
+++ file figures/throw_comp_v4_cropped.pdf does not exist.
+++ file figures/throw_comp_v4_cropped.png does not exist.
+++ file figures/throw_comp_v4_cropped.gif does not exist.
+++ file figures/synthesised_dataset_v3_cropped.ps does not exist.
+++ file figures/synthesised_dataset_v3_cropped.eps does not exist.
+++ file figures/synthesised_dataset_v3_cropped.epsi does not exist.
+++ file figures/synthesised_dataset_v3_cropped.epsf does not exist.
+++ file figures/synthesised_dataset_v3_cropped.pdf does not exist.
+++ file figures/synthesised_dataset_v3_cropped.png does not exist.
+++ file figures/synthesised_dataset_v3_cropped.gif does not exist.
+++ file figures/designer_detailed_designer_cropped.ps does not exist.
+++ file figures/designer_detailed_designer_cropped.eps does not exist.
+++ file figures/designer_detailed_designer_cropped.epsi does not exist.
+++ file figures/designer_detailed_designer_cropped.epsf does not exist.
+++ file figures/designer_detailed_designer_cropped.pdf does not exist.
+++ file figures/designer_detailed_designer_cropped.png does not exist.
+++ file figures/designer_detailed_designer_cropped.gif does not exist.
+++ file figures/RL_Metrics/Catapult/score_max.ps does not exist.
+++ file figures/RL_Metrics/Catapult/score_max.eps does not exist.
+++ file figures/RL_Metrics/Catapult/score_max.epsi does not exist.
+++ file figures/RL_Metrics/Catapult/score_max.epsf does not exist.
+++ file figures/RL_Metrics/Catapult/score_max.pdf does not exist.
+++ file figures/RL_Metrics/Catapult/score_max.png does not exist.
+++ file figures/RL_Metrics/Catapult/score_max.gif does not exist.
+++ file figures/RL_Metrics/Car/score_max.ps does not exist.
+++ file figures/RL_Metrics/Car/score_max.eps does not exist.
+++ file figures/RL_Metrics/Car/score_max.epsi does not exist.
+++ file figures/RL_Metrics/Car/score_max.epsf does not exist.
+++ file figures/RL_Metrics/Car/score_max.pdf does not exist.
+++ file figures/RL_Metrics/Car/score_max.png does not exist.
+++ file figures/RL_Metrics/Car/score_max.gif does not exist.
+++ file figures/RL_Metrics/Catapult/MachineValid_Reward.ps does not exist.
+++ file figures/RL_Metrics/Catapult/MachineValid_Reward.eps does not exist.
+++ file figures/RL_Metrics/Catapult/MachineValid_Reward.epsi does not exist.
+++ file figures/RL_Metrics/Catapult/MachineValid_Reward.epsf does not exist.
+++ file figures/RL_Metrics/Catapult/MachineValid_Reward.pdf does not exist.
+++ file figures/RL_Metrics/Catapult/MachineValid_Reward.png does not exist.
+++ file figures/RL_Metrics/Catapult/MachineValid_Reward.gif does not exist.
+++ file figures/RL_Metrics/Car/MachineValid_Reward.ps does not exist.
+++ file figures/RL_Metrics/Car/MachineValid_Reward.eps does not exist.
+++ file figures/RL_Metrics/Car/MachineValid_Reward.epsi does not exist.
+++ file figures/RL_Metrics/Car/MachineValid_Reward.epsf does not exist.
+++ file figures/RL_Metrics/Car/MachineValid_Reward.pdf does not exist.
+++ file figures/RL_Metrics/Car/MachineValid_Reward.png does not exist.
+++ file figures/RL_Metrics/Car/MachineValid_Reward.gif does not exist.
+++ file figures/RL_Metrics/Catapult/Val_Best.ps does not exist.
+++ file figures/RL_Metrics/Catapult/Val_Best.eps does not exist.
+++ file figures/RL_Metrics/Catapult/Val_Best.epsi does not exist.
+++ file figures/RL_Metrics/Catapult/Val_Best.epsf does not exist.
+++ file figures/RL_Metrics/Catapult/Val_Best.pdf does not exist.
+++ file figures/RL_Metrics/Catapult/Val_Best.png does not exist.
+++ file figures/RL_Metrics/Catapult/Val_Best.gif does not exist.
+++ file figures/RL_Metrics/Car/Val_Best.ps does not exist.
+++ file figures/RL_Metrics/Car/Val_Best.eps does not exist.
+++ file figures/RL_Metrics/Car/Val_Best.epsi does not exist.
+++ file figures/RL_Metrics/Car/Val_Best.epsf does not exist.
+++ file figures/RL_Metrics/Car/Val_Best.pdf does not exist.
+++ file figures/RL_Metrics/Car/Val_Best.png does not exist.
+++ file figures/RL_Metrics/Car/Val_Best.gif does not exist.
+++ file figures/RL_sample_new_v2.ps does not exist.
+++ file figures/RL_sample_new_v2.eps does not exist.
+++ file figures/RL_sample_new_v2.epsi does not exist.
+++ file figures/RL_sample_new_v2.epsf does not exist.
+++ file figures/RL_sample_new_v2.pdf does not exist.
+++ file figures/RL_sample_new_v2.png does not exist.
+++ file figures/RL_sample_new_v2.gif does not exist.
+++ file figures/test_time_scaling_gallery_withcaption.ps does not exist.
+++ file figures/test_time_scaling_gallery_withcaption.eps does not exist.
+++ file figures/test_time_scaling_gallery_withcaption.epsi does not exist.
+++ file figures/test_time_scaling_gallery_withcaption.epsf does not exist.
+++ file figures/test_time_scaling_gallery_withcaption.pdf does not exist.
+++ file figures/test_time_scaling_gallery_withcaption.png does not exist.
+++ file figures/test_time_scaling_gallery_withcaption.gif does not exist.
+++ file figures/LLM_feed_gemini_cot_v4_cropped.ps does not exist.
+++ file figures/LLM_feed_gemini_cot_v4_cropped.eps does not exist.
+++ file figures/LLM_feed_gemini_cot_v4_cropped.epsi does not exist.
+++ file figures/LLM_feed_gemini_cot_v4_cropped.epsf does not exist.
+++ file figures/LLM_feed_gemini_cot_v4_cropped.pdf does not exist.
+++ file figures/LLM_feed_gemini_cot_v4_cropped.png does not exist.
+++ file figures/LLM_feed_gemini_cot_v4_cropped.gif does not exist.
+There were 31 images.
+Following images not defined: figures/teaser_final_new, figures/environment_intro_cropped, figures/xml_intro_v2_cropped, figures/gemini_cot_example_v3, figures/o3_cot_example_v4_green_cropped, figures/besiegefield_pipeline_compressed, figures/LLM_Comp_v4_cropped, figures/14b_model_sample_v4_cropped, figures/game_editor_view, figures/block_stats, figures/tasks/movement_rocky, figures/tasks/throw, figures/tasks/pick, figures/tasks/delivery, figures/tasks/thru_ring, figures/tasks/curved_track, figures/RL_Metrics/search_strategy, figures/failure_mode_v3_cropped, figures/tiny_modify_v3_cropped, figures/throw_comp_v4_cropped, figures/synthesised_dataset_v3_cropped, figures/designer_detailed_designer_cropped, figures/RL_Metrics/Catapult/score_max, figures/RL_Metrics/Car/score_max, figures/RL_Metrics/Catapult/MachineValid_Reward, figures/RL_Metrics/Car/MachineValid_Reward, figures/RL_Metrics/Catapult/Val_Best, figures/RL_Metrics/Car/Val_Best, figures/RL_sample_new_v2, figures/test_time_scaling_gallery_withcaption, figures/LLM_feed_gemini_cot_v4_cropped.
+Output written on temp/xml/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.xml (307635 bytes).
+There were 1356 errors.
+(For more information, see transcript file temp/xml/arXiv-2510.14980v1.tar/arXiv-2510.14980v1.tar.log)
