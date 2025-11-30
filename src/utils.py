@@ -6,15 +6,43 @@ import base64
 from collections import defaultdict
 import json
 
+# def extract_raw_figures(root_dir: str):
+#     fig_re = re.compile(
+#         r"\\begin\{(?:figure|wrapfigure|minipage|tikzpicture)\*?\}.*?\\end\{(?:figure|wrapfigure|minipage|tikzpicture)\*?\}",
+#         re.DOTALL
+#     )
+#     results = []
+#     for path in Path(root_dir).rglob("*.tex"):
+#         text = path.read_text(encoding="utf-8", errors="ignore")
+#         for match in fig_re.finditer(text):
+#             results.append({
+#                 "file": str(path),
+#                 "snippet": match.group(0).strip()
+#             })
+#     return results
+
 def extract_raw_figures(root_dir: str):
     fig_re = re.compile(
         r"\\begin\{(?:figure|wrapfigure|minipage|tikzpicture)\*?\}.*?\\end\{(?:figure|wrapfigure|minipage|tikzpicture)\*?\}",
         re.DOTALL
     )
+    
+    # NEW: Regex to find and remove LaTeX comments:
+    # (?<!\\) : Negative Lookbehind, ensures the '%' is NOT preceded by a backslash (\), 
+    #           which handles escaped percent signs (\%).
+    # %.*$    : Matches the percent sign, followed by any character (.*), up to the 
+    #           end of the line ($).
+    comment_re = re.compile(r"(?<!\\)%.*$", re.MULTILINE)
+    
     results = []
     for path in Path(root_dir).rglob("*.tex"):
         text = path.read_text(encoding="utf-8", errors="ignore")
-        for match in fig_re.finditer(text):
+        
+        # --- NEW STEP: Remove all comments ---
+        cleaned_text = comment_re.sub("", text)
+
+        # Use the cleaned text for figure extraction
+        for match in fig_re.finditer(cleaned_text): 
             results.append({
                 "file": str(path),
                 "snippet": match.group(0).strip()

@@ -55,52 +55,52 @@ VLM_MODEL_NAME="qwen3-vl-flash"
 MODEL_NAME="qwen-plus-2025-09-11"
 CODER_MODEL_NAME="qwen3-coder-480b-a35b"
 
-INPUT_PATH="/Users/v1p0r/Documents/DDL_Fall25/term_project/protopy_agent/data/input/latex/arXiv-2510.14980v1"
-OUTPUT_PATH="/Users/v1p0r/Documents/DDL_Fall25/term_project/protopy_agent/data/output/arXiv-2510.14980v1"
+INPUT_PATH="/Users/v1p0r/Documents/DDL_Fall25/term_project/protopy_agent/data/input/latex/arXiv-2401.12200v2"
+OUTPUT_PATH="/Users/v1p0r/Documents/DDL_Fall25/term_project/protopy_agent/data/output/arXiv-2401.12200v2"
 
 echo
 echo "--------------------------- ProtoPy Agent ---------------------------"
 PAPER_NAME="$(basename "$INPUT_PATH")"
 printf '\n[%s] Processing paper: %s (model: %s)\n' "$(date +%H:%M:%S)" "$PAPER_NAME" "$MODEL_NAME"
 
-# echo
-# echo "************************** 0_preprocessing ***************************"
-# python 0_preprocessing.py \
-#     --paper_name $PAPER_NAME \
-#     --input_path $INPUT_PATH \
-#     --output_path $OUTPUT_PATH
-# echo
+echo
+echo "************************** 0_preprocessing ***************************"
+python 0_preprocessing.py \
+    --paper_name $PAPER_NAME \
+    --input_path $INPUT_PATH \
+    --output_path $OUTPUT_PATH
+echo
 
-# echo "********************* 1_image_caption_analysis *********************"
-# python 1_image_caption_analysis.py \
-#     --paper_name $PAPER_NAME \
-#     --model_name $VLM_MODEL_NAME \
-#     --key $DASHSCOPE_API_KEY \
-#     --input_path $INPUT_PATH \
-#     --output_path $OUTPUT_PATH
-# echo
+echo "********************* 1_image_caption_analysis *********************"
+python 1_image_caption_analysis.py \
+    --paper_name $PAPER_NAME \
+    --model_name $VLM_MODEL_NAME \
+    --key $DASHSCOPE_API_KEY \
+    --input_path $INPUT_PATH \
+    --output_path $OUTPUT_PATH
+echo
 
-# echo "*************************** 2_planning *****************************"
-# python 2_planning.py \
-#     --paper_name $PAPER_NAME \
-#     --model_name $MODEL_NAME \
-#     --key $DASHSCOPE_API_KEY \
-#     --input_path $INPUT_PATH \
-#     --output_path $OUTPUT_PATH
-# echo
+echo "*************************** 2_planning *****************************"
+python 2_planning.py \
+    --paper_name $PAPER_NAME \
+    --model_name $MODEL_NAME \
+    --key $DASHSCOPE_API_KEY \
+    --input_path $INPUT_PATH \
+    --output_path $OUTPUT_PATH
+echo
 
-# python 2.1_extract_config.py \
-#     --paper_name $PAPER_NAME \
-#     --output_dir ${OUTPUT_PATH}
+python 2.1_extract_config.py \
+    --paper_name $PAPER_NAME \
+    --output_dir ${OUTPUT_PATH}
 
-# cp -rp ${OUTPUT_PATH}/planning_config.yaml ${OUTPUT_PATH}/codebase/config.yaml
+cp -rp ${OUTPUT_PATH}/planning_config.yaml ${OUTPUT_PATH}/codebase/config.yaml
 
-# echo "*************************** 3_analyzing *****************************"
-# python 3_analyzing.py \
-#     --paper_name $PAPER_NAME \
-#     --model_name $MODEL_NAME \
-#     --output_path $OUTPUT_PATH
-# echo
+echo "*************************** 3_analyzing *****************************"
+python 3_analyzing.py \
+    --paper_name $PAPER_NAME \
+    --model_name $MODEL_NAME \
+    --output_path $OUTPUT_PATH
+echo
 
 echo "*************************** 4_coding *****************************"
 python 4_coding.py \
