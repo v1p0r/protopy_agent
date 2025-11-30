@@ -1,0 +1,227 @@
+### **Logic Analysis: env/simulation.py — SimulationEngine Class**
+
+---
+
+#### **1. Purpose and Role in the System**
+The `SimulationEngine` class serves as the **critical interface** between the *physical simulation* performed by `BesiegeFieldSimulator` and the *reward computation* logic encapsulated in `RewardCalculator`. It is a **wrapper** that:
+- Accepts a validated `ConstructionTree` machine design.
+- Delegates the actual physics simulation to `BesiegeFieldSimulator`.
+- Extracts the simulation state log (per-block positions, velocities, integrity at 0.2s intervals).
+- Computes the **final reward** `R = R_valid * R_task` using `RewardCalculator`.
+- Returns a **tuple `(reward_value: float, is_valid: bool)`** for downstream use by `RLTrainer`, `EvaluationMetrics`, and agentic workflows.
+
+This class **abstracts away** the complexity of raw simulation output and ensures **consistent, task-specific reward semantics** are applied uniformly across all evaluation and training pipelines.
+
+---
+
+#### **2. Core Responsibilities**
+
+##### **A. Input Handling**
+- **Input**: A single `ConstructionTree` object (validated by `JSONValidator` and `ConstructionTree.validate()` prior to this step).
+- **Assumption**: The machine is structurally valid (no cycles, valid IDs, correct parent references). Self-collision is *not* checked here — that is handled by `BesiegeFieldSimulator.check_self_collision()` before simulation.
+- **Task Specification**: The `SimulationEngine` must be initialized with a `task: str` (either `"car"` or `"catapult"`) to determine which reward logic to apply.
+
+##### **B. Simulation Execution**
+- **Delegate to `BesiegeFieldSimulator`**:
+  - Call `simulator.build_from_tree(construction_tree)` → returns `bool` indicating if placement succeeded.
+  - If placement fails (e.g., invalid block types, missing parents), return `(0.0, False)` immediately.
+  - Call `simulator.simulate()` → runs 5-second physics simulation with gravity and powered block activation at t=2s.
+  - Call `simulator.get_state_log()` → returns a list of 25 dictionaries (5s / 0.2s = 25 time steps), each containing:
+    ```python
+    {
+      "block_id": int,           # ID of block (matches ConstructionTree.id)
+      "type": str,               # e.g., "Starting Block", "Boulder"
+      "position": [x, y, z],     # global 3D position at this timestep
+      "orientation": [qw, qx, qy, qz],  # quaternion (or Euler if preferred)
+      "linear_velocity": [vx, vy, vz],
+      "angular_velocity": [wx, wy, wz],
+      "integrity": 0 or 1        # 0 if broken, 1 if intact
+    }
+    ```
+- **Critical Constraint**: Simulation duration is **fixed at 5 seconds** (per `config.yaml: simulation.duration_seconds`).
+- **Powered Block Activation**: Must occur at **t=2s** (as per paper). This is handled internally by `BesiegeFieldSimulator`, so `SimulationEngine` does not need to manage it.
+
+##### **C. Validity Assessment (`R_valid`)**
+`R_valid` is a **boolean flag** determined by **three criteria**, all derived from simulation output:
+1. **File Validity**: Already ensured before simulation (by `ConstructionTree.validate()`). Not rechecked here.
+2. **Spatial Validity**:  
+   - Call `simulator.check_self_collision()` **before** `simulate()`.  
+   - If `True`, return `(0.0, False)` immediately.  
+   - *Note*: This check must be performed *before* simulation, not after.  
+3. **Integrity After Simulation**:  
+   - After simulation, scan `state_log` for any block with `integrity == 0`.  
+   - If **any** block is broken → `R_valid = False`.  
+   - For **catapult**, an **additional constraint** applies:  
+     - Must compute the **maximum height** of the **boulder** during simulation.  
+     - If `max_height <= 3.0` → `R_valid = False` (per `config.yaml: simulation.catapult_height_threshold`).  
+     - *Note*: This is **not** part of the reward function, but a **hard validity threshold**.  
+
+> ✅ **Important**: The paper explicitly separates `R_valid` (binary) from `R_task` (scalar). `R_valid` is a gatekeeper: if `False`, `R_task` is ignored.
+
+##### **D. Task-Specific Performance Metric (`R_task`)**
+- **Car Task**:
+  - Identify the **root block** (ID=0) from `ConstructionTree`.
+  - Extract its **initial position** at t=0 from `state_log[0]`.
+  - Extract its **final position** at t=5s from `state_log[-1]`.
+  - Compute **displacement along designated direction** (paper: “towards a fixed and given direction”).
+    - Assumption: Direction is **+x axis** (standard in physics engines unless specified otherwise).
+    - `R_task = |final_x - initial_x|` (scalar distance, non-negative).
+- **Catapult Task**:
+  - Identify the **boulder** block (type = "Boulder").
+  - Extract all its positions across the 25 timesteps.
+  - Compute:
+    - `max_height = max(y-coordinate of boulder over all timesteps)`
+    - `max_distance = max(x-coordinate of boulder over all timesteps)` (along designated direction)
+  - **Only if** `max_height > 3.0` (per config), compute:
+    - `R_task = max_height * max_distance`
+  - **If** `max_height <= 3.0`, then `R_task = 0.0` (but `R_valid` is already `False`, so final reward is 0.0 regardless).
+  - *Note*: The paper states the reward is the *product* to penalize one-dimensional extremes (e.g., high but short, or long but low). This is critical for shaping effective designs.
+
+##### **E. Output Format**
+- Always return: `(float, bool)`
+  - `float`: `R_task` value (0.0 if invalid, or computed scalar)
+  - `bool`: `R_valid` (True only if all constraints satisfied)
+- **Example**:
+  - Car: `(12.5, True)` → machine moved 12.5m without breaking.
+  - Catapult: `(0.0, False)` → boulder reached 2.8m height → invalid.
+  - Catapult: `(45.6, True)` → boulder reached 6.0m height and 7.6m distance → 6.0 * 7.6 = 45.6.
+
+---
+
+#### **3. Dependencies and Integration**
+
+| Dependency | Role | How Used |
+|----------|------|----------|
+| `BesiegeFieldSimulator` | Core physics engine | `build_from_tree()`, `simulate()`, `get_state_log()`, `check_self_collision()` |
+| `RewardCalculator` | Reward logic | `compute()` method is called internally to compute `(R_task, R_valid)` — but **this is redundant**. |
+| `config.yaml` | Configuration | Read `simulation.duration_seconds`, `simulation.catapult_height_threshold`, `tasks.car.reward_metric`, `tasks.catapult.reward_metric` |
+
+> ⚠️ **Design Note**: The `RewardCalculator` class is listed as a dependency, but **its logic is fully embedded** in `SimulationEngine`. This is intentional:  
+> - `RewardCalculator` was likely designed as a reusable module for standalone reward computation (e.g., for debugging or offline analysis).  
+> - However, in the workflow, `SimulationEngine` has **direct access** to the state log and simulation context.  
+> - **Recommendation**: `SimulationEngine` should **call `RewardCalculator.compute(state_log, task)`** to **de-couple** the reward logic and allow future reuse (e.g., in evaluation metrics).  
+> - Thus, `SimulationEngine` **does not reimplement** the reward logic — it **delegates** to `RewardCalculator` for correctness and modularity.
+
+---
+
+#### **4. Edge Cases and Failure Modes**
+
+| Scenario | Handling |
+|---------|----------|
+| **Invalid block type in tree** | Already caught by `ConstructionTree.validate()` → should never reach `SimulationEngine`. Log warning if encountered. |
+| **Boulder not found in catapult task** | If no block of type "Boulder" exists in `state_log`, treat as failure → `R_valid = False`, `R_task = 0.0`. |
+| **Root block missing or not ID=0** | `ConstructionTree.get_root_block()` ensures root is ID=0. If not, validation fails earlier. |
+| **State log has fewer than 25 timesteps** | Simulation terminated early (e.g., due to crash). Use available data. Compute `max_height`/`distance` over available steps. Still compute `R_valid` based on integrity. |
+| **Multiple boulders in catapult task** | Paper assumes one boulder. If multiple, use the one with **highest max_height**. Log warning. |
+| **Multiple root blocks** | Impossible by construction tree definition. Validation should catch this. |
+| **Powered blocks not activating** | Handled by `BesiegeFieldSimulator` at t=2s. `SimulationEngine` does not intervene. |
+| **Floating point precision in position** | Use `numpy.isclose()` or tolerance-based comparisons if needed (e.g., for collision detection). |
+
+---
+
+#### **5. Integration with RL and Evaluation Pipelines**
+
+- **RL Training (`RLTrainer`)**:
+  - Calls `SimulationEngine.simulate(machine)` for each rollout.
+  - Uses `(reward, valid)` to compute advantages (via `GRPO`).
+  - Uses `valid` flag to filter out invalid rollouts during training (optional, but recommended for stability).
+- **Evaluation Metrics (`EvaluationMetrics`)**:
+  - Calls `SimulationEngine.simulate()` for each test machine.
+  - Aggregates:
+    - `file_validity_rate`: from `ConstructionTree.validate()`
+    - `spatial_validity_rate`: from `BesiegeFieldSimulator.check_self_collision()`
+    - `machine_validity_rate`: from `SimulationEngine`’s `is_valid`
+    - `mean/max_score`: from `SimulationEngine`’s `reward_value`
+- **Agentic Workflows (Iterative Editing, Hierarchical)**:
+  - Use `SimulationEngine` to evaluate candidate designs during MCTS or builder stages.
+  - Feedback to `ActiveEnvQuerier` is derived from `state_log` — but `SimulationEngine` itself does **not** perform selective queries; that is handled upstream.
+
+---
+
+#### **6. Configuration Usage**
+
+| Config Key | Usage in `SimulationEngine` |
+|------------|-----------------------------|
+| `simulation.duration_seconds` | Used to validate number of timesteps expected (25 for 0.2s intervals). |
+| `simulation.catapult_height_threshold` | Used to enforce `R_valid` condition for catapult. |
+| `tasks.car.reward_metric` | Used to select car reward logic (`distance`). |
+| `tasks.catapult.reward_metric` | Used to select catapult reward logic (`height_distance_product`). |
+
+> ✅ All values are loaded via `Config.get()` at initialization. No hardcoding.
+
+---
+
+#### **7. Performance and Parallelization**
+
+- **Thread Safety**: `SimulationEngine` must be **stateless**. Each instance is tied to one task and one simulator instance.
+- **Parallel Simulation**: 
+  - `SimulationEngine` is used by `ParallelSimulator.simulate_batch()` — which spawns multiple processes.
+  - Each process must have its own `BesiegeFieldSimulator` instance (no shared state).
+  - `SimulationEngine` must be **picklable** (no lambda, no unpicklable closures) to work with `multiprocessing.Pool`.
+- **Memory**: State log for 25 timesteps × 27 blocks ≈ 25×27×(3+4+3+3+1) = ~25×27×14 = ~9,450 floats per machine → ~75KB per machine. Acceptable.
+
+---
+
+#### **8. Validation and Logging**
+
+- **Logging**:
+  - On simulation failure: log `ERROR` with machine ID and reason.
+  - On catapult invalidity due to height: log `WARNING` with `max_height` value.
+  - On unexpected block types: log `WARNING` and skip.
+- **Assertions**:
+  - `assert len(state_log) == int(config.simulation.duration_seconds / config.simulation.state_log_interval)` → catches simulation misconfiguration.
+  - `assert "Boulder" in [b["type"] for b in state_log]` for catapult → fails early if missing.
+
+---
+
+#### **9. Summary of Design Principles**
+
+| Principle | Application |
+|---------|-------------|
+| **Separation of Concerns** | `SimulationEngine` does not simulate, validate, or calculate reward — it orchestrates `BesiegeFieldSimulator` and `RewardCalculator`. |
+| **Fail-Fast** | Reject invalid machines early (before simulation) using `check_self_collision()`. |
+| **Config-Driven** | All thresholds, durations, metrics are pulled from `config.yaml`. |
+| **Deterministic** | Same machine → same simulation → same reward. No randomness in physics engine. |
+| **Reusability** | Can be used by single-agent, iterative, hierarchical, and RL pipelines identically. |
+| **Robustness** | Handles edge cases (missing boulder, early termination, multiple roots) gracefully. |
+
+---
+
+#### **10. Final Output Contract**
+
+```python
+class SimulationEngine:
+    def __init__(self, task: str, simulator: BesiegeFieldSimulator, reward_calculator: RewardCalculator, config: Config):
+        self.task = task  # "car" or "catapult"
+        self.simulator = simulator
+        self.reward_calculator = reward_calculator
+        self.config = config
+
+    def simulate(self, machine: ConstructionTree) -> tuple[float, bool]:
+        """
+        Simulates a machine and returns (reward, is_valid).
+        
+        Steps:
+        1. Check if machine can be built (via simulator.build_from_tree).
+        2. Check for self-collision before simulation.
+        3. Run simulation.
+        4. Extract state log.
+        5. Compute R_valid and R_task via RewardCalculator.
+        6. Return (R_task * R_valid, R_valid) — but note: R_valid already encodes the gate.
+           Actually: return (R_task, R_valid) as per RewardCalculator's contract.
+        """
+        # Implementation details follow from above logic
+        ...
+```
+
+> ✅ This class **does not invent** logic — it **orchestrates** and **enforces** the exact protocol defined in the paper and config.  
+> ✅ It is the **single source of truth** for reward computation in the entire system.  
+> ✅ It enables **reproducibility**, **modularity**, and **scalability** for RL and agentic workflows.
+
+--- 
+
+**Next Steps**:  
+- Implement `SimulationEngine` using the above logic.  
+- Unit test with known valid/invalid machines.  
+- Integrate with `RewardCalculator.compute()` to avoid code duplication.  
+- Ensure compatibility with `ParallelSimulator` for multi-GPU RL training.

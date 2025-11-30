@@ -1,0 +1,152 @@
+### **Logic Analysis: utils/logger.py**
+
+The `Logger` class in `utils/logger.py` serves as the central, unified logging infrastructure for the entire `BesiegeField` reproduction system. It must be robust, consistent, and non-intrusive—ensuring that every component (agents, simulation, RL training, evaluation, dataset curation) can record events, errors, warnings, and debug traces in a standardized, timestamped, and file+console-output format without introducing performance bottlenecks or configuration drift.
+
+---
+
+#### **1. Core Responsibilities**
+
+The `Logger` class must fulfill the following functional responsibilities, derived directly from the **Task List**, **Design**, and **config.yaml**:
+
+- **Unified Logging Interface**: Provide a single, consistent API (`info()`, `error()`, `debug()`, `warning()`) used by all modules (`agent/`, `rl/`, `env/`, `dataset/`, `eval/`, `main.py`).
+- **Timestamped Entries**: Every log entry must include a UTC timestamp in ISO 8601 format (e.g., `2025-04-05T12:34:56.789Z`) to enable temporal analysis of agent iterations, simulation steps, and training epochs.
+- **Dual Output**: Simultaneously write logs to:
+  - **File**: A single, rotating, append-only log file specified by `logging.log_file` in `config.yaml` (default: `"logs/experiment.log"`).
+  - **Console**: Stream to `stdout`/`stderr` based on log level (`INFO` and above to `stdout`, `ERROR` and above to `stderr`), respecting the `logging.level` setting (default: `"INFO"`).
+- **Config-Driven Behavior**: All logging behavior (log file path, output level, format) must be dynamically loaded from `config.yaml` via the `Config` class. No hardcoding.
+- **Modularity & Zero Dependencies**: Must rely **only** on Python’s built-in `logging` module. No external dependencies (as per task specification: “Dependencies: logging”).
+- **Thread/Process Safety**: Must safely operate in multi-process environments (e.g., `ParallelSimulator` spawning 8 Unity instances). Use `logging`’s built-in thread-safe handlers.
+- **Structured but Human-Readable**: Log format must be readable by humans (for debugging) and parsable by tools (for post-hoc analysis). Avoid JSON unless explicitly needed—use plain text with key-value pairs where helpful.
+
+---
+
+#### **2. Integration with System Components**
+
+The `Logger` is a **shared utility** used by every module. Below is how each component interacts with it:
+
+| Module | Log Use Case | Log Level | Example Entry |
+|-------|--------------|-----------|---------------|
+| `agent/single_agent.py` | Records LLM prompt generation, response parsing, and failure reasons | `INFO` | `INFO: SingleAgent: Generated machine for prompt "Build a car" (ID: 42) in 2.1s` |
+| `agent/refiner.py` | Logs number of candidate revisions generated per iteration | `DEBUG` | `DEBUG: Refiner: Generated 5 revision candidates from critique of design #18` |
+| `agent/querier.py` | Logs selective query decisions (e.g., “Querying Container due to zero boulder velocity”) | `INFO` | `INFO: ActiveEnvQuerier: Selective query triggered: block_id=12, type=Container, feedback=position` |
+| `env/besiegefield.py` | Logs simulation start/end, block attachment failures, self-collision detected | `INFO` | `INFO: BesiegeFieldSimulator: Simulation started for machine with 7 blocks. Self-collision: False` |
+| `env/simulation.py` | Logs reward computation, validity flags, threshold breaches | `INFO` | `INFO: SimulationEngine: Reward computed: R_valid=True, R_task=142.3 (catapult: height=4.1m, distance=34.7m)` |
+| `reward/calculator.py` | Logs validation failures (e.g., boulder height < 3m) | `WARNING` | `WARNING: RewardCalculator: Catapult invalid: boulder max height=2.8m < 3.0m threshold` |
+| `dataset/curation.py` | Logs filtering decisions (e.g., “Rejected: statue”, “Accepted: physics-driven catapult”) | `INFO` | `INFO: DatasetCurator: Filtered 250 samples → 98 valid (rejected 152: 102 statues, 50 parse failures)` |
+| `rl/trainer.py` | Logs cold-start epoch progress, RL step metrics, KL divergence, gradient norms | `INFO` | `INFO: RLTrainer: Step 127/400: Loss=0.82, KL=0.003, Advantage=0.41, Pass@64=142.3` |
+| `rl/grpo.py` | Logs gradient updates, clipping events, optimizer state | `DEBUG` | `DEBUG: GRPO: Gradient clipped at 0.5 (norm=0.52 → 0.5), KL penalty applied: 0.001` |
+| `utils/parallel_sim.py` | Logs process spawn, worker health, batch completion | `INFO` | `INFO: ParallelSimulator: Launched 8 workers. Batch of 12 machines completed in 12.3s` |
+| `eval/metrics.py` | Logs final metric computation per task | `INFO` | `INFO: EvaluationMetrics: Car task: File validity=98.0%, Machine validity=89.5%, Mean score=87.2` |
+| `main.py` | Logs experiment start/end, CLI command execution, config loading | `INFO` | `INFO: Main: Starting experiment with config=config.yaml. Command: finetune --pass_k=64` |
+
+> ✅ **Note**: `DEBUG` level is reserved for granular, development-time diagnostics. In production (e.g., benchmark runs), `INFO` is the default. `WARNING` and `ERROR` must trigger immediate attention.
+
+---
+
+#### **3. Implementation Logic & Design Decisions**
+
+##### **3.1 Initialization (`__init__`)**
+- **Input**: `log_file: str` (from `config.yaml` → `logging.log_file`)
+- **Behavior**:
+  - Create log directory if it does not exist (`os.makedirs(os.path.dirname(log_file), exist_ok=True)`).
+  - Initialize Python `logging.Logger` with name `"BesiegeField"` (unique across system).
+  - Set log level based on `config.get("logging.level")` → convert string to `logging.INFO`, `logging.DEBUG`, etc.
+  - Create two handlers:
+    - **FileHandler**: Writes to `log_file` with format:  
+      `[TIMESTAMP] [LEVEL] [MODULE]: MESSAGE`
+    - **StreamHandler**: For console output, uses same format but filters by level:
+      - `INFO`, `WARNING`, `ERROR` → `stdout`/`stderr`
+      - `DEBUG` → only if `logging.level == "DEBUG"`
+- **Error Handling**: If log file is unwritable, log error to console and continue (do not crash system).
+
+##### **3.2 Log Format**
+- **Template**:  
+  `[2025-04-05T12:34:56.789Z] [INFO] [agent/iterative_editing.py]: MCTS round 3/10: 5 valid candidates generated, best reward=132.4`
+- **Components**:
+  - **Timestamp**: `datetime.utcnow().isoformat(timespec='milliseconds') + 'Z'`
+  - **Level**: Uppercase (`INFO`, `ERROR`, etc.)
+  - **Module**: `__name__` of the calling module (e.g., `agent/iterative_editing.py`). Use `inspect.stack()` to extract calling module name dynamically.
+  - **Message**: Free-form, human-readable, no JSON unless necessary.
+- **Rationale**: This format allows easy `grep`, `awk`, or `pandas.read_csv()` parsing. Avoids complex serialization (e.g., JSONL) for simplicity and speed.
+
+##### **3.3 Method Implementation (`info()`, `error()`, `debug()`, `warning()`)**
+- Each method is a simple wrapper around the underlying `logging.Logger` methods.
+- **No additional processing** beyond format and level filtering.
+- **No blocking I/O**: Use `logging`’s async-safe handlers. Avoid flushing after every log (performance critical during RL rollouts).
+- **No exceptions raised**: If logging fails (disk full, permission denied), silently fail and emit one-time warning to console.
+
+##### **3.4 Thread/Process Safety**
+- Python’s `logging` module is thread-safe by default.
+- For **multiprocessing** (e.g., 8 Unity simulators), each process will instantiate its own `Logger` instance. This is acceptable because:
+  - Each process writes to the *same* file → `FileHandler` with `mode='a'` supports concurrent writes on most modern filesystems (Linux/Unix).
+  - If file corruption becomes an issue, future enhancement: use `logging.handlers.RotatingFileHandler` with lock or write to separate per-process logs (not required per paper).
+- **Recommendation**: Do not use `QueueHandler` or `MultiprocessingLogHandler` unless proven necessary. Keep it simple.
+
+##### **3.5 Integration with Config**
+- The `Logger` class **must not** import `Config` directly in its `__init__` to avoid circular dependencies (e.g., `Config` might use `Logger`).
+- Instead, `main.py` (or `utils/config.py`) should:
+  1. Load `config.yaml`
+  2. Extract `logging.log_file` and `logging.level`
+  3. Pass them as arguments to `Logger(log_file, level)`
+- This ensures configuration is centralized and injected, not pulled.
+
+##### **3.6 Logging Scope and Granularity**
+- **Avoid Over-Logging**: Do not log every block placement or every 0.2s state update. That would flood logs.
+- **Log at Semantically Meaningful Points**:
+  - ✅ Log: “Agent generated machine”, “Simulation failed due to collision”, “RL step 127 completed”, “Dataset filtered 98/250”
+  - ❌ Do not log: “Block 3 attached to parent 1 at face_id=2”, “State: pos=(1.2, 0.5, 3.1)”
+- **Debug for Deep Dives**: Use `debug()` only for:
+  - Internal state transitions in MCTS
+  - LLM prompt/response pairs (only if `logging.level == "DEBUG"`)
+  - Raw JSON output from agents before validation
+
+##### **3.7 Error Handling & Recovery**
+- **Critical Failure**: If a simulation crashes or an agent generates malformed JSON, log `ERROR` and include:
+  - Exception traceback (via `logger.exception()` if exception is caught)
+  - Context: e.g., `ERROR: Refiner: Failed to parse LLM output. Prompt: "Build a catapult with lever..." Output: "```json\n{...}\n```"`
+- **Non-Critical Failure**: If log file cannot be written, log once to console and continue. Do not halt training or simulation.
+- **No Retries**: Do not retry logging. It’s a diagnostic tool, not a mission-critical component.
+
+---
+
+#### **4. Validation Against Requirements**
+
+| Requirement | Met? | How |
+|------------|------|-----|
+| Logs training, simulation, agent actions | ✅ | All modules use `Logger` for key events |
+| Timestamped entries | ✅ | ISO 8601 UTC timestamps with millisecond precision |
+| File + console output | ✅ | Two handlers: `FileHandler` + `StreamHandler` |
+| Config-driven (from `config.yaml`) | ✅ | Parameters injected at instantiation, not hardcoded |
+| Uses only `logging` module | ✅ | No external dependencies |
+| Thread/process safe | ✅ | Built-in `logging` module is thread-safe; multiprocessing handled via separate processes |
+| Human-readable, parsable format | ✅ | Standard `[TIMESTAMP] [LEVEL] [MODULE]: MESSAGE` |
+| Minimal performance impact | ✅ | No I/O blocking, no serialization, no complex formatting |
+| Used by all components | ✅ | Explicitly referenced in 24/26 modules in task list |
+
+---
+
+#### **5. Anticipated Edge Cases & Mitigations**
+
+| Edge Case | Mitigation |
+|----------|------------|
+| **Log file path contains invalid characters** | Use `os.path.abspath()` and `os.makedirs(..., exist_ok=True)` to normalize and create directory. |
+| **Multiple processes writing to same log file** | Acceptable on Unix-like systems. If corruption occurs in Windows, future fix: use `logging.handlers.WatchedFileHandler` or per-process logs. |
+| **System clock skewed or UTC not available** | Always use `datetime.utcnow()` — no reliance on local time. |
+| **Very long messages (>10KB)** | `logging` truncates by default. No action needed. If needed, truncate manually with ellipsis. |
+| **Logger instantiated before config loaded** | Enforced by design: `Logger` is instantiated **only** after `Config` is loaded in `main.py`. |
+| **Memory leak from uncollected loggers** | Python’s `logging` module is singleton. No risk. |
+
+---
+
+#### **6. Final Design Summary**
+
+The `Logger` class is a **simple, robust, configuration-driven, and universally adopted** logging utility. It does not attempt to be smart, predictive, or complex. Its strength lies in **consistency** and **reliability**.
+
+- **Interface**: `__init__(log_file, level)` → `info()`, `error()`, `debug()`, `warning()`
+- **Output**: `[ISO8601-Z] [LEVEL] [MODULE]: MESSAGE`
+- **Storage**: Single file + console
+- **Control**: Entirely driven by `config.yaml`
+- **Safety**: Thread/process safe, non-blocking, no external deps
+- **Philosophy**: “Log what matters, when it matters, clearly.”
+
+This design ensures that every experiment run is fully traceable, reproducible, and debuggable — critical for validating the paper’s complex, multi-agent, RL-driven pipeline. The logger is the silent witness to every decision, failure, and success in the system.

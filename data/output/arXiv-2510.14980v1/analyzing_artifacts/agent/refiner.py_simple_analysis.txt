@@ -1,0 +1,240 @@
+# Logic Analysis: agent/refiner.py
+
+The `Refiner` class is a core component of the iterative editing workflow, responsible for generating multiple revised machine designs based on an initial draft and environmental feedback. Its function is not to create from scratch, but to *critically revise* — transforming a flawed or suboptimal design into a higher-performing one by leveraging both linguistic reasoning and physical simulation signals. This class must operate with precision, consistency, and alignment with the paper’s methodology, while strictly adhering to the provided design, configuration, and dependencies.
+
+---
+
+## **1. Core Purpose and Role in the Workflow**
+
+The `Refiner` is invoked *after* an initial design has been generated (by the `Designer`) and evaluated by the `ActiveEnvQuerier`, which provides:
+- **Minimal feedback**: e.g., boulder max height, max distance, root displacement, state logs at 0.2s intervals.
+- **Selective feedback**: e.g., “the Container’s position at t=1.0–2.0s was too low,” or “the Spring length exceeded 2.5m.”
+
+The `Refiner` does *not* re-simulate — it receives the simulation outcome as input. Its role is to:
+- **Interpret feedback** as a set of design flaws (e.g., “boulder didn’t reach 3m” → “counterweight too light” or “lever arm too short”).
+- **Generate multiple candidate revisions** (≥3) that attempt to correct these flaws while preserving valid structural elements.
+- **Produce valid, parseable ConstructionTree objects** that can be immediately simulated again.
+
+This mirrors the “self-critic” behavior described in the paper: the agent does not merely mutate randomly — it reasons about *why* the machine failed and proposes *targeted* modifications.
+
+---
+
+## **2. Input and Output Contract (Aligned with Design)**
+
+### **Input**:
+- `design: ConstructionTree`  
+  The current draft machine to be revised. Must be a valid `ConstructionTree` object (already validated by prior stages).
+- `feedback: dict`  
+  Structured feedback from `ActiveEnvQuerier`, containing:
+  - `minimal_feedback`: e.g., `{"boulder_max_height": 2.1, "boulder_max_distance": 15.3, "root_displacement": 8.7}`
+  - `selective_feedback`: optional, e.g., `{"query_block_id": 5, "time_window": [1.0, 2.0], "feedback_type": ["position", "velocity"]}`
+
+### **Output**:
+- `list[ConstructionTree]`  
+  A list of **at least 3** revised machine designs (≥3 as specified). Each must be:
+  - **Valid**: Passes `ConstructionTree.validate()` (no cycles, valid IDs, correct parent-child relationships).
+  - **Structurally distinct**: Not identical to input or to each other (diversity enforced via sampling).
+  - **Semantically coherent**: Modifications must be grounded in feedback (e.g., if boulder height is low, revisions should adjust lever arm length, pivot point, or counterweight mass — not randomly add wheels).
+
+> **Note**: The paper explicitly states that the refiner generates *multiple candidates* for MCTS expansion. This is not a single-output model — it must be a *generator of alternatives*.
+
+---
+
+## **3. Internal Logic Flow**
+
+### **Step 1: Feedback Interpretation → Prompt Engineering**
+The `Refiner` must convert raw simulation feedback into natural language instructions for the LLM. This is critical — the LLM does not understand numerical state logs directly.
+
+**Example:**
+```python
+feedback = {
+    "minimal_feedback": {
+        "boulder_max_height": 2.1,
+        "boulder_max_distance": 15.3
+    },
+    "selective_feedback": {
+        "query_block_id": 5,
+        "time_window": [1.0, 2.0],
+        "feedback_type": ["position"]
+    }
+}
+```
+
+→ **Prompt transformation**:
+> “The boulder reached only 2.1m maximum height (needs >3m). The Container (block ID 5) was positioned at [x=1.2, y=0.8, z=0.5] during [1.0–2.0s], which is too low. Revise the machine to increase boulder launch height. Keep all existing blocks unless they are clearly flawed. Propose 3 distinct revisions.”
+
+This transformation must be **deterministic and consistent**, based on predefined rules derived from the paper’s “Failure Patterns” and “Environment Feedback” sections.
+
+**Rule-based mapping (to be encoded as a method):**
+| Feedback Signal | Inference | Suggested Revision |
+|-----------------|-----------|---------------------|
+| Boulder max height ≤ 3m | Insufficient energy transfer | Increase counterweight mass, lengthen lever arm, raise pivot point |
+| Boulder max distance low | Poor trajectory | Adjust release angle, reduce friction on launch path |
+| Block broke (integrity=0) | Structural weakness | Add Brace, reduce mass on adjacent blocks, reinforce attachment |
+| Spring length exceeded threshold | Overstretched | Shorten spring, add anchor points, reduce load |
+| Root block didn’t move (car) | No traction or imbalance | Add more wheels, adjust wheel placement, reduce mass asymmetry |
+
+These mappings are *heuristic* but grounded in the paper’s observations (e.g., Fig. FIGREF91: “incorrect container position”).
+
+### **Step 2: Prompt Construction**
+The LLM prompt template must be **fixed and reproducible**, as per the paper’s emphasis on consistent agent behavior.
+
+**Template Structure (configurable via YAML):**
+```
+You are a mechanical design expert. You are given a machine design that failed to meet its goal. Analyze the feedback and propose 3 revised designs.
+
+Current design:
+{construction_tree_json}
+
+Feedback:
+{feedback_text}
+
+Constraints:
+- Use only the 27 blocks from BesiegeField.
+- Do not change block types unless necessary.
+- Do not scale or rotate blocks post-attachment.
+- Maintain the construction tree format: list of dicts with "type", "id", "parent", "face_id".
+- For Spring blocks, use "parent_a" and "parent_b" if needed.
+
+Output exactly 3 revised construction trees in JSON list format. Do not explain. Do not add comments.
+```
+
+> **Critical**: The output must be *raw JSON*, not natural language. The LLM must be constrained to output only the list of machines, no prose. This ensures parseability.
+
+### **Step 3: LLM Sampling with Controlled Diversity**
+- **Model**: Uses the same base model as the `Designer` (e.g., Qwen2.5-14B-Instruct).
+- **Sampling Parameters** (from `config.yaml`):
+  - `temperature: 0.7` → encourages diversity without randomness.
+  - `top_p: 0.95` → nucleus sampling for high-probability tokens.
+- **Number of samples**: Generate **≥3** candidate revisions. The paper implies 5 per round in MCTS, but the *minimum* is 3. We generate **5** to ensure sufficient candidates for MCTS expansion (as per config: `candidates_per_round: 5`).
+- **Decoding**: Use `generate()` with `num_return_sequences=5`, `do_sample=True`, `max_new_tokens=1168`.
+
+> **Important**: The LLM must not be allowed to output *one* revision and then duplicate it. Sampling must be diverse. We enforce this by checking that at least 3 out of 5 outputs are structurally distinct (i.e., different parent-child relationships or block types).
+
+### **Step 4: Output Parsing and Validation**
+Each generated JSON string must be:
+1. **Parsed** into a Python list of dicts.
+2. **Validated** using `ConstructionTree.validate()` (from `representation/construction_tree.py`).
+3. **Filtered** to remove:
+   - Invalid JSON (syntax errors).
+   - Machines that fail validation (cycles, invalid IDs, missing fields).
+   - Duplicates (exact same structure as input or among candidates).
+
+Only **valid, unique** machines are returned.
+
+> **Note**: The paper notes that LLMs often fail to translate CoT into geometrically consistent trees. The `Refiner` must *compensate* for this by filtering out invalid outputs aggressively. We allow up to 5 retries *per search node* (in `IterativeEditing`), but the `Refiner` itself does not retry — it generates 5 candidates and returns the valid subset.
+
+### **Step 5: Return Format**
+```python
+return [
+    ConstructionTree(json_data_1),
+    ConstructionTree(json_data_2),
+    ...
+]
+```
+- Each `ConstructionTree` instance is fully instantiated, validated, and ready for simulation.
+- The list may contain 0–5 elements. If fewer than 3 are valid, the system must still proceed — the MCTS algorithm handles low candidate counts by reusing parent node (as per “max retries per node: 5”).
+
+> **Design Constraint**: The `Refiner` must *never* modify the input `ConstructionTree` in-place. It must generate *new* objects. This ensures immutability and traceability in MCTS.
+
+---
+
+## **4. Integration with MCTS and Iterative Editing**
+
+The `Refiner` is called within `IterativeEditing` at each MCTS node:
+1. `Designer` generates draft → `InspectorRefiner` critiques → `ActiveEnvQuerier` simulates → `Refiner` generates 5 candidates.
+2. All 5 are simulated in parallel via `ParallelSimulator`.
+3. Rewards are computed → MCTS backpropagates.
+
+**Key Alignment**:
+- The `Refiner`’s output is the **expansion phase** of MCTS.
+- Each candidate is a **child node** in the search tree.
+- The `Refiner` enables **exploration** of the design space — without it, MCTS would have no branching.
+
+The paper emphasizes that “LLMs struggle to find precise configurations that enable smooth coordination among parts.” The `Refiner` is the mechanism through which the agent *learns to refine precision* — not by trial-and-error alone, but by *reasoning from failure*.
+
+---
+
+## **5. Dependencies and Data Flow**
+
+### **Dependencies**:
+- **`construction_tree.py`**:  
+  - To validate input and output designs.
+  - To convert raw JSON into `ConstructionTree` objects.
+- **`querier.py`**:  
+  - To receive structured feedback in the correct format (`dict` with `minimal_feedback` and `selective_feedback`).
+  - To interpret block IDs referenced in selective queries (e.g., “block 5” → which block is it?).
+
+> **Critical Dependency Chain**:  
+> `IterativeEditing` → `ActiveEnvQuerier` → `Refiner` → `ConstructionTree`  
+> All must share the same block ID schema and JSON structure.
+
+### **No External Dependencies**:
+- No direct LLM API call in `refiner.py` — the LLM interface is abstracted via a `LLMWrapper` (to be implemented in `agent/` or `utils/`). This allows swapping models (e.g., Gemini → Qwen) without changing `Refiner`.
+- No simulation — simulation is done externally by `ActiveEnvQuerier`.
+
+---
+
+## **6. Configuration Integration**
+
+All parameters are pulled from `config.yaml`:
+
+| Parameter | Source | Use |
+|----------|--------|-----|
+| `agent.temperature` | `config.yaml` | LLM sampling temperature |
+| `agent.top_p` | `config.yaml` | LLM nucleus sampling threshold |
+| `agent.candidates_per_round` | `config.yaml` | Number of revisions to generate (5) |
+| `simulation.catapult_height_threshold` | `config.yaml` | Used in feedback interpretation (if height ≤ 3.0 → flag as failure) |
+| `model.max_output_length` | `config.yaml` | Constrains LLM generation to avoid truncation |
+
+> **Best Practice**: Load config once in `__init__` and store as instance variable. Do not hardcode values.
+
+---
+
+## **7. Error Handling and Robustness**
+
+The `Refiner` must be **fault-tolerant**:
+- **Invalid JSON**: Catch `json.JSONDecodeError`, log warning, skip candidate.
+- **Invalid ConstructionTree**: Catch validation errors, log reason, skip.
+- **LLM Output Format Violation**: If LLM outputs text instead of JSON list, attempt to extract JSON using regex (e.g., ```json...```), else skip.
+- **Empty Output**: If all 5 candidates are invalid, return empty list. The calling MCTS node will reuse the parent design (per paper’s retry logic).
+
+> **Logging**: Every rejection must be logged with reason (e.g., “Candidate 2: Invalid parent ID 999”).
+
+---
+
+## **8. Alignment with Paper’s Key Insights**
+
+| Paper Insight | Refiner Implementation |
+|---------------|------------------------|
+| “LLMs fail to faithfully translate CoT into geometrically consistent trees” | Refiner does *not* rely on CoT — it uses simulation feedback as direct signal. This bypasses the CoT-to-geometry misalignment. |
+| “Refiner generates multiple candidates for MCTS” | Exactly 5 candidates generated per call, as required for MCTS expansion. |
+| “Edit histories are helpful in decreasing failure attempts” | Refiner’s revisions are informed by prior feedback — each revision builds on prior failure, enabling progressive improvement. |
+| “Diversity is essential” | Temperature=0.7 + top_p=0.95 + filtering duplicates ensures candidate diversity. |
+| “Precision is critical” | Selective feedback (e.g., “Container position at t=1.0–2.0s”) allows the Refiner to target *exact* spatial flaws. |
+
+---
+
+## **9. Assumptions and Justifications**
+
+| Assumption | Justification |
+|----------|---------------|
+| **LLM can interpret feedback as design instructions** | Supported by paper: “LLMs exhibit spatial and physical reasoning as exemplified by CoT” (Fig. FIGREF10). We provide feedback in human-readable form. |
+| **Block IDs are stable across revisions** | Yes — the `ConstructionTree` maintains `id` as insertion order. Revisions must reuse existing IDs unless a block is removed. |
+| **No new block types allowed** | Per paper: “standardized 27 blocks”. Refiner must not invent new types. |
+| **No post-attachment scaling/rotation** | Explicitly excluded in “::Machine Representation”. Refiner must not generate these. |
+| **Feedback is accurate** | Simulation is assumed to be correct (per BesiegeField physics engine). Refiner trusts feedback as ground truth. |
+
+---
+
+## **10. Summary: Refiner as a “Failure-to-Improvement” Engine**
+
+The `Refiner` is not a generator — it is a **corrective optimizer**. It transforms *failure signals* into *design actions*. Its success depends on:
+1. **Accurate feedback parsing** → converting numbers into design insights.
+2. **Precise prompt engineering** → guiding the LLM to output valid, structural revisions.
+3. **Controlled sampling** → generating diverse, non-redundant candidates.
+4. **Rigorous validation** → ensuring only physically plausible designs proceed.
+
+It embodies the paper’s central thesis: *“composition is shaped by functionality, and functionality is realized through composition.”* The `Refiner` is the agent’s mechanism for closing the loop between *function* (reward) and *composition* (tree structure).
+
+By strictly adhering to the design, configuration, and paper’s methodology, the `Refiner` becomes the critical engine that enables open-source LLMs to evolve beyond one-shot failures and toward robust, functional machine design.

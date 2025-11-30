@@ -1,0 +1,88 @@
+----------------------------------------
+[Required packages]
+- torch==2.1.0
+- transformers==4.38.0
+- bitsandbytes==0.41.0
+- accelerate==0.29.0
+- numpy==1.24.3
+- pyyaml==6.0.1
+- python-dotenv==1.0.0
+- requests==2.31.0
+- jsonlines==4.0.0
+- pydantic==2.5.0
+- tqdm==4.66.1
+
+----------------------------------------
+[Required Other language third-party packages]
+- No third-party dependencies required
+
+----------------------------------------
+[Logic Analysis]
+- ['env/block_registry.py', 'BlockRegistry class: Initializes and manages the 27 predefined blocks from Besiege. Each block has metadata: type, attachable_faces (int), is_special (bool for Spring), and physical properties (mass, friction). Must map block names to internal IDs for consistent handling. Used by ConstructionTree, BesiegeFieldSimulator, and XMLConverter. Dependencies: None.']
+- ['representation/construction_tree.py', 'ConstructionTree class: Parses and validates JSON machine designs. Implements validate() to check for valid IDs, parent-child links, no cycles, and correct use of parent_a/parent_b for Spring. Converts to global position representation via to_global_position(). Requires BlockRegistry to validate block types and attachment rules. Used by all agents, simulation, and evaluation. Dependencies: block_registry.py.']
+- ['representation/xml_converter.py', "XMLConverter class: Converts between Besiege's default XML format and ConstructionTree. from_xml_to_tree() parses XML with global positions and reconstructs parent-child relationships using proximity logic. from_tree_to_xml() reverses the process. Used for baseline comparison. Dependencies: construction_tree.py, block_registry.py."]
+- ['env/besiegefield.py', 'BesiegeFieldSimulator class: Simulates machine behavior using rigid-body physics. build_from_tree() places blocks according to ConstructionTree. simulate() runs 5s simulation with gravity, logs state every 0.2s. get_state_log() returns list of per-block states (position, orientation, velocity, integrity). check_self_collision() detects overlaps before simulation. Uses BlockRegistry for block physics. Must support parallel launches via multiprocessing. Dependencies: block_registry.py, utils/parallel_sim.py.']
+- ['env/simulation.py', 'SimulationEngine class: Wrapper around BesiegeFieldSimulator that computes R_valid and R_task. For car: R_task = root block displacement; for catapult: R_task = max_height × max_distance only if max_height > 3m. Returns reward tuple (float, bool). Used by RLTrainer and EvaluationMetrics. Dependencies: besigefield.py, reward/calculator.py.']
+- ['reward/calculator.py', 'RewardCalculator class: Implements reward logic as R = R_valid * R_task. R_valid = 1 iff file valid + no self-collision + intact after 5s. R_task = distance (car) or height×distance (catapult). Thresholds hardcoded: >3m for catapult validity. Used by simulation.py and evaluation.py. Dependencies: None.']
+- ['agent/single_agent.py', 'SingleAgent class: Takes task prompt and generates construction tree in one shot via LLM API (e.g., Gemini 2.5 Pro). Uses fixed prompt template with block list, rules, and output schema. Returns ConstructionTree. Used for baseline and cold-start dataset generation. Dependencies: construction_tree.py, utils/logger.py.']
+- ['agent/meta_designer.py', 'MetaDesigner class: Generates high-level blueprint (text) from task prompt (e.g., "suspension system, lever arm, counterweight"). Uses LLM with system prompt emphasizing functional decomposition. Output fed to Designer. Used in hierarchical workflow. Dependencies: single_agent.py (same LLM interface).']
+- ['agent/designer.py', 'Designer class: Takes blueprint from MetaDesigner and generates detailed construction tree. Uses prompt template that includes blueprint + block list + attachment rules. Returns ConstructionTree. Used in hierarchical workflow. Dependencies: construction_tree.py, meta_designer.py.']
+- ['agent/querier.py', "ActiveEnvQuerier class: After simulation, extracts minimal feedback (e.g., boulder max height/distance) and performs selective queries. Heuristic: if boulder doesn't move → query Container; if block breaks → query last attached block. Returns dict with feedback keys. Used by Refiner and InspectorRefiner. Dependencies: simulation.py, construction_tree.py."]
+- ['agent/refiner.py', 'Refiner class: Takes design + feedback and generates multiple (≥3) revised construction trees via LLM sampling (temperature=0.7, top_p=0.95). Implements Monte Carlo sampling for revisions. Used in iterative editing and MCTS. Dependencies: construction_tree.py, querier.py.']
+- ['agent/inspector_refiner.py', 'InspectorRefiner class: Combines critique and refinement. First, critiques design abstractly (e.g., "missing counterweight") without simulation. Then, invokes Refiner with simulation feedback. Returns list of candidate designs. Used in iterative workflow. Dependencies: refiner.py, querier.py.']
+- ['agent/hierarchical_design.py', 'HierarchicalDesign class: Orchestrates MetaDesigner → Designer → 8 parallel builders per stage. Stage 1: 8 builders generate first functional block; Stage 2: valid designs distributed to 8 new builders for second block; etc. Only valid designs propagate. Uses ParallelSimulator for validation. Returns best design after 3–4 stages. Dependencies: meta_designer.py, designer.py, parallel_sim.py, construction_tree.py.']
+- ['agent/iterative_editing.py', 'IterativeEditing class: Implements MCTS with 10 rounds. Each round: Designer generates draft → InspectorRefiner critiques → ActiveEnvQuerier simulates → Refiner generates 5 candidates → simulate all → select best via reward. Uses 5 retries per node. MCTS nodes store visit count and total reward. Returns best design. Dependencies: designer.py, inspector_refiner.py, querier.py, refiner.py, parallel_sim.py.']
+- ['dataset/curation.py', 'DatasetCurator class: Loads 100 prompts (75 community + 25 authored). Calls SingleAgent with Gemini API to generate 250 machines per prompt. Filters by: (1) JSON parseable, (2) no self-collision, (3) physics-driven functionality (e.g., not a statue). Outputs 9,984 valid triples as JSONL. Dependencies: single_agent.py, construction_tree.py, utils/logger.py.']
+- ['dataset/loader.py', 'DatasetLoader class: Loads train/test splits from JSONL files. Splits 9,984 into train (9,884) and test (100) with no overlap. Returns list of dicts: {"prompt": "...", "cot": "...", "machine": [...]}. Used by RLTrainer and evaluation. Dependencies: construction_tree.py.']
+- ['rl/grpo.py', 'GRPO class: Implements Group Relative Policy Optimization. Takes model, LoRA rank=64, KL coefficient=0.001, clip_ratio=0.2. update() computes advantage from rollouts, applies gradient. Uses bitsandbytes for 8-bit AdamW. Requires verl framework integration for rollout sampling. Dependencies: torch, transformers, accelerate.']
+- ['rl/verl_wrapper.py', 'VERLWrapper class: Wrapper around verl framework. rollout() generates k=64 rollouts per prompt using temperature=1.0, top_p=0.95. Returns list of (ConstructionTree, reward). Used by RLTrainer for Pass@k evaluation. Dependencies: grpo.py, construction_tree.py, dataset/loader.py.']
+- ['rl/trainer.py', 'RLTrainer class: Manages cold-start and RL finetuning. cold_start_finetune() uses QOFT (block=64, 8-bit AdamW, LR=1e-6, 12 epochs). rl_finetune() uses GRPO with LoRA (rank=64, LR=5e-6, 400 steps, grad accum=8). evaluate_pass_k() runs Pass@k on test set. Uses Qwen2.5-14B-Instruct. Dependencies: grpo.py, verl_wrapper.py, dataset/loader.py, utils/config.py.']
+- ['eval/metrics.py', 'EvaluationMetrics class: Computes file validity, spatial validity, machine validity, mean/max simulation scores, Pass@k (k=1,8,64). Uses ConstructionTree to validate, SimulationEngine to score. Returns dict of metrics. Used in main.py for benchmarking. Dependencies: construction_tree.py, simulation.py, reward/calculator.py.']
+- ['eval/visualizer.py', 'Visualizer class: Renders 3D machine from ConstructionTree using Unity3D plugin or simple matplotlib-based 3D plot (fallback). Saves to PNG/PDF. Used for qualitative analysis. Dependencies: construction_tree.py.']
+- ['utils/config.py', 'Config class: Loads YAML config file with hyperparameters (e.g., learning rates, GPU count, simulation time). Provides get(key) interface. Used by all modules to avoid hardcoding. Dependencies: pyyaml.']
+- ['utils/logger.py', 'Logger class: Logs training, simulation, and agent actions to file and console. Uses timestamped entries. Used by all components. Dependencies: logging.']
+- ['utils/validator.py', 'JSONValidator class: Validates ConstructionTree JSON schema: required fields, type constraints, ID uniqueness. Used by ConstructionTree.validate() and dataset/curation.py. Dependencies: jsonschema (optional, if strict schema validation needed).']
+- ['utils/parallel_sim.py', 'ParallelSimulator class: Spawns 8 independent BesiegeFieldSimulator processes (via multiprocessing.Pool). simulate_batch() takes list of ConstructionTree and returns list of simulation results. Used by RLTrainer and hierarchical/iterative agents. Dependencies: multiprocessing, besigefield.py.']
+- ['main.py', 'Entry point: CLI interface. Subcommands: generate (single-agent), evaluate (agentic workflows), train (cold-start), finetune (RL), benchmark (all metrics). Loads config, initializes components, runs experiments. Uses logger, config, dataset_loader, and all agents/evaluators. Dependencies: all modules above.']
+
+----------------------------------------
+[Task list]
+- env/block_registry.py
+- representation/construction_tree.py
+- representation/xml_converter.py
+- env/besiegefield.py
+- env/simulation.py
+- reward/calculator.py
+- agent/single_agent.py
+- agent/meta_designer.py
+- agent/designer.py
+- agent/querier.py
+- agent/refiner.py
+- agent/inspector_refiner.py
+- agent/hierarchical_design.py
+- agent/iterative_editing.py
+- dataset/curation.py
+- dataset/loader.py
+- rl/grpo.py
+- rl/verl_wrapper.py
+- rl/trainer.py
+- eval/metrics.py
+- eval/visualizer.py
+- utils/config.py
+- utils/logger.py
+- utils/validator.py
+- utils/parallel_sim.py
+- main.py
+
+----------------------------------------
+[Full API spec]
+
+
+----------------------------------------
+[Shared Knowledge]
+All modules share the same ConstructionTree data structure and block registry definitions. Configurations (e.g., simulation duration=5s, reward thresholds, block list) are centralized in config.yaml. Logger and validator are shared utilities. The JSON schema for machine representation is a shared contract between representation, agent, simulation, and evaluation modules.
+
+----------------------------------------
+[Anything UNCLEAR]
+Clarification needed on how to implement the Unity3D simulation engine: Is a pre-built Besiege mod available for public use? If not, must we simulate physics manually using PyBullet or MuJoCo? The paper assumes Unity3D but provides no API. Also unclear: whether the 8 A100 GPUs are for RL training only or also for agent inference during MCTS. Clarify if parallel simulation requires Docker or native process spawning.
+

@@ -1,0 +1,328 @@
+# Logic Analysis: main.py
+
+## **Overall Architecture & Role**
+`main.py` serves as the central orchestration layer and CLI entry point for the entire `BesiegeField` reproduction system. It does not implement core logic (e.g., simulation, LLM inference, RL training) but acts as a **configuration-driven workflow orchestrator**, tying together all modular components defined in the design. Its primary responsibilities are:
+1. **Load and validate configuration** from `config.yaml`.
+2. **Initialize all required components** (loggers, datasets, agents, simulators, trainers, evaluators).
+3. **Parse and route CLI commands** (`generate`, `evaluate`, `train`, `finetune`, `benchmark`) to their respective modules.
+4. **Coordinate data flow** between components (e.g., pass prompts → agents → simulation → evaluation).
+5. **Manage I/O paths** (datasets, logs, outputs, checkpoints).
+6. **Ensure reproducibility** by enforcing deterministic setup (seeds, hardware config).
+
+All decisions are driven by `config.yaml`; no hard-coded values exist in `main.py`. This design ensures full alignment with the paper’s experimental setup and enables seamless ablation studies.
+
+---
+
+## **Component Initialization Logic**
+
+### **1. Configuration Loader (`Config`)**
+- **Action**: Load `config.yaml` into a singleton `Config` object.
+- **Validation**: Verify critical keys exist:
+  - `training.*` (learning rates, steps, GPU count)
+  - `simulation.*` (duration, thresholds)
+  - `agent.*` (search rounds, retries)
+  - `dataset.*` (paths to prompts, cold-start, test)
+  - `model.*` (base model name, max lengths)
+- **Failure Handling**: Exit with detailed error if any key missing or invalid (e.g., `gpus > 8` when only 8 available).
+- **Dependency**: `utils/config.py`
+
+### **2. Logger (`Logger`)**
+- **Action**: Initialize `Logger` with `logging.log_file` and `logging.level` from config.
+- **Purpose**: Centralized logging for all subprocesses. Logs must include:
+  - Timestamp
+  - Module name (e.g., `[RLTrainer]`)
+  - Event type (INFO, ERROR, DEBUG)
+- **Critical Use**: Log every CLI command invocation, dataset load, simulation result, and training step.
+- **Dependency**: `utils/logger.py`
+
+### **3. Dataset Loader (`DatasetLoader`)**
+- **Action**: Initialize with `dataset.cold_start_dataset_path` and `dataset.test_prompts_path`.
+- **Validation**:
+  - Ensure `cold_start_9984.jsonl` contains exactly 9,984 samples.
+  - Ensure `test_prompts_100.jsonl` contains exactly 100 samples.
+  - Verify each sample has fields: `"prompt"`, `"cot"`, `"machine"` (valid JSON list).
+- **Output**: Return train (9,984) and test (100) datasets as list of dicts.
+- **Dependency**: `dataset/loader.py`
+
+### **4. Block Registry (`BlockRegistry`)**
+- **Action**: Initialize once, shared globally.
+- **Content**: Load the 27 predefined blocks from paper’s “Details on the BesiegeField Environment::Blocks”.
+- **Mapping**: Map block names (e.g., `"Powered Wheel"`) to internal metadata:
+  - `attachable_faces`: int (6 for cuboids, 0 for Spring)
+  - `is_special`: bool (True for Spring, False otherwise)
+  - `mass`, `friction`, `elasticity`: from paper or default Unity values
+- **Critical**: Must be identical across all modules (simulation, validator, agent) to prevent inconsistency.
+- **Dependency**: `env/block_registry.py`
+
+### **5. JSON Validator (`JSONValidator`)**
+- **Action**: Initialize with strict schema for `ConstructionTree`:
+  - Required fields per block: `"type"`, `"id"`, `"parent"`, `"face_id"`
+  - Optional: `"parent_a"`, `"parent_b"`, `"face_id_a"`, `"face_id_b"` (only for Spring)
+  - `"id"` must be unique and sequential from 0
+  - `"parent"` must reference existing `"id"`
+  - No cycles allowed
+- **Use**: Used by `ConstructionTree.validate()` and `DatasetCurator` during filtering.
+- **Dependency**: `utils/validator.py`
+
+### **6. Simulation Environment (`BesiegeFieldSimulator`, `SimulationEngine`, `ParallelSimulator`)**
+- **Action**:
+  - Initialize `BesiegeFieldSimulator` with `simulation.duration_seconds`, `simulation.gravity`, `simulation.collision_threshold`, `simulation.state_log_interval`, and `BlockRegistry`.
+  - Initialize `SimulationEngine` with `tasks.car.reward_metric`, `tasks.catapult.reward_metric`, and `simulation.catapult_height_threshold`.
+  - Initialize `ParallelSimulator` with `training.hardware.parallel_sim_workers` (8).
+- **Critical Constraint**: All simulation must use the **same physics parameters** as paper (5s duration, 0.2s logs, >3m height threshold for catapult).
+- **Dependency**: `env/besiegefield.py`, `env/simulation.py`, `utils/parallel_sim.py`
+
+### **7. Reward Calculator (`RewardCalculator`)**
+- **Action**: Initialize two instances:
+  - `car_reward = RewardCalculator("car")`
+  - `catapult_reward = RewardCalculator("catapult")`
+- **Logic**: Hardcoded per config:
+  - Car: `R_valid = (file_valid and no_self_collision and intact_after_simulation)`; `R_task = root_block_displacement`
+  - Catapult: `R_valid = (file_valid and no_self_collision and intact_after_simulation and boulder_max_height > 3.0)`; `R_task = max_height * max_distance`
+- **Dependency**: `reward/calculator.py`
+
+### **8. Agent Components**
+All agents are initialized using `model.base_model_name` and `agent.temperature`, `agent.top_p` from config.
+
+#### **SingleAgent**
+- Initialize with `model.base_model_name`, and a **fixed prompt template**:
+  ```
+  You are an expert mechanical engineer. Build a machine to: "{task}".
+  Available blocks: [list of 27 block names].
+  Rules: 
+    - Start with "Starting Block" (ID=0).
+    - Attach new blocks to existing ones via parent-child ID.
+    - Spring can have two parents: use "parent_a" and "parent_b".
+    - Do not scale or rotate blocks after attachment.
+    - Output ONLY a JSON list of blocks in construction order.
+  ```
+- **Use**: For `generate` subcommand and cold-start dataset generation.
+
+#### **MetaDesigner & Designer**
+- Initialize as `SingleAgent` instances (same model, same prompt style).
+- `MetaDesigner` prompt:  
+  ```
+  Decompose the task "{task}" into 3–4 high-level functional blocks (e.g., "suspension system", "lever arm", "counterweight"). Do not specify exact blocks or positions. Only describe function and interconnection.
+  ```
+- `Designer` prompt:  
+  ```
+  Using this blueprint: "{blueprint}", build a detailed machine using the 27 blocks. Follow attachment rules. Output JSON.
+  ```
+
+#### **ActiveEnvQuerier**
+- Initialize with `BesiegeFieldSimulator` instance.
+- Implement **selective feedback heuristic** (per logic analysis):
+  - If boulder displacement < 0.1m → query `Container` block’s position and velocity.
+  - If any block integrity == 0 → query the last attached block’s position and velocity.
+  - Always return minimal feedback: boulder max height/distance (catapult) or root displacement (car).
+- **Dependency**: `agent/querier.py`
+
+#### **Refiner & InspectorRefiner**
+- `Refiner`: Initialize with `model.base_model_name`, `agent.temperature`, `agent.top_p`.
+  - Prompt:  
+    ```
+    Critique this machine design and generate 5 improved variants. Feedback: {feedback}. 
+    Do not repeat the same design. Only output a list of 5 JSON machines.
+    ```
+- `InspectorRefiner`: Initialize with `Refiner` and `ActiveEnvQuerier`.
+  - First, critique abstractly (no simulation) → then invoke Refiner with simulation feedback.
+
+#### **HierarchicalDesign**
+- Initialize with `MetaDesigner`, `Designer`, `ParallelSimulator`, `JSONValidator`.
+- Execute **3–4 stage autoregressive assembly**:
+  1. MetaDesigner → blueprint
+  2. Stage 1: 8 parallel `Designer` instances → generate first functional block
+  3. Filter valid designs via `JSONValidator` + `ParallelSimulator.check_self_collision()`
+  4. Stage 2: Distribute valid designs to 8 new `Designer` instances → add second block
+  5. Repeat until 3–4 blocks assembled
+  6. Return best design by reward (via `SimulationEngine`)
+- **Constraint**: Only valid (file + spatial) designs propagate.
+
+#### **IterativeEditing**
+- Initialize with `Designer`, `InspectorRefiner`, `ActiveEnvQuerier`, `Refiner`, `ParallelSimulator`.
+- Execute **MCTS with 10 rounds**:
+  - Each round:
+    1. Designer generates draft → 1 machine
+    2. InspectorRefiner critiques → generates 5 candidate revisions
+    3. ParallelSimulator simulates all 5 → get rewards
+    4. MCTS node: visit_count++, total_reward += sum(rewards)
+    5. Select best child via UCB1 (c=1.41)
+  - Max retries per node: 5 (if no valid machine after 5 tries, use parent)
+  - Output: Best machine over all 10 rounds
+- **Dependency**: `agent/iterative_editing.py`
+
+### **9. RL Trainer (`RLTrainer`)**
+- **Cold-start**:
+  - Load `DatasetLoader.train_dataset`
+  - Use `QOFT` (block_size=64) with `8bit_AdamW` optimizer
+  - Train for `training.cold_start.epochs` (12) with `learning_rate=1e-6`
+  - Save checkpoint to `output.model_checkpoints_dir/cold_start_qwen2.5-14b`
+- **RL Finetuning**:
+  - Load cold-start checkpoint
+  - Apply LoRA (rank=64) to all linear layers
+  - Use `GRPO` with:
+    - `kl_penalty_weight=0.001`
+    - `advantage_clip_ratio=0.2`
+    - `gradient_clipping=0.5`
+    - `pass_k=64` (rollouts per prompt)
+    - `batch_size_per_gpu=1`, `gradient_accumulation_steps=8` → effective batch=64
+  - Train for `training.rl_finetune.steps` (400)
+  - Use `VERLWrapper` for rollout generation (temperature=1.0, top_p=0.95)
+  - Save checkpoint to `output.model_checkpoints_dir/rl_finetuned`
+- **Hardware**: Use `training.hardware.gpus` (8) for distributed training via `accelerate`.
+
+### **10. Evaluation Metrics (`EvaluationMetrics`)**
+- Initialize with `ConstructionTree`, `SimulationEngine`, `RewardCalculator`.
+- Compute for any set of designs:
+  - `file_validity_rate`: % parseable JSON
+  - `spatial_validity_rate`: % no self-collision at placement
+  - `machine_validity_rate`: % both file + spatial valid
+  - `mean_simulation_score`: avg `R` over valid machines
+  - `max_simulation_score`: highest `R` achieved
+  - `pass@k_score`: max `R` among top-k rollouts per prompt (k=1,8,64)
+- **Use**: For `benchmark` subcommand and RL evaluation.
+
+### **11. Visualizer (`Visualizer`)**
+- Initialize with `ConstructionTree` and `BlockRegistry`.
+- Render 3D machine from `ConstructionTree`:
+  - Use Unity3D plugin if available (preferred)
+  - Fallback: matplotlib 3D scatter plot of block positions (for debugging)
+- Save to `output.visualizations_dir/{task}_{timestamp}.png`
+- **Use**: For qualitative analysis in `benchmark` and `generate`.
+
+---
+
+## **CLI Command Logic**
+
+### **1. `generate`**
+- **Input**: One task prompt (from CLI or `dataset.test_prompts_path[0]`)
+- **Flow**:
+  1. `SingleAgent.generate(task)`
+  2. Validate output → `ConstructionTree`
+  3. Simulate → get reward
+  4. Render → save visualization
+  5. Print: `File Valid: True | Spatial Valid: True | Score: 12.4`
+- **Purpose**: Quick test of agent capability.
+
+### **2. `evaluate`**
+- **Input**: Task (`car` or `catapult`), agent type (`single`, `iterative`, `hierarchical`)
+- **Flow**:
+  1. Load `DatasetLoader.test_prompts` (100 prompts)
+  2. For each prompt:
+     - Run selected agent workflow → get one machine
+     - Simulate → record metrics
+  3. Compute `EvaluationMetrics.compute_all()`
+  4. Log: `Mean Score: 8.2 | Pass@1: 15.1 | Validity: 78%`
+  5. Save results to `output.results_dir/eval_{agent_type}_{task}.json`
+- **Purpose**: Benchmark agent performance on held-out prompts.
+
+### **3. `train`**
+- **Input**: None (uses `dataset.cold_start_dataset_path`)
+- **Flow**:
+  1. Load cold-start dataset (9,984 samples)
+  2. Initialize `RLTrainer`
+  3. Call `rl_trainer.cold_start_finetune(dataset, epochs=12)`
+  4. Save model checkpoint
+- **Purpose**: Align LLM with expert CoT before RL.
+
+### **4. `finetune`**
+- **Input**: None (uses cold-start checkpoint)
+- **Flow**:
+  1. Load cold-start model
+  2. Apply LoRA
+  3. Initialize `GRPO`, `VERLWrapper`
+  4. Call `rl_trainer.rl_finetune(steps=400)`
+  5. Save RL-finetuned model
+- **Purpose**: Improve performance via verifiable rewards.
+
+### **5. `benchmark`**
+- **Input**: Task (`car`, `catapult`), agent types (`single`, `iterative`, `hierarchical`), RL models (`cold_start`, `rl_finetuned`)
+- **Flow**:
+  1. For each agent type:
+     - Run `evaluate` → get metrics
+  2. For each RL model:
+     - Run `rl_trainer.evaluate_pass_k(prompts, k=64)` → get Pass@64
+  3. Compile all metrics into table:
+     | Agent Type | File Valid | Machine Valid | Mean Score | Max Score | Pass@64 |
+     |------------|------------|---------------|------------|-----------|---------|
+     | Single     | 0.32       | 0.28          | 4.1        | 12.3      | 15.1    |
+     | Iterative  | 0.51       | 0.45          | 7.8        | 22.5      | 28.7    |
+     | Hierarchical | 0.48     | 0.42          | 7.1        | 20.1      | 26.4    |
+     | RL-Finetuned | 0.65     | 0.60          | 11.2       | 35.8      | 42.1    |
+  4. Save to `output.results_dir/benchmark_{task}.csv`
+  5. Generate visualizations for top 5 designs
+- **Purpose**: Full comparison of all methods as in paper’s Table TABREF15, FIGREF104.
+
+---
+
+## **Data Flow & Integration**
+
+```
+[CLI Command]
+       ↓
+[Config] → loads all paths, hyperparameters
+       ↓
+[Logger] → starts logging session
+       ↓
+[DatasetLoader] → loads prompts & cold-start data
+       ↓
+[BlockRegistry, JSONValidator, RewardCalculator] → initialize shared state
+       ↓
+[Agent/Trainer/Evaluator] → instantiate based on command
+       ↓
+[ParallelSimulator] → simulate machines in parallel (8 workers)
+       ↓
+[SimulationEngine] → compute R_valid and R_task
+       ↓
+[EvaluationMetrics] → aggregate scores
+       ↓
+[Visualizer] → render results
+       ↓
+[Logger] → log final metrics
+       ↓
+[Output] → save results, checkpoints, visualizations
+```
+
+All components are **stateless** except `RLTrainer` (which holds model weights) and `Config` (which holds global settings). This ensures **reproducibility**: same config → same results.
+
+---
+
+## **Error Handling & Robustness**
+
+- **Invalid JSON**: Log error, skip sample, continue.
+- **Simulation Crash**: Log error, treat as invalid machine (R_valid=0).
+- **LLM API Failure**: Retry up to 3 times, then fail.
+- **GPU OOM**: Catch `CUDA OOM`, reduce batch size or skip.
+- **Missing Files**: Exit early with clear error (e.g., “cold_start_9984.jsonl not found”).
+- **Config Mismatch**: If `gpus=8` but only 4 available, warn and use 4.
+
+---
+
+## **Reproducibility & Alignment with Paper**
+
+- **All hyperparameters** are pulled from `config.yaml`, matching paper’s values exactly:
+  - `steps=400`, `lr=5e-6`, `KL=0.001`, `pass_k=64`, `grad_accum=8`, etc.
+- **Dataset size**: 9,984 cold-start samples, 100 test prompts — exact.
+- **Reward thresholds**: `catapult_height_threshold=3.0` — exact.
+- **Search rounds**: 10 — exact.
+- **MCTS retries**: 5 — exact.
+- **Hardware**: 8 A100 GPUs — exact.
+- **Model**: Qwen2.5-14B-Instruct — exact.
+- **Evaluation metrics**: File validity, spatial validity, machine validity, mean/max, Pass@k — exact.
+
+**No assumptions made beyond paper**. All ambiguities (e.g., face indexing, selective feedback heuristic) are **explicitly implemented as documented in logic analysis**.
+
+---
+
+## **Extensibility & Future Work**
+
+- **Add new tasks** (e.g., delivery, pick): Add to `tasks` in config, define new reward metric.
+- **Add new agent**: Implement new class (e.g., `MultiAgentCoordinator`), register in CLI.
+- **Add new LLM**: Change `model.base_model_name`, update tokenizer settings.
+- **Add multimodal**: Extend `ConstructionTree` to include image embeddings (future work).
+
+---
+
+## **Conclusion**
+
+`main.py` is a **configuration-driven orchestrator** that strictly implements the paper’s methodology. It does not contain domain logic but ensures **perfect alignment** between the experimental design and its execution. Every component is modular, reusable, and traceable to a specific section of the paper. The system is designed for **reproducibility**, **extensibility**, and **rigorous benchmarking** — exactly as required by the research goals of “Agentic Design of Compositional Machines.”

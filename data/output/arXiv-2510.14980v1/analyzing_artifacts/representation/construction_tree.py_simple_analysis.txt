@@ -1,0 +1,225 @@
+# Logic Analysis: representation/construction_tree.py — ConstructionTree Class
+
+## **1. Core Purpose and Role in System**
+The `ConstructionTree` class is the **central data structure** that represents a machine design in the BesiegeField environment. It is the *only* valid internal representation used across all components: agents (single, hierarchical, iterative), simulation engine, reward calculator, evaluation metrics, and RL training pipeline. 
+
+Its primary responsibilities are:
+- **Parsing** raw JSON output from LLM agents into a structured, validated machine design.
+- **Validating** structural integrity according to BesiegeField’s rigid construction rules (parent-child relationships, attachment faces, Spring special cases, no cycles).
+- **Converting** between the *construction tree representation* (relative, semantic) and the *global position representation* (absolute, coordinate-based) for baseline comparison.
+- **Providing a consistent interface** for downstream modules (simulation, evaluation) to access machine topology without needing to parse raw JSON.
+
+This class enforces the **shared contract** defined in the paper and config: machines must be represented as ordered lists of blocks with explicit parent-child-ID relationships, no post-attachment scaling/rotation, and strict handling of Spring blocks.
+
+---
+
+## **2. Input and Output Contract**
+
+### **Input:**
+- **Format**: A list of dictionaries (`list[dict]`), where each dict represents one block in the order of construction (i.e., index 0 is always the root).
+- **Required Fields per Block**:
+  - `"type"`: string, must be one of the 27 predefined block types from `BlockRegistry`.
+  - `"id"`: integer, must match its position in the list (0-indexed). This is **not** inferred — it is explicitly provided to avoid parsing ambiguity.
+  - `"parent"`: integer or `None`. For non-Spring blocks, this is the ID of the single parent block. Must be a valid ID (< current ID, since construction is sequential).
+  - `"face_id"`: integer (0–5), indicating which face of the parent block the current block is attached to. **Assumed to be indexed as: 0=front, 1=back, 2=left, 3=right, 4=top, 5=bottom** (inferred from standard cuboid geometry, as paper does not specify).
+  - For **Spring blocks** (and only Spring):
+    - `"parent_a"` and `"parent_b"`: integers, IDs of the two parent blocks.
+    - `"face_id_a"` and `"face_id_b"`: integers, attachment faces on parent_a and parent_b respectively.
+- **Constraints**:
+  - The first block (index 0) must have `"type": "Starting Block"`, `"id": 0`, `"parent": null`, `"face_id": null`.
+  - All `"id"` values must be unique and span `0` to `N-1` for an N-block machine.
+  - Parent IDs must be less than current block ID (since construction is sequential).
+  - No circular references allowed.
+
+### **Output:**
+- **Internal State**: A validated, normalized list of block records with resolved relationships.
+- **Methods Return**:
+  - `validate()`: `(bool, str)` — success flag and error message (if any).
+  - `to_json()`: `list[dict]` — the exact same input structure, normalized (e.g., sorted, canonicalized).
+  - `to_global_position()`: `list[dict]` — each block now includes `"position"` (x,y,z) and `"orientation"` (quaternion or Euler) derived from recursive attachment transformations.
+  - `get_root_block()`: `dict` — the root block dictionary.
+
+---
+
+## **3. Validation Logic — `validate()` Method (Core)**
+
+This method is the **gatekeeper** for all machine designs. It must reject malformed inputs before simulation or reward computation. Validation occurs in **three phases**:
+
+### **Phase 1: Structural Integrity**
+- **Root Check**: 
+  - Is block[0] type == "Starting Block"? 
+  - Is block[0].id == 0?
+  - Is block[0].parent == None and block[0].face_id == None?
+  - If not → return `False, "Invalid root block"`.
+
+- **ID Uniqueness & Continuity**:
+  - Extract all `"id"` values → must be set of `{0, 1, 2, ..., N-1}` with no duplicates or gaps.
+  - If any ID is negative, non-integer, or outside range → `False, "Invalid or duplicate ID"`.
+
+- **Parent ID Validity**:
+  - For each block (except root): 
+    - `parent` must be an integer, `0 <= parent < current_id`.
+    - If `parent >= current_id` → `False, "Parent ID refers to future block"` (violates sequential construction).
+  - For Spring blocks:
+    - Must have both `parent_a` and `parent_b` defined.
+    - Both `parent_a` and `parent_b` must be valid IDs and `< current_id`.
+    - Must NOT have `parent` or `face_id` (mutually exclusive with parent_a/b).
+
+- **Face ID Validity**:
+  - `face_id` (and `face_id_a`, `face_id_b`) must be integers in `[0, 5]`.
+  - If block type is not a cuboid (e.g., Spring, Wooden Rod), does it have attachable faces? Per `BlockRegistry`, Spring has 0 attachable faces (it doesn't consume them), so `face_id_a/b` are **not** constrained by face availability — only by being in [0,5]. Other blocks must have at least one attachable face (per registry).
+  - If a block type has 0 attachable faces (e.g., Spring) but has `face_id` → `False, "Spring cannot have face_id"`.
+
+### **Phase 2: Topological Validity (No Cycles)**
+- Build a directed graph from parent → child relationships.
+- Use DFS or iterative traversal from root to detect cycles.
+- **Cycle Detection**: If any node is visited twice during traversal → `False, "Cycle detected in construction tree"`.
+- **Reachability**: All blocks must be reachable from root (via parent chain). If any block’s parent chain leads to an invalid or unconnected block → `False, "Disconnected component"`.
+
+### **Phase 3: Block-Specific Rules (via BlockRegistry)**
+- For each block:
+  - `BlockRegistry.is_special_block(type)` → if True, enforce Spring rules.
+  - `BlockRegistry.get_attachable_faces(type)` → if returns 0 (e.g., Spring), then:
+    - Must NOT have `parent` or `face_id` (only `parent_a/b`, `face_id_a/b` allowed).
+    - Must have exactly two parents.
+  - If block is not special but has `parent_a` or `parent_b` → `False, "Non-Spring block cannot have two parents"`.
+  - If block is special (Spring) but has only one parent → `False, "Spring must have exactly two parents"`.
+
+> ✅ **Critical Insight**: The `BlockRegistry` is **not** just a lookup table — it is the **source of truth** for physical semantics. The `ConstructionTree` must delegate all block-type-specific rules to it. This ensures consistency with `BesiegeFieldSimulator` and avoids duplication of block metadata.
+
+---
+
+## **4. Global Position Conversion — `to_global_position()` Method**
+
+This method transforms the *relative* construction tree into *absolute* 3D coordinates, matching Besiege’s default XML representation. It is **essential** for baseline comparison and visualization.
+
+### **Algorithm**:
+1. Initialize root block (`id=0`) with:
+   - `position = [0, 0, 0]`
+   - `orientation = [0, 0, 0, 1]` (identity quaternion, aligned to +z axis — as per paper).
+2. For each subsequent block in order (ID=1 to N-1):
+   - Retrieve its parent block’s `position` and `orientation`.
+   - Retrieve `face_id` (or `face_id_a` for Spring).
+   - **Apply relative transformation**:
+     - Each block type has a **default offset** from its parent’s attachment face (e.g., a Small Wooden Block attached to front face extends +1m along parent’s local +z).
+     - These offsets are **predefined in `BlockRegistry`** as `default_attachment_offset` (dict: `block_type → dict(face_id → [dx, dy, dz])`).
+     - The orientation of the child block is **aligned with parent’s orientation**, then **rotated** to match the attachment face direction.
+       - Example: if parent’s front face (face_id=0) is aligned with its +z, then child’s local +z is aligned with parent’s +z.
+       - If child is attached to parent’s top face (face_id=4), then child’s local +z becomes parent’s local +y.
+   - Compute child’s global position:  
+     `child_pos = parent_pos + (parent_orientation × default_offset[face_id])`
+   - Compute child’s global orientation:  
+     `child_ori = parent_orientation × face_rotation_matrix[face_id]`
+     - `face_rotation_matrix[face_id]` is a 3x3 rotation matrix that rotates the child’s local frame to align with the attachment face (e.g., rotating 90° around x-axis for top face).
+3. For **Spring blocks**:
+   - Has two parents → compute two candidate positions from `parent_a` and `parent_b`.
+   - **Assumption**: The Spring block is centered between the two attachment points.
+   - `child_pos = midpoint(parent_a_pos + offset_a, parent_b_pos + offset_b)`
+   - Orientation: **undefined or averaged** — paper does not specify. We assume **orientation aligns with the vector between the two attachment points** (i.e., from `parent_a`’s attachment to `parent_b`’s attachment). This is a reasonable physical approximation for a spring’s natural alignment.
+   - Store both `parent_a` and `parent_b` positions in the output as `parent_a_pos`, `parent_b_pos` for visualization/debugging.
+
+### **Output Format**:
+```json
+[
+  {
+    "type": "Starting Block",
+    "id": 0,
+    "position": [0.0, 0.0, 0.0],
+    "orientation": [0.0, 0.0, 0.0, 1.0]
+  },
+  {
+    "type": "Powered Wheel",
+    "id": 1,
+    "parent": 0,
+    "face_id": 4,
+    "position": [0.0, 1.0, 0.0],
+    "orientation": [0.707, 0.0, 0.0, 0.707]  // rotated 90° around x-axis
+  },
+  ...
+]
+```
+
+> ✅ **Note**: This conversion is **deterministic** and **reversible** only if attachment offsets and face rotations are fixed. The `BlockRegistry` must store these values precisely.
+
+---
+
+## **5. Dependency on BlockRegistry — Critical Integration**
+
+The `ConstructionTree` class **must not** hardcode block semantics. Instead, it **depends entirely** on `BlockRegistry` for:
+- Valid block type names (27 allowed).
+- Whether a block is special (Spring).
+- Number of attachable faces per block.
+- Default attachment offset per face (for global position conversion).
+- Whether a block can have two parents.
+
+This decoupling ensures:
+- **Maintainability**: Adding a new block type requires only updating `BlockRegistry`, not `ConstructionTree`.
+- **Consistency**: Simulation, validation, and conversion all use the same block metadata.
+- **Extensibility**: Future work on fluid blocks or new mechanisms can be added without changing core logic.
+
+> 🚨 **Implementation Note**: `BlockRegistry` must be instantiated once and passed to `ConstructionTree` via constructor or as a singleton. Avoid re-initializing per machine to prevent performance overhead.
+
+---
+
+## **6. Error Handling and Debugging**
+
+- `validate()` returns `(False, detailed_error_message)` — **not** exceptions. This allows agents to retry or log failures without crashing.
+- All error messages must be **human-readable and actionable**:
+  - ❌ `"Invalid parent"` → ✅ `"Block with id=5 has parent=7, but parent ID must be < current ID (5)"`.
+- Logging: Use `utils/logger.py` to log validation failures during dataset curation and RL rollout for debugging.
+- In `to_global_position()`, if a parent block’s orientation is invalid (e.g., NaN), log warning and return default orientation.
+
+---
+
+## **7. Integration with Other Modules**
+
+| Module | Interaction |
+|-------|-------------|
+| **SingleAgent / Designer / Refiner** | Generates raw JSON → passes to `ConstructionTree` → receives validated tree → passes to simulation. |
+| **XMLConverter** | Uses `to_global_position()` to convert XML → global coords → then reconstructs tree via proximity matching (reverse logic). |
+| **BesiegeFieldSimulator** | Uses `ConstructionTree` to place blocks. Relies on `validate()` to ensure input is clean before simulation. |
+| **RewardCalculator** | Uses `get_root_block()` to extract root position for distance calculation. |
+| **EvaluationMetrics** | Calls `validate()` to compute file validity rate. Uses `to_global_position()` to compute spatial validity (self-collision detection). |
+| **Visualizer** | Uses `to_global_position()` to render 3D model. |
+| **RLTrainer (Pass@k)** | Uses `to_json()` to serialize machine for rollout logging. |
+
+> ✅ **Key Design Principle**: `ConstructionTree` is the **only** object that knows how to interpret the JSON machine representation. All other modules treat it as a black box with well-defined methods.
+
+---
+
+## **8. Edge Cases and Assumptions**
+
+| Case | Assumption / Resolution |
+|------|--------------------------|
+| **Spring with 3 parents** | Invalid. `validate()` rejects if `parent_a` and `parent_b` are present and a third parent is found. |
+| **Missing `face_id` on non-Spring block** | Invalid. Must be provided. Paper implies all attachments require face_id. |
+| **Block type not in BlockRegistry** | Invalid. `validate()` checks against registry. |
+| **Zero-length machine (empty list)** | Invalid. Must have at least root block. |
+| **Parent ID = current ID** | Invalid. Self-reference → cycle. |
+| **Orientation not provided in global output** | We assume quaternion format. If Euler is used, convert internally. Paper uses “pose” — we assume quaternion for numerical stability. |
+| **Multiple Spring blocks sharing a parent** | Allowed. Each Spring has its own two parents. No restriction on parent reuse. |
+| **Attachment face out of bounds** | Rejected by `validate()`. |
+
+---
+
+## **9. Performance Considerations**
+
+- `validate()` runs once per machine — O(N) for N blocks. Efficient.
+- `to_global_position()` is O(N) with constant-time parent lookups (use dict mapping `id → block` for O(1) access).
+- **Caching**: After first validation and global conversion, cache results. If `ConstructionTree` is immutable after construction, cache `valid`, `global_pos` to avoid recomputation during RL rollouts.
+
+> ✅ **Recommendation**: Make `ConstructionTree` **immutable** after initialization. Once validated, prevent mutation. This ensures thread safety in parallel simulation and avoids state corruption.
+
+---
+
+## **10. Summary: Design Philosophy**
+
+The `ConstructionTree` class embodies the **paper’s core insight**: *“Explicit structural information is necessary for LLM understanding.”* 
+
+It is not a passive data container — it is an **active validator and transformer** that enforces the **semantic and geometric rules** of mechanical assembly. By centralizing validation, transformation, and block semantics, it enables:
+- Reliable agent output parsing.
+- Fair comparison between representations (XML vs. tree).
+- Accurate simulation and reward computation.
+- Reproducible RL training and evaluation.
+
+Its design ensures that **every machine generated by an LLM is physically interpretable** — not just syntactically correct. This is the foundation upon which all agentic behavior and RL learning is built.
