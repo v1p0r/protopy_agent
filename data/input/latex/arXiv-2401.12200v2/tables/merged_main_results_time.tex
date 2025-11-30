@@ -1,0 +1,24 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+\begin{table*}[t!]
+\resizebox{1.0\linewidth}{!}{
+\begin{tabular}{@{}ll|rrrr|rrrr@{}}
+\toprule
+Model                                           & Method         & MNLI          & SST2          & SQuAD v2      & CNN/DM                  & Train Time($\Downarrow$) & Train Mem($\Downarrow$) & Inf Time($\Downarrow$) & Inf Mem($\Downarrow$) \\ \midrule
+\multirow{5}{*}{$\text{RoBERTa}_{\text{base}}$} & FT             & 87.6          & 94.8          & 82.9          & -                       & 100.0\%      & 100.0\%     & 100.0\%    & 100.0\%   \\
+                                                & LoRA           & 87.5          & 95.1          & 83.0          & -                       & 2137.0\%        & 60.5\%      & 100.0\%    & 100.0\%   \\ \cmidrule(l){2-10} 
+                                                & LoRA+Prune   & 84.0          & 93.0          & 79.2          & -                       & 5128.3\%        & \textbf{60.5\%}      & \textbf{38.0\%}    & \textbf{75.1\%}    \\
+                                                & Prune+Distill   & \textbf{87.3}          & \textbf{94.5}          &   -        & -                       & 1495.3\%        & 168.5\%      & 38.6\%    & 79.2\%    \\
+                                                & LoRA+Prune+Distill & 84.2          & 91.9          & -             & -                       & 6534.6\%        & 141.4\%     & 39.4\%    & 82.3\%    \\  \cmidrule(l){2-10} 
+                                                & \ourmethod     & 86.4 & \textbf{94.5} & \textbf{81.8} & -                       & \textbf{592.1\%}       & 70.1\%      & 41.3\%    & 78.1\%    \\ \midrule
+\multirow{4}{*}{$\text{T5}_{\text{base}}$}      & FT             & 87.1          & 95.2          & -             & 42.1/20.3/39.4          & 100.0\%      & 100.0\%     & 100.0\%    & 100.0\%   \\
+                                                & LoRA           & 87.0          & 95.0          & -             & 38.7/17.2/36.0          & 255.5\%       & 62.0\%      & 100.0\%    & 100.0\%   \\ \cmidrule(l){2-10} 
+                                                & LoRA+Prune   & 80.9          & 92.3          & -             & 36.7/15.7/33.9          & 4523.5\%        & \textbf{62.0\%}      & \textbf{47.1\%}    & \textbf{73.4\%}    \\ \cmidrule(l){2-10} 
+                                                & \ourmethod     & \textbf{87.0} & \textbf{95.0} & -             & \textbf{38.6/17.0/35.8} & \textbf{484.7\%}       & 73.9\%      & 74.6\%    & 81.5\%    \\ \bottomrule
+\end{tabular}
+}
+\caption{RoBERTa and T5 pruning with {\ourmethod} compared to baselines under 60\% sparsity. We measure the training and inference efficiency with {\lmabbr}s pruned on the SST2 task. Training speed is measured via 97\% accuracy TTA. All efficiency metrics are normalized to FT. $\Downarrow$ denotes smaller is better. The best-pruned results are \textbf{bold}. Raw efficiency results are reported in \cref{tab:raw-efficiency}.}
+\label{tab:small-model-results}
+\vspace{-5pt}
+\end{table*}

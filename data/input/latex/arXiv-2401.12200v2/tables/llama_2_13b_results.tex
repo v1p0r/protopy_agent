@@ -1,0 +1,22 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+\begin{table*}[htbp]
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+Method    & Target Density & Init Density & T. M.   & ARC   & HellaSWAG & MMLU  & TruthfulQA & Avg.    \\ \midrule
+None      & 100\%           & 100\%         & 100\%    & 59.39 & 82.13     & 55.77 & 37.38      & 58.6675 \\
+LoRA      & 100\%           & 100\%         & 100\%    & 60.84 & 82.82     & 55.95 & 46.5       & 61.5275 \\ \midrule
+LoRA + $\text{MT}_{\text{train}}$ & 70\%            & 70\%          & 100\%    & 56.4  & 79.08     & 50.71 & 42.07      & 57.065  \\
+LLMPruner & 70\%            & 70\%          &         &       &           &       &            &         \\
+APT       & 70\%            & 100\%         & 100.50\% & 45.9  &           &       & 47.37      &         \\
+APT       & 70\%            & 85\%          & 86.24\%  & 47.95 & 75.61     & 50.28 & 46.33      & 55.0425 \\
+APT       & 70\%            & 70\%          & 75.82\%  & 49.49 & 75.84     & 52.46 & 44.67      & 55.615  \\ \midrule
+LoRA + $\text{MT}_{\text{train}}$ & 50\%            & 50\%          & 100\%    & 38.4  & 60.55     & 42.92 & 46.51      & 47.095  \\
+LLMPruner & 50\%            & 50\%          &         &       &           &       &            &         \\
+APT       & 50\%            & 100\%         &         &       &           &       &            &         \\
+APT       & 50\%            & 75\%          & 78.03\%  & 36.86 & 57.15     &       & 41.54      &         \\
+APT       & 50\%            & 50\%          &         & 36.35 & 55        & 30.71 & 45.44      & 41.875  \\ \bottomrule
+\end{tabular}
+\caption{Main results of {\ourmethod} compared to structured pruning baselines on LLaMA 2 13B model.}
+\label{tab:llama-2-13b-main-result}
+\end{table*}

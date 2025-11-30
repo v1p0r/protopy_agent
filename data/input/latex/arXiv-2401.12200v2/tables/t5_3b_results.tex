@@ -1,0 +1,15 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+\begin{table}[]
+\begin{tabular}{@{}lr|rrrr@{}}
+\toprule
+Method                         & Density & SST2 & CNN/DM &  T. M. & Inf. Speedup \\ \midrule
+FT                           & 100\%   & 97.4 &  42.72/21.02/39.94  &            &              \\
+LoRA                           & 100\%   & 97.5 &        &            &              \\ \midrule
+LoRA + $\text{MT}_{\text{train}}$            & 8\%    &   83.1  &         &       &              \\
+LoRA + $\text{MT}_{\text{distill}}$            & 8\%    & 90.9  &           &       &              \\
+{\ourmethod}                  & 8\%    &  92.0  &        &          &              \\ \bottomrule
+\end{tabular}
+\caption{T5-XL results}
+\label{tab:t5-3b-results}
+\end{table}

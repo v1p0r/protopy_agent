@@ -1,0 +1,325 @@
+\begin{thebibliography}{60}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Ben~Zaken et~al.(2022)Ben~Zaken, Goldberg, and Ravfogel]{ben-zaken-etal-2022-bitfit}
+Ben~Zaken, E., Goldberg, Y., and Ravfogel, S.
+\newblock {B}it{F}it: Simple parameter-efficient fine-tuning for transformer-based masked language-models.
+\newblock In \emph{Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers)}, pp.\  1--9, Dublin, Ireland, 2022. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2022.acl-short.1}.
+
+\bibitem[Clark et~al.(2018)Clark, Cowhey, Etzioni, Khot, Sabharwal, Schoenick, and Tafjord]{clark2018think}
+Clark, P., Cowhey, I., Etzioni, O., Khot, T., Sabharwal, A., Schoenick, C., and Tafjord, O.
+\newblock Think you have solved question answering? try arc, the ai2 reasoning challenge.
+\newblock \emph{ArXiv preprint}, abs/1803.05457, 2018.
+
+\bibitem[Coleman et~al.(2019)Coleman, Kang, Narayanan, Nardi, Zhao, Zhang, Bailis, Olukotun, R\'{e}, and Zaharia]{10.1145/3352020.3352024}
+Coleman, C., Kang, D., Narayanan, D., Nardi, L., Zhao, T., Zhang, J., Bailis, P., Olukotun, K., R\'{e}, C., and Zaharia, M.
+\newblock Analysis of dawnbench, a time-to-accuracy machine learning performance benchmark.
+\newblock \emph{SIGOPS Oper. Syst. Rev.}, 53\penalty0 (1):\penalty0 14–25, 2019.
+\newblock ISSN 0163-5980.
+\newblock \doi{10.1145/3352020.3352024}.
+
+\bibitem[Dettmers et~al.(2022)Dettmers, Lewis, Belkada, and Zettlemoyer]{Dettmers2022LLMint88M}
+Dettmers, T., Lewis, M., Belkada, Y., and Zettlemoyer, L.
+\newblock Gpt3.int8(): 8-bit matrix multiplication for transformers at scale.
+\newblock In Koyejo, S., Mohamed, S., Agarwal, A., Belgrave, D., Cho, K., and Oh, A. (eds.), \emph{Advances in Neural Information Processing Systems}, volume~35, pp.\  30318--30332. Curran Associates, Inc., 2022.
+
+\bibitem[Dettmers et~al.(2023)Dettmers, Pagnoni, Holtzman, and Zettlemoyer]{dettmers2023qlora}
+Dettmers, T., Pagnoni, A., Holtzman, A., and Zettlemoyer, L.
+\newblock Qlora: Efficient finetuning of quantized llms.
+\newblock \emph{ArXiv preprint}, abs/2305.14314, 2023.
+
+\bibitem[Devlin et~al.(2019)Devlin, Chang, Lee, and Toutanova]{devlin-etal-2019-bert}
+Devlin, J., Chang, M.-W., Lee, K., and Toutanova, K.
+\newblock {BERT}: Pre-training of deep bidirectional transformers for language understanding.
+\newblock In \emph{Proceedings of the 2019 Conference of the North {A}merican Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers)}, pp.\  4171--4186, Minneapolis, Minnesota, 2019. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/N19-1423}.
+
+\bibitem[Ding et~al.(2023)Ding, Qin, Yang, Wei, Yang, Su, Hu, Chen, Chan, Chen, et~al.]{ding2023parameter}
+Ding, N., Qin, Y., Yang, G., Wei, F., Yang, Z., Su, Y., Hu, S., Chen, Y., Chan, C.-M., Chen, W., et~al.
+\newblock Parameter-efficient fine-tuning of large-scale pre-trained language models.
+\newblock \emph{Nature Machine Intelligence}, 5\penalty0 (3):\penalty0 220--235, 2023.
+
+\bibitem[Frankle \& Carbin(2019)Frankle and Carbin]{frankle2018lottery}
+Frankle, J. and Carbin, M.
+\newblock The lottery ticket hypothesis: Finding sparse, trainable neural networks.
+\newblock In \emph{7th International Conference on Learning Representations, {ICLR} 2019, New Orleans, LA, USA, May 6-9, 2019}. OpenReview.net, 2019.
+
+\bibitem[Frankle et~al.(2021)Frankle, Dziugaite, Roy, and Carbin]{frankle2021pruning}
+Frankle, J., Dziugaite, G.~K., Roy, D., and Carbin, M.
+\newblock Pruning neural networks at initialization: Why are we missing the mark?
+\newblock In \emph{9th International Conference on Learning Representations, {ICLR} 2021, Virtual Event, Austria, May 3-7, 2021}. OpenReview.net, 2021.
+
+\bibitem[Frantar \& Alistarh(2023)Frantar and Alistarh]{Frantar2023SparseGPTML}
+Frantar, E. and Alistarh, D.
+\newblock {S}parse{GPT}: Massive language models can be accurately pruned in one-shot.
+\newblock In Krause, A., Brunskill, E., Cho, K., Engelhardt, B., Sabato, S., and Scarlett, J. (eds.), \emph{Proceedings of the 40th International Conference on Machine Learning}, volume 202 of \emph{Proceedings of Machine Learning Research}, pp.\  10323--10337. PMLR, 2023.
+
+\bibitem[Frantar et~al.(2023)Frantar, Ashkboos, Hoefler, and Alistarh]{Frantar2022GPTQAP}
+Frantar, E., Ashkboos, S., Hoefler, T., and Alistarh, D.
+\newblock {OPTQ}: Accurate quantization for generative pre-trained transformers.
+\newblock In \emph{The Eleventh International Conference on Learning Representations}, 2023.
+
+\bibitem[Gao et~al.(2023)Gao, Tow, Abbasi, Biderman, Black, DiPofi, Foster, Golding, Hsu, Le~Noac'h, Li, McDonell, Muennighoff, Ociepa, Phang, Reynolds, Schoelkopf, Skowron, Sutawika, Tang, Thite, Wang, Wang, and Zou]{eval-harness}
+Gao, L., Tow, J., Abbasi, B., Biderman, S., Black, S., DiPofi, A., Foster, C., Golding, L., Hsu, J., Le~Noac'h, A., Li, H., McDonell, K., Muennighoff, N., Ociepa, C., Phang, J., Reynolds, L., Schoelkopf, H., Skowron, A., Sutawika, L., Tang, E., Thite, A., Wang, B., Wang, K., and Zou, A.
+\newblock A framework for few-shot language model evaluation, 2023.
+
+\bibitem[Guo et~al.(2021)Guo, Rush, and Kim]{guo-etal-2021-parameter}
+Guo, D., Rush, A., and Kim, Y.
+\newblock Parameter-efficient transfer learning with diff pruning.
+\newblock In \emph{Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics and the 11th International Joint Conference on Natural Language Processing (Volume 1: Long Papers)}, pp.\  4884--4896, Online, 2021. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2021.acl-long.378}.
+
+\bibitem[Haidar et~al.(2022)Haidar, Anchuri, Rezagholizadeh, Ghaddar, Langlais, and Poupart]{haidar2022rail}
+Haidar, M.~A., Anchuri, N., Rezagholizadeh, M., Ghaddar, A., Langlais, P., and Poupart, P.
+\newblock {RAIL}-{KD}: {RA}ndom intermediate layer mapping for knowledge distillation.
+\newblock In \emph{Findings of the Association for Computational Linguistics: NAACL 2022}, pp.\  1389--1400, Seattle, United States, 2022. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2022.findings-naacl.103}.
+
+\bibitem[Han et~al.(2015)Han, Pool, Tran, and Dally]{han2015learning}
+Han, S., Pool, J., Tran, J., and Dally, W.~J.
+\newblock Learning both weights and connections for efficient neural network.
+\newblock In Cortes, C., Lawrence, N.~D., Lee, D.~D., Sugiyama, M., and Garnett, R. (eds.), \emph{Advances in Neural Information Processing Systems 28: Annual Conference on Neural Information Processing Systems 2015, December 7-12, 2015, Montreal, Quebec, Canada}, pp.\  1135--1143, 2015.
+
+\bibitem[Han et~al.(2016)Han, Mao, and Dally]{Han2015DeepCC}
+Han, S., Mao, H., and Dally, W.~J.
+\newblock Deep compression: Compressing deep neural network with pruning, trained quantization and huffman coding.
+\newblock In Bengio, Y. and LeCun, Y. (eds.), \emph{4th International Conference on Learning Representations, {ICLR} 2016, San Juan, Puerto Rico, May 2-4, 2016, Conference Track Proceedings}, 2016.
+
+\bibitem[He et~al.(2022{\natexlab{a}})He, Zhou, Ma, Berg{-}Kirkpatrick, and Neubig]{he_towards_2022}
+He, J., Zhou, C., Ma, X., Berg{-}Kirkpatrick, T., and Neubig, G.
+\newblock Towards a unified view of parameter-efficient transfer learning.
+\newblock In \emph{The Tenth International Conference on Learning Representations, {ICLR} 2022, Virtual Event, April 25-29, 2022}. OpenReview.net, 2022{\natexlab{a}}.
+
+\bibitem[He et~al.(2022{\natexlab{b}})He, Ding, Dong, Zhang, and Tao]{he-etal-2022-sparseadapter}
+He, S., Ding, L., Dong, D., Zhang, J., and Tao, D.
+\newblock {S}parse{A}dapter: An easy approach for improving the parameter-efficiency of adapters.
+\newblock In \emph{Findings of the Association for Computational Linguistics: EMNLP 2022}, pp.\  2184--2190, Abu Dhabi, United Arab Emirates, 2022{\natexlab{b}}. Association for Computational Linguistics.
+
+\bibitem[Hedegaard et~al.(2022)Hedegaard, Alok, Jose, and Iosifidis]{hedegaard_structured_2022}
+Hedegaard, L., Alok, A., Jose, J., and Iosifidis, A.
+\newblock Structured {Pruning} {Adapters}, 2022.
+
+\bibitem[Hendrycks et~al.(2021)Hendrycks, Burns, Basart, Zou, Mazeika, Song, and Steinhardt]{hendrycks2021measuring}
+Hendrycks, D., Burns, C., Basart, S., Zou, A., Mazeika, M., Song, D., and Steinhardt, J.
+\newblock Measuring massive multitask language understanding.
+\newblock In \emph{9th International Conference on Learning Representations, {ICLR} 2021, Virtual Event, Austria, May 3-7, 2021}. OpenReview.net, 2021.
+
+\bibitem[Hinton et~al.(2015)Hinton, Vinyals, and Dean]{Hinton2015DistillingTK}
+Hinton, G.~E., Vinyals, O., and Dean, J.
+\newblock Distilling the knowledge in a neural network.
+\newblock \emph{ArXiv preprint}, abs/1503.02531, 2015.
+
+\bibitem[Houlsby et~al.(2019)Houlsby, Giurgiu, Jastrzebski, Morrone, de~Laroussilhe, Gesmundo, Attariyan, and Gelly]{houlsby2019parameter}
+Houlsby, N., Giurgiu, A., Jastrzebski, S., Morrone, B., de~Laroussilhe, Q., Gesmundo, A., Attariyan, M., and Gelly, S.
+\newblock Parameter-efficient transfer learning for {NLP}.
+\newblock In Chaudhuri, K. and Salakhutdinov, R. (eds.), \emph{Proceedings of the 36th International Conference on Machine Learning, {ICML} 2019, 9-15 June 2019, Long Beach, California, {USA}}, volume~97 of \emph{Proceedings of Machine Learning Research}, pp.\  2790--2799. {PMLR}, 2019.
+
+\bibitem[Hu et~al.(2022)Hu, Shen, Wallis, Allen{-}Zhu, Li, Wang, Wang, and Chen]{hu_lora_2021}
+Hu, E.~J., Shen, Y., Wallis, P., Allen{-}Zhu, Z., Li, Y., Wang, S., Wang, L., and Chen, W.
+\newblock Lora: Low-rank adaptation of large language models.
+\newblock In \emph{The Tenth International Conference on Learning Representations, {ICLR} 2022, Virtual Event, April 25-29, 2022}. OpenReview.net, 2022.
+
+\bibitem[Kaplan et~al.(2020)Kaplan, McCandlish, Henighan, Brown, Chess, Child, Gray, Radford, Wu, and Amodei]{kaplan2020scaling}
+Kaplan, J., McCandlish, S., Henighan, T., Brown, T.~B., Chess, B., Child, R., Gray, S., Radford, A., Wu, J., and Amodei, D.
+\newblock Scaling laws for neural language models.
+\newblock \emph{ArXiv preprint}, abs/2001.08361, 2020.
+
+\bibitem[Kwon et~al.(2022)Kwon, Kim, Mahoney, Hassoun, Keutzer, and Gholami]{kwon_fast_2022}
+Kwon, W., Kim, S., Mahoney, M.~W., Hassoun, J., Keutzer, K., and Gholami, A.
+\newblock A fast post-training pruning framework for transformers.
+\newblock In Koyejo, S., Mohamed, S., Agarwal, A., Belgrave, D., Cho, K., and Oh, A. (eds.), \emph{Advances in Neural Information Processing Systems}, volume~35, pp.\  24101--24116. Curran Associates, Inc., 2022.
+
+\bibitem[Lagunas et~al.(2021)Lagunas, Charlaix, Sanh, and Rush]{lagunas_block_2021}
+Lagunas, F., Charlaix, E., Sanh, V., and Rush, A.
+\newblock Block pruning for faster transformers.
+\newblock In \emph{Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing}, pp.\  10619--10629, Online and Punta Cana, Dominican Republic, 2021. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2021.emnlp-main.829}.
+
+\bibitem[LeCun et~al.(1989)LeCun, Denker, and Solla]{LeCun1989OptimalBD}
+LeCun, Y., Denker, J.~S., and Solla, S.~A.
+\newblock Optimal brain damage.
+\newblock In \emph{NIPS}, 1989.
+
+\bibitem[Lester et~al.(2021)Lester, Al-Rfou, and Constant]{lester-etal-2021-power}
+Lester, B., Al-Rfou, R., and Constant, N.
+\newblock The power of scale for parameter-efficient prompt tuning.
+\newblock In \emph{Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing}, pp.\  3045--3059, Online and Punta Cana, Dominican Republic, 2021. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2021.emnlp-main.243}.
+
+\bibitem[Li \& Liang(2021)Li and Liang]{li2021prefix}
+Li, X.~L. and Liang, P.
+\newblock Prefix-tuning: Optimizing continuous prompts for generation.
+\newblock In \emph{Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics and the 11th International Joint Conference on Natural Language Processing (Volume 1: Long Papers)}, pp.\  4582--4597, Online, 2021. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2021.acl-long.353}.
+
+\bibitem[Li et~al.(2022)Li, Luo, Tan, Wang, Huang, Li, and Bai]{ijcai2022p586}
+Li, Y., Luo, F., Tan, C., Wang, M., Huang, S., Li, S., and Bai, J.
+\newblock Parameter-efficient sparsity for large language models fine-tuning.
+\newblock In Raedt, L.~D. (ed.), \emph{Proceedings of the Thirty-First International Joint Conference on Artificial Intelligence, {IJCAI-22}}, pp.\  4223--4229. International Joint Conferences on Artificial Intelligence Organization, 2022.
+\newblock \doi{10.24963/ijcai.2022/586}.
+\newblock Main Track.
+
+\bibitem[Lialin et~al.(2023)Lialin, Deshpande, and Rumshisky]{lialin2023scaling}
+Lialin, V., Deshpande, V., and Rumshisky, A.
+\newblock Scaling down to scale up: A guide to parameter-efficient fine-tuning.
+\newblock \emph{ArXiv preprint}, abs/2303.15647, 2023.
+
+\bibitem[Lin et~al.(2023)Lin, Tang, Tang, Yang, Dang, and Han]{lin2023awq}
+Lin, J., Tang, J., Tang, H., Yang, S., Dang, X., and Han, S.
+\newblock Awq: Activation-aware weight quantization for llm compression and acceleration.
+\newblock \emph{ArXiv preprint}, abs/2306.00978, 2023.
+
+\bibitem[Lin et~al.(2022)Lin, Hilton, and Evans]{lin-etal-2022-truthfulqa}
+Lin, S., Hilton, J., and Evans, O.
+\newblock {T}ruthful{QA}: Measuring how models mimic human falsehoods.
+\newblock In \emph{Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)}, pp.\  3214--3252, Dublin, Ireland, 2022. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2022.acl-long.229}.
+
+\bibitem[Liu et~al.(2019)Liu, Ott, Goyal, Du, Joshi, Chen, Levy, Lewis, Zettlemoyer, and Stoyanov]{liu2019roberta}
+Liu, Y., Ott, M., Goyal, N., Du, J., Joshi, M., Chen, D., Levy, O., Lewis, M., Zettlemoyer, L., and Stoyanov, V.
+\newblock Roberta: A robustly optimized bert pretraining approach.
+\newblock \emph{ArXiv preprint}, abs/1907.11692, 2019.
+
+\bibitem[Ma et~al.(2023)Ma, Fang, and Wang]{ma2023llm}
+Ma, X., Fang, G., and Wang, X.
+\newblock Llm-pruner: On the structural pruning of large language models.
+\newblock \emph{ArXiv preprint}, abs/2305.11627, 2023.
+
+\bibitem[Mahabadi et~al.(2021)Mahabadi, Henderson, and Ruder]{karimi2021compacter}
+Mahabadi, R.~K., Henderson, J., and Ruder, S.
+\newblock Compacter: Efficient low-rank hypercomplex adapter layers.
+\newblock In Ranzato, M., Beygelzimer, A., Dauphin, Y.~N., Liang, P., and Vaughan, J.~W. (eds.), \emph{Advances in Neural Information Processing Systems 34: Annual Conference on Neural Information Processing Systems 2021, NeurIPS 2021, December 6-14, 2021, virtual}, pp.\  1022--1035, 2021.
+
+\bibitem[Mishra et~al.(2022)Mishra, Khashabi, Baral, and Hajishirzi]{mishra-etal-2022-cross}
+Mishra, S., Khashabi, D., Baral, C., and Hajishirzi, H.
+\newblock Cross-task generalization via natural language crowdsourcing instructions.
+\newblock In \emph{Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)}, pp.\  3470--3487, Dublin, Ireland, 2022. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2022.acl-long.244}.
+
+\bibitem[Nallapati et~al.(2016)Nallapati, Zhou, dos Santos, Gulcehre, and Xiang]{Nallapati2016AbstractiveTS}
+Nallapati, R., Zhou, B., dos Santos, C., Gulcehre, C., and Xiang, B.
+\newblock Abstractive text summarization using sequence-to-sequence {RNN}s and beyond.
+\newblock In \emph{Proceedings of the 20th {SIGNLL} Conference on Computational Natural Language Learning}, pp.\  280--290, Berlin, Germany, 2016. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/K16-1028}.
+
+\bibitem[Panigrahi et~al.(2023)Panigrahi, Saunshi, Zhao, and Arora]{panigrahi2023task}
+Panigrahi, A., Saunshi, N., Zhao, H., and Arora, S.
+\newblock Task-specific skill localization in fine-tuned language models.
+\newblock \emph{ArXiv preprint}, abs/2302.06600, 2023.
+
+\bibitem[Pfeiffer et~al.(2021)Pfeiffer, Kamath, R{\"u}ckl{\'e}, Cho, and Gurevych]{Pfeiffer2020AdapterFusionNT}
+Pfeiffer, J., Kamath, A., R{\"u}ckl{\'e}, A., Cho, K., and Gurevych, I.
+\newblock {A}dapter{F}usion: Non-destructive task composition for transfer learning.
+\newblock In \emph{Proceedings of the 16th Conference of the European Chapter of the Association for Computational Linguistics: Main Volume}, pp.\  487--503, Online, 2021. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2021.eacl-main.39}.
+
+\bibitem[Raffel et~al.(2020)Raffel, Shazeer, Roberts, Lee, Narang, Matena, Zhou, Li, and Liu]{raffel2020exploring}
+Raffel, C., Shazeer, N., Roberts, A., Lee, K., Narang, S., Matena, M., Zhou, Y., Li, W., and Liu, P.~J.
+\newblock Exploring the limits of transfer learning with a unified text-to-text transformer.
+\newblock \emph{J. Mach. Learn. Res.}, 21:\penalty0 140:1--140:67, 2020.
+
+\bibitem[Rajpurkar et~al.(2018)Rajpurkar, Jia, and Liang]{rajpurkar-etal-2018-know}
+Rajpurkar, P., Jia, R., and Liang, P.
+\newblock Know what you don{'}t know: Unanswerable questions for {SQ}u{AD}.
+\newblock In \emph{Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 2: Short Papers)}, pp.\  784--789, Melbourne, Australia, 2018. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/P18-2124}.
+
+\bibitem[Sanh et~al.(2020)Sanh, Wolf, and Rush]{sanh_movement_2020}
+Sanh, V., Wolf, T., and Rush, A.~M.
+\newblock Movement pruning: Adaptive sparsity by fine-tuning.
+\newblock In Larochelle, H., Ranzato, M., Hadsell, R., Balcan, M., and Lin, H. (eds.), \emph{Advances in Neural Information Processing Systems 33: Annual Conference on Neural Information Processing Systems 2020, NeurIPS 2020, December 6-12, 2020, virtual}, 2020.
+
+\bibitem[Shen et~al.(2022{\natexlab{a}})Shen, Molchanov, Yin, and Alvarez]{Shen_2022_CVPR}
+Shen, M., Molchanov, P., Yin, H., and Alvarez, J.~M.
+\newblock When to prune? a policy towards early structural pruning.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)}, pp.\  12247--12256, 2022{\natexlab{a}}.
+
+\bibitem[Shen et~al.(2022{\natexlab{b}})Shen, Yin, Molchanov, Mao, Liu, and Alvarez]{NEURIPS2022_5434be94}
+Shen, M., Yin, H., Molchanov, P., Mao, L., Liu, J., and Alvarez, J.~M.
+\newblock Structural pruning via latency-saliency knapsack.
+\newblock In Koyejo, S., Mohamed, S., Agarwal, A., Belgrave, D., Cho, K., and Oh, A. (eds.), \emph{Advances in Neural Information Processing Systems}, volume~35, pp.\  12894--12908. Curran Associates, Inc., 2022{\natexlab{b}}.
+
+\bibitem[Sun et~al.(2023)Sun, Liu, Bair, and Kolter]{sun2023simple}
+Sun, M., Liu, Z., Bair, A., and Kolter, J.~Z.
+\newblock A simple and effective pruning approach for large language models.
+\newblock \emph{ArXiv preprint}, abs/2306.11695, 2023.
+
+\bibitem[Sung et~al.(2021)Sung, Nair, and Raffel]{sung2021training}
+Sung, Y., Nair, V., and Raffel, C.
+\newblock Training neural networks with fixed sparse masks.
+\newblock In Ranzato, M., Beygelzimer, A., Dauphin, Y.~N., Liang, P., and Vaughan, J.~W. (eds.), \emph{Advances in Neural Information Processing Systems 34: Annual Conference on Neural Information Processing Systems 2021, NeurIPS 2021, December 6-14, 2021, virtual}, pp.\  24193--24205, 2021.
+
+\bibitem[Taori et~al.(2023)Taori, Gulrajani, Zhang, Dubois, Li, Guestrin, Liang, and Hashimoto]{alpaca}
+Taori, R., Gulrajani, I., Zhang, T., Dubois, Y., Li, X., Guestrin, C., Liang, P., and Hashimoto, T.~B.
+\newblock Stanford alpaca: An instruction-following llama model.
+\newblock \url{https://github.com/tatsu-lab/stanford_alpaca}, 2023.
+
+\bibitem[Touvron et~al.(2023)Touvron, Lavril, Izacard, Martinet, Lachaux, Lacroix, Rozi{\`e}re, Goyal, Hambro, Azhar, et~al.]{touvron2023llama}
+Touvron, H., Lavril, T., Izacard, G., Martinet, X., Lachaux, M.-A., Lacroix, T., Rozi{\`e}re, B., Goyal, N., Hambro, E., Azhar, F., et~al.
+\newblock Llama: Open and efficient foundation language models.
+\newblock \emph{ArXiv preprint}, abs/2302.13971, 2023.
+
+\bibitem[Wang et~al.(2019)Wang, Singh, Michael, Hill, Levy, and Bowman]{wang2018glue}
+Wang, A., Singh, A., Michael, J., Hill, F., Levy, O., and Bowman, S.~R.
+\newblock {GLUE:} {A} multi-task benchmark and analysis platform for natural language understanding.
+\newblock In \emph{7th International Conference on Learning Representations, {ICLR} 2019, New Orleans, LA, USA, May 6-9, 2019}. OpenReview.net, 2019.
+
+\bibitem[Wang et~al.(2022{\natexlab{a}})Wang, Wen, Zhang, Hou, Liu, and Li]{wang-etal-2022-finding-skill}
+Wang, X., Wen, K., Zhang, Z., Hou, L., Liu, Z., and Li, J.
+\newblock Finding skill neurons in pre-trained transformer-based language models.
+\newblock In \emph{Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing}, pp.\  11132--11152, Abu Dhabi, United Arab Emirates, 2022{\natexlab{a}}. Association for Computational Linguistics.
+
+\bibitem[Wang et~al.(2022{\natexlab{b}})Wang, Mishra, Alipoormolabashi, Kordi, Mirzaei, Naik, Ashok, Dhanasekaran, Arunkumar, Stap, Pathak, Karamanolakis, Lai, Purohit, Mondal, Anderson, Kuznia, Doshi, Pal, Patel, Moradshahi, Parmar, Purohit, Varshney, Kaza, Verma, Puri, Karia, Doshi, Sampat, Mishra, Reddy~A, Patro, Dixit, and Shen]{wang-etal-2022-super}
+Wang, Y., Mishra, S., Alipoormolabashi, P., Kordi, Y., Mirzaei, A., Naik, A., Ashok, A., Dhanasekaran, A.~S., Arunkumar, A., Stap, D., Pathak, E., Karamanolakis, G., Lai, H., Purohit, I., Mondal, I., Anderson, J., Kuznia, K., Doshi, K., Pal, K.~K., Patel, M., Moradshahi, M., Parmar, M., Purohit, M., Varshney, N., Kaza, P.~R., Verma, P., Puri, R.~S., Karia, R., Doshi, S., Sampat, S.~K., Mishra, S., Reddy~A, S., Patro, S., Dixit, T., and Shen, X.
+\newblock Super-{N}atural{I}nstructions: Generalization via declarative instructions on 1600+ {NLP} tasks.
+\newblock In \emph{Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing}, pp.\  5085--5109, Abu Dhabi, United Arab Emirates, 2022{\natexlab{b}}. Association for Computational Linguistics.
+
+\bibitem[Xia et~al.(2022)Xia, Zhong, and Chen]{xia_structured_2022}
+Xia, M., Zhong, Z., and Chen, D.
+\newblock Structured pruning learns compact and accurate models.
+\newblock In \emph{Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)}, pp.\  1513--1528, Dublin, Ireland, 2022. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2022.acl-long.107}.
+
+\bibitem[Xu et~al.(2021)Xu, Yen, Zhao, and Xiao]{xu2021rethinking}
+Xu, D., Yen, I. E.-H., Zhao, J., and Xiao, Z.
+\newblock Rethinking network pruning {--} under the pre-train and fine-tune paradigm.
+\newblock In \emph{Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies}, pp.\  2376--2382, Online, 2021. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/2021.naacl-main.188}.
+
+\bibitem[Xu et~al.(2023)Xu, Xie, Gu, Chen, Chang, Zhang, Chen, Zhang, and Tian]{xu2023qa}
+Xu, Y., Xie, L., Gu, X., Chen, X., Chang, H., Zhang, H., Chen, Z., Zhang, X., and Tian, Q.
+\newblock Qa-lora: Quantization-aware low-rank adaptation of large language models.
+\newblock \emph{ArXiv preprint}, abs/2309.14717, 2023.
+
+\bibitem[Zellers et~al.(2019)Zellers, Holtzman, Bisk, Farhadi, and Choi]{zellers-etal-2019-hellaswag}
+Zellers, R., Holtzman, A., Bisk, Y., Farhadi, A., and Choi, Y.
+\newblock {H}ella{S}wag: Can a machine really finish your sentence?
+\newblock In \emph{Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics}, pp.\  4791--4800, Florence, Italy, 2019. Association for Computational Linguistics.
+\newblock \doi{10.18653/v1/P19-1472}.
+
+\bibitem[Zhang et~al.(2023{\natexlab{a}})Zhang, Shen, Yang, Ou, Yu, Zhuang, et~al.]{zhang2023pruning}
+Zhang, M., Shen, C., Yang, Z., Ou, L., Yu, X., Zhuang, B., et~al.
+\newblock Pruning meets low-rank parameter-efficient fine-tuning.
+\newblock \emph{ArXiv preprint}, abs/2305.18403, 2023{\natexlab{a}}.
+
+\bibitem[Zhang et~al.(2023{\natexlab{b}})Zhang, Chen, Bukharin, He, Cheng, Chen, and Zhao]{zhang2023adaptive}
+Zhang, Q., Chen, M., Bukharin, A., He, P., Cheng, Y., Chen, W., and Zhao, T.
+\newblock Adaptive budget allocation for parameter-efficient fine-tuning.
+\newblock In \emph{The Eleventh International Conference on Learning Representations}, 2023{\natexlab{b}}.
+
+\bibitem[Zhang et~al.(2023{\natexlab{c}})Zhang, Zeng, Lin, Xiao, Wang, Han, Liu, Xie, Sun, and Zhou]{zhang2023emergent}
+Zhang, Z., Zeng, Z., Lin, Y., Xiao, C., Wang, X., Han, X., Liu, Z., Xie, R., Sun, M., and Zhou, J.
+\newblock Emergent modularity in pre-trained transformers.
+\newblock \emph{ArXiv preprint}, abs/2305.18390, 2023{\natexlab{c}}.
+
+\bibitem[Zhao et~al.(2023)Zhao, Huang, Han, Liu, Zhang, and Sun]{zhao2023cpet}
+Zhao, W., Huang, Y., Han, X., Liu, Z., Zhang, Z., and Sun, M.
+\newblock Cpet: Effective parameter-efficient tuning for compressed large language models.
+\newblock \emph{ArXiv preprint}, abs/2307.07705, 2023.
+
+\end{thebibliography}

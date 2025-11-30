@@ -1,0 +1,22 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+\begin{table}[htbp]
+\centering
+\begin{tabular}{@{}llr|rrrr@{}}
+\toprule
+Model                                           & Method             & Sparsity & 97\% TTA (s) & Train Mem. (MB) & Inf. Time (ms) & Inf. Mem (MB) \\ \midrule
+\multirow{6}{*}{$\text{RoBERTa}_{\text{base}}$} & FT                 & 0\%      & 127          & 2,696           & 220.8          & 1,157         \\
+                                                & LoRA               & 0\%      & 2,714        & 1,630           & 181.8          & 1,157         \\ \cmidrule(l){2-7} 
+                                                & LoRA+Prune         & 60\%     & 6,513        & 1,630           & 84.0           & 869           \\
+                                                & Prune+Distill      & 60\%     & 1,899        & 4,544           & 85.2           & 917           \\
+                                                & LoRA+Prune+Distill & 60\%     & 8,299        & 3,813           & 87.0           & 952           \\ \cmidrule(l){2-7} 
+                                                & APT                & 60\%     & 752          & 1,890           & 91.3           & 904           \\ \midrule
+\multirow{4}{*}{$\text{T5}_{\text{base}}$}      & FT                 & 0\%      & 366          & 7,217           & 248.1          & 2,347         \\
+                                                & LoRA               & 0\%      & 935          & 4,476           & 254.2          & 2,347         \\ \cmidrule(l){2-7} 
+                                                & LoRA+Prune         & 60\%     & 14,417       & 4,476           & 116.8          & 1,724         \\ \cmidrule(l){2-7} 
+                                                & APT                & 60\%     & 1,774        & 5,332           & 185.0          & 1,913         \\ \bottomrule
+\end{tabular}
+\caption{Raw efficiency metrics, including time to accuracy, training peak memory, inference time and memory footprints, when using different methods to fine-tune $\text{RoBERTa}_{\text{base}}$ and $\text{T5}_{\text{base}}$models on SST2.}
+\label{tab:raw-efficiency}
+\end{table}

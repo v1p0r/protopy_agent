@@ -1,0 +1,22 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+% \usepackage{multirow}
+\begin{table*}[htbp]
+\centering
+\resizebox{1.0\linewidth}{!}{
+\begin{tabular}{@{}l|llrrr|llll@{}}
+\toprule
+Method       & ARC                            & HellaSwag                      & MMLU                           & TruthfulQA                     & Avg.                           & Train Speed($\Uparrow$) & Train Mem ($\Downarrow$) & Inf Speed($\Uparrow$) & Inf Mem($\Downarrow$) \\ \midrule
+LLaMA 2 7B   & 53.1                           & 77.7                           & 43.8                           & 39.0                           & 53.4                           & -            & -           & -          & -         \\ 
+LoRA         & 55.6                           & 79.3                           & 46.9                           & 49.9                           & 57.9                           & 100.0\%      & 100.0\%     & 100.0\%    & 100.0\%   \\ \midrule
+LoRA+Prune & \textbf{46.8} & 65.2                           & 23.9                           & 46.2                           & 45.5                           & 55.3\%       & 100.0\%     & 115.5\%    & 68.9\%    \\
+LLMPruner    & 39.2                           & 67.0                           & 24.9                           & 40.6                           & 42.9                           & 115.1\%      & 253.6\%     & 114.8\%    & 74.2\%    \\
+APT          & 45.4                           & \textbf{71.1} & \textbf{36.9} & \textbf{46.6} & \textbf{50.0} & 94.3\%       & 75.8\%      & 117.0\%    & 67.2\%    \\ \bottomrule
+\end{tabular}
+}
+\caption{
+% \hanna{this table has a different set of baelines, explain why you are using a diferent baseline here. }
+    LLaMA 2 7B 30\% sparsity pruning results with GPT4-generated Alpaca dataset, evaluated on the Open LLM leaderboard few-shot tasks. Training speed is measured via training time per step. We do not compare to distillation baselines because the training cost of distillation is too large, and we also compare {\ourmethod} to LLMPruner since it is dedicated to large {\lmabbr} pruning. $\Uparrow$ denotes the metric is better when bigger, and $\Downarrow$ denotes smaller is better.}
+\label{tab:llama-7b-results}
+\vspace{-15pt}
+\end{table*}

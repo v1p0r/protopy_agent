@@ -1,0 +1,22 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+\begin{table*}[htbp]
+\centering
+\begin{tabular}{@{}lr|rrrrrr@{}}
+\toprule
+Method                         & Density & SST2 & 97\% TTA     & 99\% TTA     & T. M. & Inf. $\nearrow$ & Inf. Mem. \\ \midrule
+FT                             & 100\%   & 94.8 & 1.00$\times$ & 1.00$\times$ & 100\%           & 1.00$\times$ & 100.0\%  \\
+LoRA                           & 100\%    & 95.1 & 21.4$\times$ & 8.39$\times$ & 60.5\%          & 1.00$\times$ & 100.0\%  \\ \midrule
+FT + $\text{MT}_{\text{train}}$              & 40\%    & 93.5 & 6.80$\times$ & -            & 100\%           & 2.67$\times$ & 76.4\%   \\
+LoRA + $\text{MT}_{\text{train}}$            & 40\%    & 93.0   & 51.3$\times$ & -            & 60.5\%          & 2.63$\times$ & 75.1\%   \\
+% LoRA* + $\text{MT}_{\text{train}}$ & 40\%    & 93.2 & 51.3$\times$ & -            & 60.5\%          & 2.57$\times$ & 74.2\%   \\
+FT + $\text{MT}_{\text{distill}}$              & 40\%    & 94.3 & 9.40$\times$ & 6.17$\times$ & 100\%           & 2.60$\times$ & 76.4\%   \\
+LoRA + $\text{MT}_{\text{distill}}$            & 40\%    & 92.3 & 65.3$\times$ & -            & 70.5\%          & 2.60$\times$ & 75.1\%   \\
+% LoRA* + $\text{MT}_{\text{distill}}$ & 40\%    & 92.8 & 65.3$\times$ & -            & 70.5\%          & 2.60$\times$ & 75.1\%   \\
+FT + CoFi                      & 40\%    & 94.5 & 15.0$\times$ & -            & 168.5\%         & 2.59$\times$ & 79.2\%   \\
+LoRA + CoFi                    & 40\%    & 91.9 & 65.3$\times$ & -            & 141.4\%         & 2.54$\times$ & 82.3\%   \\ \midrule
+{\ourmethod}                  & 40\%    & 94.5 & 5.92$\times$ & 4.13$\times$ & 62.7\%          & 2.71$\times$ & 79.5\%   \\ \bottomrule
+\end{tabular}
+\caption{RoBERTa-base SST2 performance and efficiency results. LoRA* denotes the setting where we use the model tuned with LoRA after the same amount of epochs when fine-tuning converges as the trained/teacher model. T.M. denotes the relative training peak memory to full fine-tuning. Inf. $\nearrow$ and Inf. Mem. represent the relative inference speedup and memory usage compared to full fine-tuning.}
+\label{tab:roberta-base-sst2}
+\end{table*}
