@@ -1,0 +1,247 @@
+# Logic Analysis: `agent/single_agent.py`
+
+## **1. Core Purpose and Role in System**
+The `SingleAgent` class serves as the foundational agent for compositional machine design, implementing the **one-shot generation** workflow described in the paper. It is used for:
+- **Baseline evaluation**: Establishing performance of LLMs without iterative refinement.
+- **Cold-start dataset generation**: Producing 250 machine–CoT pairs per prompt using Gemini 2.5 Pro to curate the 9,984-sample dataset.
+- **Reference for ablation**: Providing a baseline against which iterative editing and hierarchical design are compared.
+
+It is **not** responsible for feedback loops, search, or revision — it generates a single machine design from a natural language task prompt in one forward pass.
+
+---
+
+## **2. Input Requirements and Constraints**
+The input to `SingleAgent.generate(task: str)` is a **natural language task description**, e.g.:
+> “Build a machine that can throw a boulder as far as possible.”
+
+The agent must **strictly adhere** to the following constraints, as defined in the paper and config.yaml:
+
+### **a) Task Input**
+- Must be a string (from `dataset/prompts.jsonl` or user input).
+- No assumptions about task complexity — must handle both simple (“move forward”) and constrained (“throw boulder over a 3m wall”) prompts.
+
+### **b) Contextual Constraints (Hardcoded in Prompt Template)**
+Per the paper’s “Agentic Workflow Design” and “Machine Representation” sections, the prompt template **must include**:
+1. **Task instruction**: The user-provided `task` string.
+2. **Available blocks**: All 27 blocks from `block_registry.py`, listed verbatim as in the paper (e.g., “Starting Block”, “Powered Wheel”, “Spring”, etc.).
+3. **Construction rules**:
+   - Machines are built by attaching blocks to existing structure, starting from the root “Starting Block” (ID=0).
+   - Each block has **exactly one attachable face**, except **Spring**, which has **two parents**.
+   - **No scaling or rotation** after attachment is permitted.
+   - The output must be a **construction tree** in JSON list format, ordered by placement sequence.
+4. **Output format specification**:
+   - JSON list of dictionaries.
+   - Each dictionary must have:
+     - `"type"`: string from the 27-block registry.
+     - `"id"`: integer, 0-indexed, matching list position.
+     - `"parent"`: integer (ID of parent block), or `null` for root.
+     - `"face_id"`: integer (0–5, representing face index on parent).
+     - For **Spring** (and only Spring): `"parent_a"`, `"parent_b"`, `"face_id_a"`, `"face_id_b"` (all integers).
+   - First block must be `"type": "Starting Block"`, `"id": 0`, `"parent": null`, `"face_id": null`.
+   - **No other fields allowed**.
+5. **Reasoning requirement**:
+   - The agent must generate a **Chain-of-Thought (CoT)** before the final JSON output.
+   - CoT must be enclosed in triple backticks (```) and logically connect task → block selection → attachment logic.
+   - Final output must be **only the JSON list**, with no additional text.
+
+> ✅ **Example Prompt Template (Final Form)**:
+> ```
+> You are an expert mechanical designer. Your task is to build a machine using only the following 27 blocks: [list of 27 blocks].
+>
+> Construction Rules:
+> - Start with the "Starting Block" (ID=0). Every other block must be attached to an existing block.
+> - Each block has exactly one attachable face, except "Spring", which can attach to two blocks.
+> - Blocks cannot be scaled or rotated after attachment.
+> - Output must be a JSON list of block dictionaries in construction order.
+> - Each block must include: "type", "id", "parent", "face_id". For "Spring", use "parent_a", "parent_b", "face_id_a", "face_id_b".
+> - First block must be: {"type": "Starting Block", "id": 0, "parent": null, "face_id": null}.
+> - Do not include any text outside the JSON list.
+>
+> Task: {task}
+>
+> First, reason step-by-step about the design in a Chain-of-Thought (CoT) inside triple backticks:
+> ```
+> Step 1: I need a base... Step 2: Attach wheels for mobility... Step 3: Add a lever to launch...
+> ```
+> Then output the JSON construction tree below, with no other text:
+> ```
+
+### **c) Block List Source**
+- Must be **dynamically retrieved** from `BlockRegistry.get_block_list()` to ensure consistency with `env/block_registry.py`.
+- Must **not** be hardcoded — future extension to new blocks must require no template change.
+
+---
+
+## **3. Output Requirements and Validation**
+The output of `SingleAgent.generate(task)` is a `ConstructionTree` object.
+
+### **a) Generation Process**
+1. **LLM Call**:
+   - Uses the fixed prompt template above.
+   - Calls LLM API (e.g., Gemini 2.5 Pro via Google AI API, or Qwen via Hugging Face).
+   - Uses **temperature=0.0** for deterministic generation during dataset curation (paper uses Gemini 2.5 Pro for cold-start — assumed to be low-entropy).
+   - Max output tokens: `config.model.max_output_length = 1168` (matches RL setup).
+2. **Output Parsing**:
+   - Extracts the **first** JSON array found after the CoT block.
+   - Must ignore any text before or after the JSON.
+   - Uses `utils/validator.JSONValidator.validate_construction_tree()` to validate schema.
+3. **Validation Failure Handling**:
+   - If JSON is malformed, invalid, or missing required fields → return `None`.
+   - Log error via `utils/logger.Logger.error()` with prompt and error message.
+   - In dataset curation context, this sample is discarded.
+
+### **b) ConstructionTree Output**
+- Must instantiate `ConstructionTree(json_data)` with the parsed JSON list.
+- The `ConstructionTree` class will validate:
+  - IDs are unique and sequential from 0.
+  - Parent IDs exist and are less than current ID (DAG constraint).
+  - No cycles (via DFS).
+  - Spring blocks have exactly two parents and correct fields.
+  - Block types are in the 27-block registry.
+- If validation fails, `SingleAgent.generate()` returns `None`.
+
+---
+
+## **4. Dependencies and Integration Points**
+| Dependency | Role | How It Is Used |
+|----------|------|----------------|
+| `construction_tree.py` → `ConstructionTree` | Output format and validation | `SingleAgent` parses LLM output into `ConstructionTree` object. Uses its `validate()` method to check output integrity. |
+| `env/block_registry.py` → `BlockRegistry` | Block validity | Retrieves the 27-block list for prompt template. Used by `ConstructionTree` for type validation. |
+| `utils/logger.py` → `Logger` | Logging | Logs: prompt, generated JSON, validation result, errors. Critical for dataset curation audit trail. |
+| `utils/config.py` → `Config` | Hyperparameters | Retrieves `model.max_output_length` for LLM call. Not used for prompt template — template is fixed per paper. |
+
+> ⚠️ **Critical Note**: The `SingleAgent` does **not** interact with simulation, reward, or environment. It is purely a **text-to-structure generator**. Simulation and validation occur **after** generation in `dataset/curation.py` and `eval/metrics.py`.
+
+---
+
+## **5. Workflow Execution Flow (Step-by-Step)**
+
+```python
+def generate(self, task: str) -> Optional[ConstructionTree]:
+    # Step 1: Retrieve block list from BlockRegistry
+    block_list = BlockRegistry.get_block_list()  # Returns list[str] of 27 blocks
+
+    # Step 2: Construct prompt template with task and rules
+    prompt = build_prompt_template(task, block_list)  # Uses fixed structure from paper
+
+    # Step 3: Call LLM API (Gemini 2.5 Pro for cold-start, configurable via config)
+    llm_response = self.llm_api.call(
+        prompt=prompt,
+        max_tokens=config.model.max_output_length,
+        temperature=0.0,  # Deterministic for dataset curation
+        top_p=1.0
+    )
+
+    # Step 4: Parse JSON output from LLM response
+    # - Extract content after ```json or ``` (CoT delimiter)
+    # - Use regex or string splitting to isolate JSON array
+    json_str = extract_json_from_response(llm_response)
+
+    # Step 5: Validate JSON structure
+    is_valid, error_msg = JSONValidator.validate_construction_tree(json_str)
+    if not is_valid:
+        logger.error(f"SingleAgent: Invalid JSON for task '{task}': {error_msg}")
+        return None
+
+    # Step 6: Parse into ConstructionTree
+    try:
+        machine = ConstructionTree(json.loads(json_str))
+    except Exception as e:
+        logger.error(f"SingleAgent: Failed to instantiate ConstructionTree: {e}")
+        return None
+
+    # Step 7: Validate ConstructionTree (redundant but safe)
+    is_tree_valid, tree_error = machine.validate()
+    if not is_tree_valid:
+        logger.error(f"SingleAgent: ConstructionTree validation failed: {tree_error}")
+        return None
+
+    # Step 8: Return valid machine
+    logger.debug(f"SingleAgent: Successfully generated machine for task: {task[:50]}...")
+    return machine
+```
+
+---
+
+## **6. Key Design Decisions and Alignment with Paper**
+
+| Design Choice | Paper Alignment | Rationale |
+|---------------|-----------------|-----------|
+| **Fixed prompt template** | Explicitly described in “Single-agent setting” and “CoT reasoning” | Ensures reproducibility. Paper shows CoT is critical — template enforces it. |
+| **No sampling (temperature=0.0)** | Paper uses Gemini 2.5 Pro for cold-start — assumed deterministic | Ensures consistent, deterministic outputs for dataset curation. |
+| **JSON schema strictness** | “::Machine Representation” defines exact fields | Prevents ambiguous or invalid designs from polluting dataset. |
+| **No simulation in agent** | Paper separates generation from simulation | Agent’s job is **generation only**; simulation occurs in `dataset/curation.py` and `env/simulation.py`. |
+| **Uses BlockRegistry dynamically** | “Details on the BesiegeField Environment::Blocks” lists 27 blocks | Ensures maintainability. If paper adds a block, only `block_registry.py` needs update. |
+| **Returns None on failure** | Paper filters out invalid machines | Enables clean dataset curation: only valid outputs are retained. |
+| **CoT must be in triple backticks** | Paper’s examples show CoT as text before JSON | Standardizes parsing. Enables automatic extraction. |
+
+---
+
+## **7. Edge Cases and Failure Modes**
+
+| Scenario | Handling Strategy |
+|----------|-------------------|
+| **LLM returns no JSON** | Return `None`. Log warning. |
+| **JSON has extra fields** | Reject. Schema must be exact. |
+| **Parent ID references non-existent block** | `ConstructionTree.validate()` catches this. Agent returns `None`. |
+| **Spring has only one parent** | `ConstructionTree.validate()` fails → agent returns `None`. |
+| **Missing "id" field** | `JSONValidator` fails → agent returns `None`. |
+| **Wrong block type (e.g., "Wheel" instead of "Unpowered Wheel")** | `BlockRegistry` rejects → `ConstructionTree.validate()` fails. |
+| **CoT missing** | Still attempt to parse JSON. If valid, return it. Log warning. |
+| **JSON is malformed (e.g., trailing comma)** | Use `json.loads()` with strict parsing → catches and logs error. |
+| **LLM exceeds token limit** | Truncation handled by API. If output is incomplete → invalid JSON → `None`. |
+
+---
+
+## **8. Integration with Dataset Curation (dataset/curation.py)**
+
+The `SingleAgent` is **only** used in `DatasetCurator.generate_and_filter()` as follows:
+
+```python
+for prompt in prompts:  # 100 prompts
+    for _ in range(250):  # 250 samples per prompt
+        machine = single_agent.generate(prompt)
+        if machine is None:
+            continue  # Skip invalid
+        if not simulation.check_self_collision(machine):
+            continue  # Skip spatial collision
+        if not reward_calculator.is_physics_driven(machine):
+            continue  # Skip statue/floating block
+        # Save valid triple: {prompt, cot, machine}
+```
+
+> ✅ **Critical**: `SingleAgent` does **not** perform spatial or physics validation — that is done in `dataset/curation.py`. This separation of concerns is essential.
+
+---
+
+## **9. Configuration Usage**
+
+| Config Key | Used? | Purpose |
+|------------|-------|---------|
+| `model.max_output_length` | ✅ Yes | Limits LLM output to 1168 tokens. |
+| `model.base_model_name` | ✅ Yes | Determines which LLM API to call (Gemini vs Qwen). |
+| `agent.temperature` | ❌ No | Set to 0.0 internally for cold-start. |
+| `agent.top_p` | ❌ No | Set to 1.0 internally. |
+| `simulation.duration_seconds` | ❌ No | Not used here. |
+| `tasks.catapult.validity_constraints` | ❌ No | Not used here. |
+
+> **Note**: The `SingleAgent` is **not** configured via `agent.*` keys — it uses **hardcoded, paper-aligned** generation settings. Only `model.*` keys are relevant.
+
+---
+
+## **10. Summary: Design Principles**
+
+| Principle | Implementation |
+|---------|----------------|
+| **Faithfulness to Paper** | Strict adherence to CoT + JSON schema + 27 blocks + no post-attachment modifications. |
+| **Modularity** | No simulation, no reward, no search — pure text-to-structure converter. |
+| **Robustness** | Uses validator and ConstructionTree for end-to-end schema safety. |
+| **Reproducibility** | Fixed prompt template, deterministic generation (temperature=0.0), dynamic block list. |
+| **Extensibility** | Block list sourced from `BlockRegistry` — adding a new block requires only one file edit. |
+| **Auditability** | Every failure is logged with prompt and error — essential for dataset curation debugging. |
+
+---
+
+## **Conclusion**
+
+The `SingleAgent` class is a **minimal, precise, and strictly constrained** LLM wrapper that implements the foundational generation step of the paper’s methodology. It does not reason about physics, simulate, or optimize — it translates natural language into a syntactically and semantically valid construction tree, as defined by the BesiegeField formalism. Its correctness is **critical** to the validity of the entire cold-start dataset and the baseline evaluation. Any deviation from the paper’s specified format (e.g., omitting CoT, adding fields, using wrong block names) will corrupt downstream experiments. The design enforces **rigorous structure** to ensure reproducibility and alignment with the paper’s core claim: that LLMs can generate compositional machines from textual goals.

@@ -1,0 +1,92 @@
+# Logic Analysis: data/dataloader.py
+
+## Core Responsibilities
+The `DatasetLoader` class in `data/dataloader.py` is responsible for:
+1. Loading and preprocessing multiple datasets (GLUE, SQuAD, CNN/DM, Alpaca)
+2. Applying appropriate tokenization using the model's tokenizer
+3. Formatting data according to task-specific requirements
+4. Creating PyTorch-compatible datasets with proper batching
+5. Handling different maximum sequence lengths based on data type
+6. Supporting both training and evaluation modes
+
+## Dataset-Specific Processing Logic
+
+### GLUE Tasks
+- **Supported tasks**: SST-2, MNLI, QNLI, QQP, MRPC, CoLA, RTE, STS-B
+- **Processing flow**:
+  1. Load dataset using Hugging Face `datasets` library
+  2. For single-sentence tasks (SST-2, CoLA): tokenize input text only
+  3. For sentence-pair tasks (MNLI, QNLI, QQP, MRPC, RTE): tokenize both sentences with proper separator tokens
+  4. Apply truncation/padding to `max_length.text` (512) from config
+  5. Convert labels to appropriate format (integer for classification, float for regression in STS-B)
+
+### SQuAD v2.0
+- **Processing flow**:
+  1. Load dataset with both context/question pairs and answer spans
+  2. Tokenize using special handling for question answering:
+     - Concatenate question and context with proper separators
+     - Use `max_length.question` (64) for questions
+     - Use `max_length.text` (512) for combined question+context
+  3. Handle unanswerable questions by setting start/end positions to [CLS] token
+  4. Create multiple features per example if context exceeds max length (sliding window approach)
+  5. Include is_impossible flag for determining answerability
+
+### CNN/DM Summarization
+- **Processing flow**:
+  1. Load article-summary pairs
+  2. Tokenize articles using `max_length.text` (512)
+  3. Tokenize summaries using `max_length.summary` (128)
+  4. Format as encoder-decoder task for T5 models:
+     - Input: "summarize: {article}"
+     - Target: "{summary}"
+  5. Apply padding/truncation appropriately for both input and target sequences
+
+### Alpaca Instruction-Following
+- **Processing flow**:
+  1. Load instruction, input (optional), and output triples
+  2. Format examples using instruction-following template:
+     ```
+     Below is an instruction that describes a task. Write a response that appropriately completes the request.
+     
+     ### Instruction:
+     {instruction}
+     
+     ### Input:
+     {input}
+     
+     ### Response:
+     {output}
+     ```
+  3. Tokenize using `max_length.instruction` (2048) from config
+  4. Handle cases where input field is empty or null
+  5. Ensure proper formatting for LLaMA tokenizer (no extra whitespace issues)
+
+## Batching Strategy
+- **Batch size determination**:
+  - Training: Use values from `training.batch_size` in config.yaml
+  - Inference: Use values from `evaluation.inference_batch_size` based on model size:
+    - Small models (RoBERTa, T5): 128
+    - LLaMA-2 7B: 32
+    - LLaMA-2 13B: 4
+- **Dynamic batching considerations**:
+  - Implement padding within batches to minimize wasted computation
+  - Consider using `DataCollatorWithPadding` from Transformers library
+  - For variable-length sequences, sort examples by length within each batch when possible
+
+## Integration Points
+- **Tokenizer dependency**: Requires tokenizer from `model/base_model.py`
+- **Configuration dependency**: Uses hyperparameters from `config/hparams.py` and `config.yaml`
+- **Output compatibility**: Must produce datasets compatible with `train/trainer.py` and `eval/evaluator.py`
+
+## Implementation Details
+- **Class structure**: Single `DatasetLoader` class with multiple loader methods
+- **Error handling**: Robust error handling for missing fields, encoding issues, etc.
+- **Memory efficiency**: Stream data when possible rather than loading entire datasets into memory
+- **Caching**: Implement caching mechanism to avoid reprocessing datasets on subsequent runs
+- **Flexibility**: Support easy addition of new datasets through modular design
+
+## Special Considerations from Paper
+- The paper specifies single A100 GPU usage, so dataloading should be optimized for single-GPU performance
+- Inference batch sizes are specifically called out in Section 5.3, so these must be strictly followed
+- For Alpaca dataset, ensure compatibility with lm-eval-harness package used for evaluation
+- Maintain consistency with hyperparameter settings in Table 6 of the paper

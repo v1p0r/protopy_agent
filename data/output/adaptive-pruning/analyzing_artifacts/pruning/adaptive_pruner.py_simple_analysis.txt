@@ -1,0 +1,132 @@
+# Logic Analysis: `pruning/adaptive_pruner.py`
+
+## Overview
+The `AdaptivePruner` class is responsible for dynamically identifying and removing unimportant parameter blocks from the language model during fine-tuning. It implements the core pruning functionality of APT by computing outlier-aware salience scores, determining which blocks to prune based on sparsity constraints, and gradually applying pruning masks for training stability.
+
+## Dependencies and Configuration
+- Depends on `config.yaml` for key parameters:
+  - `pruning.scheduler`: Specifies cubic scheduling for sparsity progression
+  - `pruning.salience_type`: Confirms use of "outlier-aware" salience scoring
+  - `pruning.use_kurtosis`: Enables kurtosis calculation for outlier detection
+  - `pruning.target_sparsity`: Target sparsity level (0.6 per config)
+  - `pruning.update_frequency`: How often to update masks (every 100 steps)
+  - `model.adapter.mha_components` and `ffn_components`: Identifies where adapters are applied
+- Imports from `utils.salience` for activation-gradient product and kurtosis calculations
+- Interfaces with `APTAdapter` to apply masks to input/output dimensions
+
+## Core Components
+
+### 1. Salience Computation (`compute_salience`)
+This method calculates the outlier-aware salience score as defined in Equation (5) of the paper:
+
+```
+Ŝ(W_:j) = Σ_(x,y∈𝒟_t) Σ_i |∂ℒ/∂H_j,i| · Σ_(x,y∈𝒟_t) Σ_i |H_j,i| + (Kurt(O_j,:))^(1/2)
+```
+
+**Implementation Steps:**
+1. **Activation-Gradient Product**: For each parameter block, compute the magnitude of the product between activations and their gradients, summed across batches to reduce memory overhead.
+   - Extract activations H from forward pass
+   - Obtain gradients ∂ℒ/∂H from backward pass
+   - Compute element-wise product |∂ℒ/∂H|·|H| and sum over batch and sequence dimensions
+
+2. **Kurtosis Calculation**: Compute kurtosis of the activation tensor O_j,: = W_:j ∘ X_j,^T to capture outlier importance.
+   - Use `utils.salience.compute_kurtosis()` function
+   - Take square root of kurtosis value as in paper equation
+   - This preserves more outlier parameters that are crucial for task-specific capabilities
+
+3. **Score Aggregation**: Combine both components into final salience score.
+   - Sum activation-gradient product term
+   - Add square root of kurtosis term
+   - Store scores for each block type (MHA heads, FFN neurons, hidden dimensions)
+
+4. **Block Identification**: Identify parameter blocks based on configuration:
+   - MHA heads in query and value projections (per `mha_components`)
+   - FFN neurons in intermediate and output dense layers (per `ffn_components`)
+   - Hidden dimension size affecting all layers
+
+### 2. Mask Generation (`generate_mask`)
+This method determines which blocks to retain/prune given current sparsity requirements.
+
+**Implementation Steps:**
+1. **Retrieve Current Sparsity**: Get γ_t from scheduler using cubic schedule:
+   ```
+   γ_t = γ_T + (1−γ_T)(1−t/T)^3
+   ```
+   - Access via external scheduler object initialized with parameters from config
+
+2. **Calculate Salience Density**: For each block, compute salience density = salience / parameter_count.
+   - Parameter count varies by block type:
+     - MHA head: 4 × d_model × d_head
+     - FFN neuron: 2 × d_model  
+     - Hidden dimension: n_layers × (4×d_model + 2×ffn_size)
+
+3. **Sort Blocks**: Sort all blocks by salience density in descending order.
+   - Higher density indicates more important parameters per parameter cost
+
+4. **Binary Search for Constraint Satisfaction**: 
+   - Goal: Find minimum number of top-salient blocks to retain while meeting γ_t constraint
+   - Use binary search over sorted list to efficiently identify cutoff point
+   - Calculate total parameter count of retained blocks
+   - Ensure sparsity ≥ γ_t as required by Equation (1)
+
+5. **Generate Binary Masks**: Create m_i (input) and m_o (output) masks.
+   - Set mask values to 1 for retained blocks, 0 for pruned blocks
+   - Structure masks to align with adapter architecture
+
+### 3. Mask Application (`apply_mask`)
+Handles gradual application of pruning masks for training stability.
+
+**Implementation Steps:**
+1. **Gradual Update**: Instead of instant zeroing, update masks incrementally.
+   - Decrease pruned block masks by α=0.01 per update (from config.mask_decay_rate)
+   - Increase retained block masks toward 1.0 similarly
+   - Ensures smooth transition and prevents abrupt performance drops
+
+2. **Mask Propagation**: Apply masks to appropriate adapter components.
+   - Input mask m_i affects hidden dimension pruning
+   - Output mask m_o affects attention heads (MHA) and neurons (FFN)
+   - Coordinate with APTAdapter's forward method for proper masking
+
+3. **Shape Maintenance**: Ensure mask shapes remain compatible with model architecture.
+   - Handle dynamic changes in layer sizes due to previous pruning rounds
+   - Validate mask dimensions before application
+
+## Integration Points
+
+### With Training Loop
+- Called periodically during training (every `update_frequency` steps)
+- Receives activations and gradients from trainer after backward pass
+- Returns updated masks to be applied before next forward pass
+- Interacts with optimizer through trainer (optimizer reset when shapes change)
+
+### With Other Components
+- **APTAdapter**: Applies generated masks to control effective model size
+- **SparsityScheduler**: Gets target sparsity level for current training step
+- **SelfDistiller**: Pruning affects teacher-student alignment; non-pruned layers guide mapping function φ(·)
+- **AdaptiveTuner**: Pruning decisions influence which layers receive additional tuning capacity
+
+## Special Considerations
+
+### Block Definition for Different Architectures
+- **RoBERTa/T5**: Standard transformer blocks with specified MHA and FFN components
+- **LLaMA**: May require adjustments for rotary embeddings and RMSNorm, but adapter placement remains consistent
+- **T5 Encoder-Decoder**: Must handle both encoder and decoder sides, including cross-attention layers
+
+### Memory Efficiency
+- Compress activation/gradient data by summing over batches
+- Reuse cached values when possible
+- Avoid storing full Jacobian matrices
+- Leverage mixed precision (fp16) as specified in hardware config
+
+### Stability Mechanisms
+- Gradual mask updates prevent sudden performance degradation
+- Exponential moving average for salience scores (using momentum_salience=0.9 from config)
+- Reset optimizer state when significant shape changes occur
+- Maintain minimum sparsity threshold to avoid over-pruning
+
+## Edge Cases and Validation
+- Handle cases where no blocks meet salience threshold
+- Validate that final sparsity meets or exceeds γ_t requirement
+- Ensure at least one head/neuron remains in each layer
+- Check for numerical stability in kurtosis calculation
+- Verify mask compatibility with merged adapter weights post-training

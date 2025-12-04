@@ -1,0 +1,16 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+\begin{table*}[htbp]
+\centering
+\begin{tabular}{@{}l|rlr|llll@{}}
+\toprule
+Method                        & MNLI                           & SST2                           & CNN/DM                                                                                       & Train. Speed & Train. Mem. & Inf. Speed & Inf. Mem. \\ \midrule
+FT                            & 87.1                           & 95.2                           & 42.1/20.3/39.4                                                                               & 100.0\%      & 100.0\%     & 100.0\%    & 100.0\%   \\
+LoRA                          & 87.0                           & 95.0                           & 38.7/17.2/36.0                                                                               & 39.1\%       & 62.0\%      & 100.0\%    & 100.0\%   \\ \midrule
+LoRA + Prune                  & 80.9                           & 92.3                           & 36.7/15.7/33.9                                                                               & 2.5\%        & 62.0\%      & 212.5\%    & 73.4\%    \\ \midrule
+{\ourmethod} & \textbf{87.0} & \textbf{95.0} & \textbf{38.6}/\textbf{17.0}/\textbf{35.8} & 20.6\%       & 73.9\%      & 134.1\%    & 81.5\%    \\ \bottomrule
+\end{tabular}
+\caption{T5 model pruning with {\ourmethod} compared to existing baselines under 60\% sparsity. We measure the training and inference efficiency with {\lmabbr}s pruned on the SST2 task. Training speed is measured via 97\% accuracy TTA.}
+\label{tab:t5-main-results}
+\vspace{-15pt}
+\end{table*}

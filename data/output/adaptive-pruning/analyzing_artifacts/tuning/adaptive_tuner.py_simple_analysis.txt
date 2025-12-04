@@ -1,0 +1,183 @@
+# Logic Analysis: `tuning/adaptive_tuner.py`
+
+## 1. Core Purpose and Role in APT Framework
+
+The `AdaptiveTuner` class is responsible for the dynamic adjustment of tuning capacity during fine-tuning by increasing the rank (`r_apt`) of selected APT adapters based on their importance to the current task. This component directly implements the "T" (Tuning) aspect of APT's adaptive pruning and tuning paradigm, working in conjunction with the `AdaptivePruner` to balance model efficiency and performance.
+
+Its primary function is to recover performance lost due to pruning by strategically allocating additional tuning parameters to the most salient layers, thereby improving convergence speed and final accuracy while maintaining training efficiency constraints.
+
+## 2. Key Design Principles from Paper
+
+Based on Section 4.3 "Adaptive and Efficient LM Tuning", the implementation must adhere to these principles:
+
+- **Salience-based allocation**: Only increase ranks in adapters deemed important based on their contribution to task learning
+- **Controlled growth**: Limit total number of tuning parameters to prevent excessive memory consumption
+- **Top-half selection**: Focus rank increases on the most important half of all adapters
+- **Output-preserving initialization**: When expanding ranks, initialize new parameters such that layer output remains unchanged
+- **Linear rank scaling**: Increase ranks proportionally based on budget changes
+
+## 3. Class Structure and Dependencies
+
+```python
+class AdaptiveTuner:
+    def __init__(self, model: nn.Module, max_params: int)
+    def compute_adapter_salience(self, named_parameters: Iterator) -> Dict[str, float]
+    def adjust_ranks(self, salience_dict: Dict, target_params: int) -> int
+```
+
+**Dependencies:**
+- `model/apt_adapter.py`: To access APTAdapter instances and modify their ranks
+- `utils/salience.py`: For computing parameter-level salience scores
+- `config.yaml`: For hyperparameters like `init_std`, `max_tuning_params_ratio`
+
+## 4. Detailed Method Analysis
+
+### `__init__` Method
+
+**Purpose:** Initialize the tuner with reference to the model and parameter budget constraints.
+
+**Parameters:**
+- `model`: The full model containing APT adapters
+- `max_params`: Maximum allowed tuning parameters (Δ_t constraint)
+
+**Logic:**
+1. Store reference to model for accessing adapters
+2. Extract all APT adapter modules from the model (using naming convention or module traversal)
+3. Store maximum parameter budget from config (`max_tuning_params_ratio` × total model params)
+4. Initialize tracking of current total tuning parameters
+
+**Configuration Usage:**
+- `tuning.max_tuning_params_ratio` from config.yaml sets the upper bound on tuning parameter growth
+- `tuning.init_std` used for Gaussian initialization when expanding ranks
+
+### `compute_adapter_salience` Method
+
+**Purpose:** Calculate the importance score 𝒯(H_apt) for each adapter as defined in Equation (7):
+
+𝒯(H_apt) = Σ_(i,j) S(W_Bi,j) where S(W_Bi,j) = |W_Bi,j · ∂ℒ/∂W_Bi,j|
+
+**Input:** 
+- `named_parameters`: Iterator over (name, parameter) pairs from model, including gradients
+
+**Logic:**
+1. Iterate through all model parameters to identify those belonging to APT adapters' W_B matrices
+2. For each W_B parameter with available gradient:
+   - Compute element-wise product of weight and gradient values
+   - Take absolute value of each element
+   - Sum all elements to get total salience for that parameter tensor
+3. Group salience scores by adapter instance (using parameter name parsing)
+4. Sum salience across all W_B parameters within each adapter to get adapter-level importance 𝒯(H_apt)
+5. Return dictionary mapping adapter names to their salience scores
+
+**Key Implementation Notes:**
+- Must only consider W_B parameters (not W_A or other components)
+- Requires gradients to be computed (called after backward pass)
+- Uses activation-gradient product rather than weight-gradient as in standard salience
+- Follows paper's focus on W_B for adapter importance assessment
+
+### `adjust_ranks` Method
+
+**Purpose:** Dynamically increase ranks of top-salient adapters to meet target parameter budget.
+
+**Inputs:**
+- `salience_dict`: Adapter importance scores from `compute_adapter_salience`
+- `target_params`: Desired total number of tuning parameters (Δ_t')
+
+**Logic Flow:**
+
+1. **Sort adapters by importance:**
+   - Sort adapters in descending order of salience score
+   - Select top-half of adapters for potential rank increase
+
+2. **Calculate required rank expansion:**
+   - Determine current total tuning parameters
+   - Compute ratio: target_params / current_total_params
+   - This ratio determines scale factor for rank increases
+
+3. **Update ranks for selected adapters:**
+   - For each adapter in top-half:
+     - Current_rank = r_apt
+     - New_rank = floor(r_apt × (target_params / current_total_params))
+     - Call adapter's `increase_rank(new_rank)` method
+
+4. **Handle edge cases:**
+   - Ensure no rank decreases (only increases allowed)
+   - Cap maximum rank based on architectural constraints
+   - Maintain minimum rank threshold
+
+5. **Return actual number of parameters after adjustment** for monitoring
+
+**Rank Expansion Strategy:**
+- Uses floor operation as specified: r'_apt = ⌊r_apt · Δ_t' / Δ_t⌋
+- Proportional scaling ensures balanced growth across important adapters
+- Top-half selection concentrates resources on most impactful layers
+
+## 5. Integration with APTAdapter
+
+The `AdaptiveTuner` relies on `APTAdapter.increase_rank()` method which must implement:
+
+```python
+def increase_rank(self, new_rank: int, init_type: str = 'lora'):
+    # Validate new_rank > current_rank
+    # Calculate how many new dimensions needed
+    num_new = new_rank - self.rank
+    
+    # Initialize new W_A rows: N(0, σ²) where σ² from config.tuning.init_std
+    new_W_A = torch.randn(num_new, self.in_features) * self.init_std
+    
+    # Initialize new W_B columns: zeros
+    new_W_B = torch.zeros(self.out_features, num_new)
+    
+    # Concatenate to existing weights
+    self.W_A = nn.Parameter(torch.cat([self.W_A, new_W_A], dim=0))
+    self.W_B = nn.Parameter(torch.cat([self.W_B, new_W_B], dim=1))
+    
+    # Update rank attribute
+    self.rank = new_rank
+```
+
+This initialization strategy preserves layer output before/after expansion because:
+- New W_B columns are zero → contribute nothing initially
+- Scaling factor s modulates impact
+- Allows gradual learning of new parameters without disrupting established representations
+
+## 6. Coordination with Training Loop
+
+The `AdaptiveTuner` operates within the main training loop (`train/trainer.py`) according to this sequence:
+
+1. After forward and backward passes
+2. When it's time to adjust tuning parameters (controlled by frequency in config)
+3. Following pruning operations to maintain parameter balance
+4. Before optimizer step
+
+It should be called periodically (e.g., every N steps) rather than every step to minimize overhead.
+
+## 7. Configuration Parameters Utilization
+
+From `config.yaml`, this module uses:
+
+- `tuning.adaptive_rank_update`: Boolean flag to enable/disable adaptive tuning
+- `tuning.rank_increase_strategy`: Currently "top_half" as specified in paper
+- `tuning.max_tuning_params_ratio`: Sets upper limit on parameter growth
+- `tuning.init_std`: Standard deviation for Gaussian initialization of new W_A rows
+- `pruning.update_frequency`: May influence how often tuning adjustments occur
+
+## 8. Performance and Stability Considerations
+
+- **Memory Efficiency:** Only stores salience scores, not full gradients
+- **Computational Overhead:** Salience computation adds minimal cost compared to forward/backward passes
+- **Training Stability:** Gradual rank increases prevent sudden distribution shifts
+- **Optimizer Handling:** Rank changes require optimizer reset (handled by trainer)
+- **Gradient Flow:** Ensures gradients flow correctly through expanded parameter tensors
+
+## 9. Expected Behavior and Validation Points
+
+When functioning correctly, the `AdaptiveTuner` should demonstrate:
+- Ranks increase monotonically over training
+- Higher increases in early training stages when performance recovery is critical
+- Concentration of rank growth in task-relevant layers (e.g., later transformer layers for classification)
+- Total tuning parameters stay within configured limits
+- Improved convergence speed compared to static-rank baselines
+- Better final accuracy than non-adaptive tuning approaches
+
+This analysis provides a comprehensive blueprint for implementing the `AdaptiveTuner` class that faithfully reproduces the methodology described in the APT paper while adhering to the specified design and configuration requirements.

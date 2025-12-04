@@ -1,0 +1,125 @@
+### Logic Analysis: `distillation/self_distiller.py`
+
+This module implements the **Self-Distillation** framework described in Section 4.4 of the paper, which is a critical component for recovering performance in pruned models without incurring high memory or time costs from traditional knowledge distillation.
+
+---
+
+#### **Core Concept**
+The key innovation is **self-distillation with shared parameters**, where:
+- The **student model** is the current APT-pruned and tuned model being trained.
+- The **teacher model** shares all frozen pretrained parameters with the student but duplicates only the *tunable APT adapter layers* as its own independent tuning modules.
+- This eliminates the need to store a separate full teacher model in GPU memory, drastically reducing training memory overhead compared to standard distillation (e.g., CoFi).
+
+As stated in the paper:  
+> *"We keep duplicating the tuning student layers as teachers during fine-tuning... Frozen parameters are shared between the student and teacher model."*
+
+---
+
+#### **Key Components & Their Roles**
+
+1. **Teacher-Student Architecture (`SelfDistiller` class)**
+   - **Input**: Student model (with APT adapters), layer mapping function φ(·)
+   - **Internal Structure**:
+     - Shares all **frozen backbone parameters** (W in $H_{\text{apt}}(X) = m_o \circ (W + s \cdot W_B W_A) X \circ m_i$).
+     - Maintains **separate copies of APT adapter weights** ($W_A$, $W_B$) for the teacher path.
+     - These duplicated adapters form the "teacher head" while using the same base transformer outputs.
+
+2. **Tunable Transformation Layer (`Tr`)**
+   - As per Equation (7): $\mathcal{L}_{\text{layer}} = \sum_{i=1}^{\tau} \text{MSE}( \mathrm{Tr}(H_s^{\phi(i)}), H_t^{i} )$
+   - `Tr` is a **LoRA-style transformation layer** applied to student hidden states before comparing them to teacher outputs.
+   - **Initialization**: Identity matrix → ensures minimal initial distortion.
+   - **Purpose**: Aligns dimensions and compensates for structural mismatches due to pruning (e.g., when student has fewer heads/neurons than teacher at certain layers).
+
+3. **Layer Mapping Function (`φ(·)`)**
+   - Maps each teacher layer $i$ to the closest non-pruned corresponding student layer $\phi(i)$.
+   - Implemented via `config.yaml`: `teacher_layer_mapping: closest_non_pruned`
+   - Ensures alignment even when some student layers have been heavily pruned or skipped.
+
+4. **Dynamic Distillation Weight (`μ`)**
+   - Controls the balance between distillation loss $\mathcal{L}_{\text{distill}}$ and fine-tuning loss $\mathcal{L}_{\text{ft}}$:  
+     $$\mathcal{L} = \mu \mathcal{L}_{\text{distill}} + (1 - \mu)\mathcal{L}_{\text{ft}}$$
+   - **Scheduling**: Linearly increases from 0 to 1 over training steps (controlled by `distill_epochs` in config).
+   - Rationale: Start focusing on task data fitting; gradually shift toward mimicking teacher representations.
+
+5. **Sampling Strategy (`τ`)**
+   - Only a subset of τ layers are used for distillation per step (from Appendix G: “block-wise randomly sampled teacher layers”).
+   - Reduces computation and avoids overfitting to specific layers.
+   - Configurable via `distill_layers_sampled: 6`.
+
+---
+
+#### **Data Flow & Execution Workflow**
+
+```python
+def forward_teacher(x):
+    # Uses shared frozen W, but separate W_A/W_B (teacher's copy)
+    # Returns list of hidden states from selected τ teacher layers
+
+def compute_distill_loss(student_outputs, teacher_outputs):
+    # For each sampled layer i:
+    #   s_hidden = student_outputs[φ(i)]
+    #   t_hidden = teacher_outputs[i]
+    #   transformed_s = Tr(s_hidden)
+    #   loss += MSE(transformed_s, t_hidden)
+    # Normalize by number of layers
+    return loss
+
+# In training loop:
+total_loss = μ * compute_distill_loss(...) + (1 - μ) * L_ft
+```
+
+---
+
+#### **Memory Efficiency Mechanism**
+| Component | Shared? | Why |
+|--------|-------|-----|
+| Pretrained Transformer Weights (W) | ✅ Yes | Avoids duplicating large frozen blocks |
+| Embedding Layers | ✅ Yes | Part of backbone |
+| Output Head | ✅ Yes | Task-specific, not adapter-based |
+| APT Adapter Parameters ($W_A$, $W_B$) | ❌ No | Teacher maintains its own copy for independent updates |
+
+→ This design ensures that **only a small fraction (~<1%) of total parameters are duplicated**, keeping memory usage close to single-model training.
+
+---
+
+#### **Integration Points with Other Modules**
+| From Module | Interaction |
+|-----------|------------|
+| `train/trainer.py` | Calls `compute_distill_loss()` every step; passes μ(t); triggers `forward_teacher()` |
+| `model/apt_adapter.py` | Duplicates APT adapter instances for teacher use; applies `Tr` transformation |
+| `utils/mask_scheduler.py` | Layer mapping depends on current pruning masks (to find non-pruned layers) |
+| `config/hparams.py` / `config.yaml` | Reads `num_teacher_layers`, `distill_loss_weight_start/end`, `teacher_layer_mapping` |
+
+---
+
+#### **Critical Design Decisions Based on Paper**
+1. **No Separate Teacher Training**: The teacher evolves alongside the student — both update their respective APT adapters during backpropagation.
+2. **Identity Initialization of `Tr`**: Matches description: *"initialized as an identical matrix $\mathcal{T}$"*.
+3. **Use of MSE Loss**: Directly follows CoFi adaptation in Equation (7).
+4. **Gradual Focus Shift via μ**: Starts with $\mu=0$ (pure supervised learning), ends with $\mu=1$ (full mimicry).
+
+---
+
+#### **Ambiguities Resolved Using Configuration File**
+| Paper Ambiguity | Resolution via `config.yaml` |
+|------------------|-------------------------------|
+| How many layers to sample? | `distill_layers_sampled: 6` |
+| How to map teacher to student layers? | `teacher_layer_mapping: closest_non_pruned` |
+| How fast should μ increase? | Linear schedule over `distill_epochs` |
+| Should we share frozen params? | `share_frozen_params: true` enforces this behavior |
+| Is `Tr` trainable? | Yes — implied by "tunable LoRA layer", implemented as parameterized module |
+
+---
+
+#### **Implementation Requirements Summary**
+
+To implement `SelfDistiller` correctly:
+1. Duplicate only APT adapter parameters for the teacher.
+2. Share all other model components (embeddings, attention W, FFN W, etc.).
+3. Implement `Tr` as a low-rank or linear transformation initialized to identity.
+4. Sample τ layers dynamically based on current sparsity.
+5. Apply MSE loss between transformed student and teacher hidden states.
+6. Schedule μ linearly from 0 to 1 across distillation epochs.
+7. Ensure gradients flow through both student and teacher adapter paths.
+
+This approach enables accurate recovery of pruned model performance while maintaining the **low memory footprint** central to APT’s efficiency claims.

@@ -1,0 +1,222 @@
+## utils/mask_scheduler.py
+"""
+Sparsity scheduling utilities for APT framework.
+
+Implements the SparsityScheduler class that controls the gradual increase of model sparsity
+during training according to a predefined schedule (e.g., cubic). This ensures smooth
+transition from initial to target sparsity, avoiding abrupt structural changes that could
+destabilize training.
+
+Based on Section A and Appendix C of the paper, with parameters from config.yaml.
+"""
+
+import torch
+from typing import Optional
+import math
+
+# Import from local modules
+from config.hparams import (
+    PRUNING_CONFIG, TRAINING_CONFIG,
+    PRUNING_SCHEDULER, TARGET_SPARSITY, MIN_SPARSITY
+)
+
+
+class SparsityScheduler:
+    """
+    Scheduler for controlling sparsity level during adaptive pruning.
+    
+    Implements time-varying sparsity constraints as described in Section A:
+    γ_t = γ_T + (1 - γ_T)(1 - t/T)^3
+    
+    However, based on context and standard practice, we interpret this as:
+    γ_t = γ_T * [1 - (1 - t/T)^3]
+    
+    Which starts at 0 and asymptotically approaches γ_T by step T.
+    
+    Attributes:
+        total_steps: Total number of training steps
+        target_sparsity: Target sparsity ratio (e.g., 0.6 for 60%)
+        schedule_type: Type of scheduling ('cubic', 'linear')
+        min_sparsity: Minimum sparsity (usually 0.0)
+    """
+    
+    def __init__(self, 
+                 total_steps: int, 
+                 target_sparsity: Optional[float] = None, 
+                 schedule_type: Optional[str] = None,
+                 min_sparsity: Optional[float] = None):
+        """
+        Initialize the sparsity scheduler.
+        
+        Args:
+            total_steps: Total number of training steps (epochs * steps_per_epoch)
+            target_sparsity: Target sparsity ratio [0,1) (default: from config)
+            schedule_type: Scheduling strategy ('cubic', 'linear') (default: from config)
+            min_sparsity: Minimum allowed sparsity (default: from config)
+            
+        Raises:
+            ValueError: If total_steps <= 0 or invalid sparsity values
+            TypeError: If arguments have incorrect types
+        """
+        # Validate inputs
+        if not isinstance(total_steps, int) or total_steps <= 0:
+            raise ValueError(f"total_steps must be positive integer, got {total_steps}")
+        
+        # Set default values from configuration if not provided
+        self.target_sparsity = target_sparsity if target_sparsity is not None else TARGET_SPARSITY
+        self.schedule_type = schedule_type if schedule_type is not None else PRUNING_SCHEDULER
+        self.min_sparsity = min_sparsity if min_sparsity is not None else MIN_SPARSITY
+        
+        # Validate sparsity values
+        if not isinstance(self.target_sparsity, float) or not (0.0 <= self.target_sparsity < 1.0):
+            raise ValueError(f"target_sparsity must be float in [0,1), got {self.target_sparsity}")
+            
+        if not isinstance(self.min_sparsity, float) or not (0.0 <= self.min_sparsity <= self.target_sparsity):
+            raise ValueError(f"min_sparsity must be in [0, target_sparsity], got {self.min_sparsity}")
+        
+        # Validate schedule type
+        supported_schedules = ['cubic', 'linear']
+        if self.schedule_type not in supported_schedules:
+            raise ValueError(f"Unsupported schedule_type: {self.schedule_type}. "
+                           f"Supported types: {supported_schedules}")
+        
+        # Store attributes
+        self.total_steps = total_steps
+        
+        # Precompute constants for efficiency
+        self._target_sparsity = float(self.target_sparsity)
+        self._min_sparsity = float(self.min_sparsity)
+    
+    def get_current_sparsity(self, step: int) -> float:
+        """
+        Get the current sparsity level at the given training step.
+        
+        Computes sparsity using the selected schedule:
+        
+        Cubic:   γ_t = γ_T * [1 - (1 - t/T)^3]
+        Linear:  γ_t = γ_T * (t/T)
+        
+        Args:
+            step: Current training step (0-indexed)
+            
+        Returns:
+            Sparsity ratio in range [min_sparsity, target_sparsity]
+            
+        Raises:
+            ValueError: If step is negative
+        """
+        if step < 0:
+            raise ValueError(f"step must be non-negative, got {step}")
+        
+        # Handle edge cases
+        if self.total_steps == 0:
+            return self._target_sparsity
+            
+        if step >= self.total_steps:
+            return self._target_sparsity  # Cap at target after final step
+        
+        # Compute normalized progress ratio
+        ratio = step / self.total_steps
+        
+        # Apply scheduling function
+        if self.schedule_type == 'cubic':
+            # Cubic schedule: slow start, faster end
+            sparsity = self._target_sparsity * (1 - (1 - ratio) ** 3)
+        elif self.schedule_type == 'linear':
+            # Linear schedule: constant rate
+            sparsity = self._target_sparsity * ratio
+        else:
+            # Should never reach here due to validation in __init__
+            sparsity = self._target_sparsity * ratio
+        
+        # Clamp between min and max sparsity
+        sparsity = max(self._min_sparsity, min(sparsity, self._target_sparsity))
+        
+        return sparsity
+    
+    def get_remaining_steps(self, step: int) -> int:
+        """
+        Get the number of remaining training steps.
+        
+        Useful for logging and progress tracking.
+        
+        Args:
+            step: Current training step
+            
+        Returns:
+            Number of steps remaining until completion
+        """
+        return max(0, self.total_steps - step)
+    
+    def is_complete(self, step: int) -> bool:
+        """
+        Check if the sparsity schedule is complete.
+        
+        Args:
+            step: Current training step
+            
+        Returns:
+            True if schedule is complete, False otherwise
+        """
+        return step >= self.total_steps
+    
+    def get_progress_ratio(self, step: int) -> float:
+        """
+        Get the training progress ratio.
+        
+        Args:
+            step: Current training step
+            
+        Returns:
+            Progress ratio in [0, 1]
+        """
+        if step < 0:
+            return 0.0
+        return min(step / self.total_steps, 1.0) if self.total_steps > 0 else 1.0
+    
+    def get_schedule_type(self) -> str:
+        """
+        Get the current schedule type.
+        
+        Returns:
+            Schedule type string ('cubic', 'linear', etc.)
+        """
+        return self.schedule_type
+    
+    def get_target_sparsity(self) -> float:
+        """
+        Get the target sparsity value.
+        
+        Returns:
+            Target sparsity ratio
+        """
+        return self._target_sparsity
+    
+    def get_min_sparsity(self) -> float:
+        """
+        Get the minimum sparsity value.
+        
+        Returns:
+            Minimum sparsity ratio
+        """
+        return self._min_sparsity
+    
+    def get_total_steps(self) -> int:
+        """
+        Get the total number of training steps.
+        
+        Returns:
+            Total steps count
+        """
+        return self.total_steps
+    
+    def __str__(self) -> str:
+        """String representation of the scheduler."""
+        return (f"SparsityScheduler(schedule_type={self.schedule_type}, "
+                f"target_sparsity={self._target_sparsity:.3f}, "
+                f"min_sparsity={self._min_sparsity:.3f}, "
+                f"total_steps={self.total_steps})")
+    
+    def __repr__(self) -> str:
+        """Detailed string representation."""
+        return self.__str__()

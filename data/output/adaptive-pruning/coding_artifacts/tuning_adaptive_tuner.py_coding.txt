@@ -1,0 +1,428 @@
+```python
+## tuning/adaptive_tuner.py
+"""
+Adaptive tuner implementation for APT framework.
+
+Implements the AdaptiveTuner class that dynamically increases the rank of APT adapters
+in salient layers during fine-tuning to recover performance lost due to pruning.
+This component enables efficient performance recovery by strategically allocating additional
+tuning parameters to the most important layers while maintaining training efficiency.
+
+Based on Section 4.3 of the paper and config.yaml specifications.
+"""
+
+import torch
+import torch.nn as nn
+from typing import Dict, List, Tuple, Optional, Iterator
+from dataclasses import dataclass
+
+# Import from local modules
+from model.apt_adapter import APTAdapter
+from config.hparams import (
+    TUNING_CONFIG, TRAINING_CONFIG,
+    ADAPTIVE_RANK_UPDATE, RANK_INCREASE_STRATEGY,
+    MAX_TUNING_PARAMS_RATIO, INIT_STD
+)
+
+
+@dataclass
+class AdapterInfo:
+    """Information about an adapter for tuning decisions."""
+    name: str
+    adapter: APTAdapter
+    current_rank: int
+    param_count: int
+
+
+class AdaptiveTuner:
+    """
+    Adaptive tuner that dynamically increases ranks in salient APT adapters.
+    
+    This class implements the adaptive tuning strategy described in Section 4.3 of the paper.
+    It computes adapter importance scores based on parameter salience, then increases ranks
+    in the most important adapters to recover performance lost through pruning.
+    
+    The tuner works by:
+    1. Computing importance score 𝒯(H_apt) for each adapter
+    2. Sorting adapters by importance
+    3. Increasing ranks of top-half most salient adapters
+    4. Using proportional scaling to meet target parameter budget
+    
+    Based on Equation (7) and Algorithm 1 of the paper.
+    """
+    
+    def __init__(self, 
+                 model: nn.Module, 
+                 max_params_ratio: Optional[float] = None,
+                 init_std: Optional[float] = None):
+        """
+        Initialize the adaptive tuner.
+        
+        Args:
+            model: The model containing APT adapters to be tuned
+            max_params_ratio: Maximum ratio of tuning params to total model params (default: from config)
+            init_std: Standard deviation for Gaussian initialization (default: from config)
+            
+        Raises:
+            ValueError: If model has no APT adapters or invalid configuration values
+            TypeError: If arguments have incorrect types
+        """
+        # Validate inputs
+        if not hasattr(model, 'get_adapter_params') or not hasattr(model, 'adapters'):
+            raise ValueError("Model must have get_adapter_params() method and adapters attribute")
+            
+        if len(model.adapters) == 0:
+            raise ValueError("Model has no APT adapters to tune")
+        
+        # Set default values from configuration if not provided
+        self.max_params_ratio = max_params_ratio or MAX_TUNING_PARAMS_RATIO
+        self.init_std = init_std or INIT_STD
+        
+        # Validate configuration values
+        if not isinstance(self.max_params_ratio, float) or not (0.0 < self.max_params_ratio <= 1.0):
+            raise ValueError(f"max_params_ratio must be in (0,1], got {self.max_params_ratio}")
+            
+        if not isinstance(self.init_std, float) or self.init_std <= 0.0:
+            raise ValueError(f"init_std must be positive, got {self.init_std}")
+        
+        # Store references
+        self.model = model
+        
+        # Initialize tracking variables
+        self.adapter_info: List[AdapterInfo] = []
+        self.current_total_params = 0
+        self.step_count = 0
+        
+        # Build adapter information
+        self._build_adapter_info()
+        
+        # Validate adaptive tuning is enabled
+        if not ADAPTIVE_RANK_UPDATE:
+            print("Warning: Adaptive rank update is disabled in configuration.")
+    
+    def _build_adapter_info(self):
+        """Build information about all adapters available for tuning."""
+        self.adapter_info = []
+        
+        # Get total number of model parameters for ratio calculation
+        total_model_params = sum(p.numel() for p in self.model.parameters())
+        max_allowed_params = int(total_model_params * self.max_params_ratio)
+        
+        # Create adapter info for each adapter
+        for adapter_name, adapter in self.model.adapters.items():
+            param_count = adapter.get_parameter_count()
+            
+            # Check if this adapter would exceed maximum allowed parameters
+            if param_count > max_allowed_params:
+                print(f"Warning: Adapter {adapter_name} has {param_count} parameters, "
+                      f"exceeding maximum allowed {max_allowed_params}. "
+                      "Consider reducing initial rank or max_params_ratio.")
+            
+            adapter_info = AdapterInfo(
+                name=adapter_name,
+                adapter=adapter,
+                current_rank=adapter.get_current_rank(),
+                param_count=param_count
+            )
+            
+            self.adapter_info.append(adapter_info)
+        
+        # Update current total parameters
+        self.current_total_params = sum(info.param_count for info in self.adapter_info)
+    
+    def compute_adapter_salience(self, named_parameters: Iterator[Tuple[str, nn.Parameter]]) -> Dict[str, float]:
+        """
+        Compute importance scores for each APT adapter based on parameter salience.
+        
+        Implements Equation (7) from the paper:
+        𝒯(H_apt) = Σ_(i,j) S(W_Bi,j) where S(W_Bi,j) = |W_Bi,j · ∂ℒ/∂W_Bi,j|
+        
+        Args:
+            named_parameters: Iterator over (name, parameter) pairs from model
+            
+        Returns:
+            Dictionary mapping adapter names to their importance scores
+            
+        Raises:
+            RuntimeError: If computation fails due to missing gradients or other issues
+        """
+        # Initialize dictionary to store salience scores
+        salience_dict = {}
+        
+        try:
+            # Process each parameter with gradient
+            for name, param in named_parameters:
+                # Skip parameters without gradients
+                if param.grad is None:
+                    continue
+                
+                # Look for W_B parameters in APT adapters
+                if '.Wb' in name and 'adapter_' in name:
+                    # Extract adapter name from full parameter name
+                    # Format: adapter_mha_q_proj_layer0.Wb
+                    parts = name.split('.')
+                    adapter_name = '.'.join(parts[:-1])  # Remove the parameter name (e.g., 'Wb')
+                    
+                    # Compute parameter-level salience: |W_Bi,j · ∂ℒ/∂W_Bi,j|
+                    weight_grad_product = torch.abs(param.data * param.grad.data)
+                    param_salience = torch.sum(weight_grad_product).item()
+                    
+                    # Accumulate salience for this adapter
+                    if adapter_name in salience_dict:
+                        salience_dict[adapter_name] += param_salience
+                    else:
+                        salience_dict[adapter_name] = param_salience
+            
+            # Ensure all adapters have a score (set zero for those without gradients)
+            for adapter_info in self.adapter_info:
+                if adapter_info.name not in salience_dict:
+                    salience_dict[adapter_info.name] = 0.0
+            
+            return salience_dict
+            
+        except Exception as e:
+            raise RuntimeError(f"Failed to compute adapter salience: {str(e)}")
+    
+    def adjust_ranks(self, salience_dict: Dict[str, float], target_params: int) -> int:
+        """
+        Adjust ranks of APT adapters based on their importance scores.
+        
+        Implements the dynamic rank adjustment strategy from Section 4.3:
+        - Sort adapters by importance score 𝒯(H_apt)
+        - Select top-half most salient adapters
+        - Increase their ranks proportionally to meet target parameter budget
+        - Use floor operation: r'_apt = ⌊r_apt · Δ_t' / Δ_t⌋
+        
+        Args:
+            salience_dict: Dictionary mapping adapter names to importance scores
+            target_params: Target number of tuning parameters Δ_t'
+            
+        Returns:
+            Actual number of tuning parameters after adjustment
+            
+        Raises:
+            ValueError: If target_params is less than current count or invalid
+            RuntimeError: If rank adjustment fails
+        """
+        # Validate inputs
+        if target_params < self.current_total_params:
+            raise ValueError(f"Target parameters ({target_params}) cannot be less than "
+                           f"current count ({self.current_total_params}). "
+                           "Rank reduction not supported.")
+        
+        if not salience_dict:
+            print("Warning: Empty salience dictionary. No rank adjustments will be made.")
+            return self.current_total_params
+        
+        try:
+            # Sort adapters by importance score in descending order
+            sorted_adapters = sorted(
+                self.adapter_info,
+                key=lambda x: salience_dict.get(x.name, 0.0),
+                reverse=True
+            )
+            
+            # Select top-half adapters for rank increase
+            num_to_update = max(1, len(sorted_adapters) // 2)
+            top_adapters = sorted_adapters[:num_to_update]
+            
+            # Calculate scaling factor for rank increase
+            # r'_apt = ⌊r_apt · Δ_t' / Δ_t⌋
+            scale_factor = target_params / max(self.current_total_params, 1)
+            
+            # Track actual parameter count after adjustment
+            new_total_params = 0
+            
+            # Update ranks for selected adapters
+            for adapter_info in top_adapters:
+                current_rank = adapter_info.current_rank
+                current_param_count = adapter_info.param_count
+                
+                # Calculate new rank using floor operation
+                new_rank = int(current_rank * scale_factor)
+                
+                # Ensure minimum rank of 1 and don't decrease rank
+                new_rank = max(1, new_rank)
+                if new_rank <= current_rank:
+                    new_rank = current_rank + 1  # Always increase at least one rank
+                
+                # Apply rank increase to adapter
+                adapter_info.adapter.increase_rank(new_rank, init_type='lora')
+                
+                # Update adapter info
+                adapter_info.current_rank = new_rank
+                adapter_info.param_count = adapter_info.adapter.get_parameter_count()
+                
+                # Add to new total
+                new_total_params += adapter_info.param_count
+            
+            # Update non-selected adapters (no change)
+            for adapter_info in sorted_adapters[num_to_update:]:
+                new_total_params += adapter_info.param_count
+            
+            # Update current total parameters
+            self.current_total_params = new_total_params
+            
+            return new_total_params
+            
+        except Exception as e:
+            raise RuntimeError(f"Failed to adjust ranks: {str(e)}")
+    
+    def should_update(self, step: int, min_interval: int = 100) -> bool:
+        """
+        Determine whether tuning should be updated at current step.
+        
+        Args:
+            step: Current training step
+            min_interval: Minimum interval between updates
+            
+        Returns:
+            Boolean indicating whether to perform tuning update
+        """
+        # Check if adaptive tuning is enabled
+        if not ADAPTIVE_RANK_UPDATE:
+            return False
+            
+        # Never update before warmup
+        if step < 0:
+            return False
+            
+        # Respect minimum interval
+        if (step - self.step_count) < min_interval:
+            return False
+            
+        # Don't update too frequently
+        if step <= self.step_count:
+            return False
+            
+        return True
+    
+    def tuning_step(self, 
+                   named_parameters: Iterator[Tuple[str, nn.Parameter]], 
+                   target_params: int,
+                   step: int) -> int:
+        """
+        Perform one step of adaptive tuning.
+        
+        This method orchestrates the complete tuning process:
+        1. Check if update is needed
+        2. Compute adapter importance scores
+        3. Adjust ranks based on target parameter budget
+        4. Update internal state
+        
+        Args:
+            named_parameters: Iterator over model parameters with gradients
+            target_params: Target number of tuning parameters
+            step: Current training step
+            
+        Returns:
+            Actual number of tuning parameters after adjustment
+            
+        Raises:
+            RuntimeError: If any part of the tuning process fails
+        """
+        # Check if update is needed
+        if not self.should_update(step):
+            return self.current_total_params
+            
+        try:
+            # Update step counter
+            self.step_count = step
+            
+            # Compute adapter importance scores
+            salience_dict = self.compute_adapter_salience(named_parameters)
+            
+            # Adjust ranks to meet target parameter budget
+            actual_params = self.adjust_ranks(salience_dict, target_params)
+            
+            # Update adapter info
+            self._build_adapter_info()
+            
+            return actual_params
+            
+        except Exception as e:
+            raise RuntimeError(f"Failed to complete tuning step: {str(e)}")
+    
+    def get_tuning_stats(self) -> Dict[str, Any]:
+        """
+        Get current tuning statistics.
+        
+        Returns:
+            Dictionary containing tuning information across all adapters
+        """
+        # Get individual adapter stats
+        adapter_stats = {}
+        total_params = 0
+        total_rank = 0
+        num_adapters = len(self.adapter_info)
+        
+        for adapter_info in self.adapter_info:
+            stats = adapter_info.adapter.get_sparsity_stats()
+            adapter_stats[adapter_info.name] = {
+                'rank': adapter_info.current_rank,
+                'param_count': adapter_info.param_count,
+                'input_sparsity': stats['input_sparsity'],
+                'output_sparsity': stats['output_sparsity']
+            }
+            total_params += adapter_info.param_count
+            total_rank += adapter_info.current_rank
+        
+        avg_rank = total_rank / num_adapters if num_adapters > 0 else 0
+        
+        return {
+            'total_tuning_parameters': total_params,
+            'current_total_params': self.current_total_params,
+            'average_rank': avg_rank,
+            'max_rank': max((a.current_rank for a in self.adapter_info), default=0),
+            'min_rank': min((a.current_rank for a in self.adapter_info), default=0),
+            'num_adapters': num_adapters,
+            'step_count': self.step_count,
+            'max_params_ratio': self.max_params_ratio,
+            'init_std': self.init_std,
+            'adapter_details': adapter_stats
+        }
+    
+    def reset(self):
+        """Reset tuner state."""
+        self.step_count = 0
+        self.current_total_params = 0
+        self._build_adapter_info()
+    
+    def get_adapter_info(self) -> List[AdapterInfo]:
+        """
+        Get information about all adapters available for tuning.
+        
+        Returns:
+            List of AdapterInfo objects
+        """
+        return self.adapter_info.copy()
+    
+    def get_max_params_ratio(self) -> float:
+        """
+        Get the maximum allowed ratio of tuning parameters.
+        
+        Returns:
+            Maximum parameter ratio
+        """
+        return self.max_params_ratio
+    
+    def get_init_std(self) -> float:
+        """
+        Get the standard deviation for Gaussian initialization.
+        
+        Returns:
+            Initialization standard deviation
+        """
+        return self.init_std
+    
+    def extra_repr(self) -> str:
+        """
+        Extra representation string for debugging.
+        
+        Returns:
+            String representation of key properties
+        """
+        return f"max_params_ratio={self.max_params_ratio:.4f}, " \
+               f"init_std={self.init_std:.6f}, " \
+               f"step_count={self.step_count}"
+```

@@ -1,0 +1,141 @@
+## config.yaml
+training:
+  learning_rate:
+    glue_small: 0.0002
+    glue_big: 0.0002
+    squad: 0.0002
+    cnn_dm: 0.0001
+    alpaca: 0.0001
+  batch_size:
+    glue_small: 32
+    glue_big: 32
+    squad: 32
+    cnn_dm: 16
+    alpaca: 32
+  epochs:
+    glue_small: 40
+    glue_big: 40
+    squad: 40
+    cnn_dm: 16
+    alpaca: 15
+  distill_epochs:
+    glue_small: 20
+    glue_big: 20
+    squad: 20
+    cnn_dm: 6
+    alpaca: null
+  target_sparsity: 0.6
+  initial_rank: 8
+  scaling_factor: 2.0
+  mask_decay_rate: 0.01
+  momentum_salience: 0.9
+  warmup_steps: null
+  optimizer: "Adam"
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+
+model:
+  architectures:
+    - roberta-base
+    - t5-base
+    - llama-2-7b
+    - llama-2-13b
+  adapter:
+    apply_to_mha: true
+    apply_to_ffn: true
+    mha_components:
+      - q_proj
+      - v_proj
+    ffn_components:
+      - intermediate_dense
+      - output_dense
+
+data:
+  datasets:
+    - sst2
+    - mnli
+    - qnli
+    - qqp
+    - mrpc
+    - cola
+    - rte
+    - stsb
+    - squad_v2
+    - cnn_dm
+    - alpaca
+  task_type:
+    classification: [sst2, mnli, qnli, qqp, mrpc, cola, rte]
+    qa: [squad_v2]
+    summarization: [cnn_dm]
+    instruction_following: [alpaca]
+  num_labels:
+    sst2: 2
+    mnli: 3
+    qnli: 2
+    qqp: 2
+    mrpc: 2
+    cola: 2
+    rte: 2
+    stsb: 1
+  max_length:
+    text: 512
+    question: 64
+    answer: 192
+    summary: 128
+    instruction: 2048
+
+evaluation:
+  inference_batch_size:
+    small_model: 128
+    llama_7b: 32
+    llama_13b: 4
+  metrics:
+    classification: accuracy
+    qa: f1
+    summarization: rouge
+    instruction_following: lm_eval_harness
+  eval_tasks:
+    open_llm_leaderboard:
+      - arc: 25-shot
+      - hellaswag: 10-shot
+      - mmlu: 5-shot
+      - truthfulqa: 0-shot
+  normalize_metrics: true
+  baseline_ft: true
+  baseline_lora: true
+
+pruning:
+  scheduler: cubic
+  salience_type: outlier-aware
+  use_kurtosis: true
+  block_types:
+    - mha_head
+    - ffn_neuron
+    - hidden_dimension
+  binary_search: true
+  update_frequency: 100
+  min_sparsity: 0.0
+  target_sparsity: 0.6
+  gradual_mask_update: true
+
+tuning:
+  adaptive_rank_update: true
+  rank_increase_strategy: top_half
+  max_tuning_params_ratio: 0.1
+  init_std: 0.02
+
+distillation:
+  use_self_distillation: true
+  share_frozen_params: true
+  teacher_layer_mapping: closest_non_pruned
+  num_teacher_layers: 6
+  distill_loss_weight_start: 0.0
+  distill_loss_weight_end: 1.0
+  distill_layers_sampled: 6
+  tr_layer_init: identity
+
+hardware:
+  gpu_type: A100
+  num_gpus: 1
+  distributed_training: false
+  precision: fp16

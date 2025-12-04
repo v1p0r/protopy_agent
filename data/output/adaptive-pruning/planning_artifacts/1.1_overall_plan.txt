@@ -1,0 +1,320 @@
+# Reproduction Plan for APT: Adaptive Pruning and Tuning Pretrained Language Models
+
+## 1. Core Methodology Extraction
+
+### 1.1 Overall Framework
+APT (Adaptive Pruning and Tuning) is a method that simultaneously prunes and tunes pretrained language models during fine-tuning to improve both training and inference efficiency. The key innovation is the dynamic adjustment of:
+- Pruning masks (removing unimportant parameters)
+- Tuning ranks (adding salient tuning parameters)
+
+The framework operates by:
+1. Starting with an initial sparse configuration
+2. Dynamically pruning less important parameter blocks based on salience scores
+3. Dynamically increasing tuning capacity in more important layers
+4. Using self-distillation to maintain performance
+
+### 1.2 APT Adapter Architecture
+The APT adapter builds upon LoRA but adds dynamic capabilities:
+
+**Mathematical Formulation:**
+```
+H_apt(X) = m_o ∘ (W + s · W_B W_A) X ∘ m_i
+```
+
+Where:
+- `m_i` ∈ ℝ^d_i: binary input pruning mask
+- `m_o` ∈ ℝ^d_o: binary output pruning mask  
+- `W_A` ∈ ℝ^(r_apt × d_i): low-rank decomposition matrix
+- `W_B` ∈ ℝ^(d_o × r_apt): low-rank decomposition matrix
+- `s`: scaling factor (constant)
+- `∘`: Hadamard product
+- `r_apt`: dynamic rank that can be increased during training
+
+**Implementation Details:**
+- Applied to queries and values in Multi-Head Attention (MHA) layers
+- Also applied to Feed-Forward Network (FFN) layers for smaller models (RoBERTa, T5)
+- Input mask `m_i` prunes transformer hidden dimensions
+- Output mask `m_o` prunes attention heads in MHA and neurons in FFN layers
+
+### 1.3 Adaptive Pruning (𝒜ₚ)
+
+**Outlier-aware Salience Scoring:**
+```
+Ŝ(W_:j) = Σ_(x,y∈𝒟_t) Σ_i |∂ℒ/∂H_j,i| · Σ_(x,y∈𝒟_t) Σ_i |H_j,i| + (Kurt(O_j,:))^(1/2)
+```
+
+Where:
+- First term: activation-gradient magnitude product (compressed across batches)
+- Second term: square root of kurtosis of activation O_j,: = W_:j ∘ X_j,^T
+- Kurtosis captures outlier parameters important for task-specific capabilities
+
+**Efficient Search Algorithm:**
+1. Calculate salience score for each parameter block
+2. Sort blocks by salience density (salience / parameter count)
+3. Use binary search to identify top-salient blocks to retain given sparsity constraint γ_t
+4. Gradually decrease pruning masks by α=0.01 instead of instant zeroing for stability
+
+### 1.4 Adaptive Tuning (𝒜ₜ)
+
+**APT Adapter Salience Scoring:**
+```
+𝒯(H_apt) = Σ_(i,j) S(W_Bi,j)
+```
+Where S(W_Bi,j) = |W_Bi,j · ∂ℒ/∂W_Bi,j| is the standard salience score
+
+**Dynamic Rank Adjustment:**
+1. Calculate importance score 𝒯(H_apt) for each APT adapter
+2. Sort adapters by importance
+3. Increase ranks of top-half most salient adapters
+4. When increasing from Δ_t to Δ_t':
+   - New rank r'_apt = ⌊r_apt · (Δ_t' / Δ_t)⌋
+   - Initialize new parameters: concatenate random Gaussian N(0,σ²) to W_A and zeros to W_B
+   - This preserves layer output before/after expansion
+
+### 1.5 Efficient Self-Knowledge Distillation
+
+**Distillation Objective:**
+```
+ℒ = μℒ_distill + (1-μ)ℒ_ft
+ℒ_layer = Σ_(i=1)^τ MSE(Tr(H_s^φ(i)), H_t^i)
+```
+
+Key features:
+- μ linearly scales from 0 to 1 during training
+- Teacher model uses same parameters as student (self-distillation)
+- Only tuning layers are duplicated as teachers
+- Frozen parameters shared between teacher and student
+- τ: number of randomly sampled teacher layers
+- φ(·): teacher-student layer mapping function
+- Tr: tunable LoRA layer initialized as identity matrix
+
+## 2. Experimental Requirements
+
+### 2.1 Datasets
+
+**For BERT/RoBERTa/T5 Models:**
+- **GLUE Benchmark:**
+  - SST-2: Binary sentiment classification
+  - MNLI: Multi-genre Natural Language Inference
+  - QNLI, QQP, MRPC, CoLA, RTE, STS-B (mentioned in Appendix D)
+- **SQuAD v2.0:** Question answering with unanswerable questions
+- **CNN/DM:** Summarization dataset (for T5 models)
+
+**For LLaMA Models:**
+- **Alpaca Dataset:** GPT-4 generated instruction-following data
+- Evaluation on Open LLM Leaderboard tasks:
+  - 25-shot ARC (AI2 Reasoning Challenge)
+  - 10-shot HellaSwag
+  - 5-shot MMLU (Massive Multitask Language Understanding)
+  - Zero-shot TruthfulQA
+
+### 2.2 Model Architectures
+
+**Small-to-Medium Models:**
+- RoBERTa-base (12 layers, 768 hidden dim, 12 heads)
+- T5-base (encoder-decoder architecture)
+
+**Large Models:**
+- LLaMA-2 7B
+- LLaMA-2 13B (mentioned in Appendix D.3)
+
+### 2.3 Baseline Methods for Comparison
+
+**PEFT Methods:**
+- Full Fine-tuning (FT)
+- LoRA (Hu et al., 2022)
+
+**Pruning Methods:**
+- LoRA+Prune: Post-training pruning using Mask Tuning (Kwon et al., 2022)
+- Prune+Distill: CoFi (Xia et al., 2022) with L0 regularization
+- LoRA+Prune+Distill: CoFi pruning with only LoRA parameters tuned
+
+**State-of-the-Art Comparisons:**
+- LLMPruner (Ma et al., 2023): Task-agnostic pruning for LLaMA
+- PST (Li et al., 2022) and LRP (Zhang et al., 2023a): Additional baselines in Appendix D
+
+### 2.4 Hyperparameters and Training Settings
+
+**General Hyperparameters (from Table 6):**
+
+| Hyperparameter | GLUE-small | GLUE-big | SQuAD | CNN/DM | Alpaca |
+|----------------|------------|---------|-------|--------|--------|
+| Learning rate | 2e-4 | 2e-4 | 2e-4 | 1e-4 | 1e-4 |
+| Batch size | 32 | 32 | 32 | 16 | 32 |
+| Epochs | 40 | 40 | 40 | 16 | 15 |
+| Distill epochs | 20 | 20 | 20 | 6 | - |
+
+**APT-Specific Parameters:**
+- Initial adapter rank: 8
+- Scaling factor (s): 2 (static)
+- Target sparsity (γ_T): Varies by experiment (60% for RoBERTa/T5, 30% for LLaMA)
+- Sparsity scheduling: Cubic schedule γ_t = γ_T + (1-γ_T)(1-t/T)³
+- Momentum for salience averaging (β): Not specified ""
+- Pruning mask decay rate (α): 0.01
+- Distillation coefficient (μ): Linearly increases from 0 to 1
+
+**Optimizer Settings:**
+- Standard Adam optimizer (implied, not explicitly stated) ""
+- Reset optimizer every time parameter sizes change (for stability)
+
+### 2.5 Implementation Architecture
+
+**Model Integration:**
+- Add APT adapters to:
+  - Query and value projections in MHA layers (all models)
+  - FFN layers (RoBERTa and T5 only, not mentioned for LLaMA)
+- For encoder-decoder models (T5), include cross-attention layers in decoder
+
+**Memory Management:**
+- Single A100 GPU for all experiments
+- Inference batch sizes:
+  - Small models: 128
+  - LLaMA 7B: 32
+  - LLaMA 13B: 4
+
+### 2.6 Evaluation Metrics
+
+**Training Efficiency Metrics:**
+- Relative training peak memory (Train Mem ↓): Compared to full fine-tuning
+- Time to Accuracy (TTA): For small models, time to reach 97% of final accuracy
+- Training time per step: For large models (LLaMA)
+
+**Inference Efficiency Metrics:**
+- Inference peak memory (Inf Mem ↓)
+- Inference speedup: Based on throughput (data processed per second)
+- Absolute metrics reported in Tables 11 and 12
+
+**Performance Metrics:**
+- Classification tasks: Accuracy
+- SQuAD v2.0: F1 score
+- CNN/DM: ROUGE-1/2/L scores
+- Large model evaluation: Average of four task scores
+
+## 3. Step-by-Step Implementation Plan
+
+### Step 1: Environment Setup
+1. Install PyTorch and Hugging Face Transformers library
+2. Set up single GPU environment (A100 as specified)
+3. Prepare dataset loading pipelines for all required datasets
+
+### Step 2: Base Model and Adapter Implementation
+1. Implement base transformer model classes with support for:
+   - Loading pretrained weights (RoBERTa, T5, LLaMA)
+   - Standard forward pass
+2. Implement APT adapter module with:
+   - Dynamic rank capability
+   - Input/output pruning masks
+   - Proper initialization (Gaussian for W_A, zero for W_B)
+   - Merge functionality for inference
+
+### Step 3: APT Adapter Integration
+1. Modify transformer layers to include APT adapters in:
+   - MHA query and value projections
+   - FFN layers (for RoBERTa and T5)
+2. Implement proper masking operations that respect pruning masks
+3. Ensure gradient flow only through unpruned parameters
+
+### Step 4: Adaptive Pruning Module
+1. Implement outlier-aware salience scoring function:
+   - Activation-gradient product calculation
+   - Kurtosis computation for outlier detection
+   - Batch compression to reduce memory
+2. Implement efficient search algorithm:
+   - Block sorting by salience density
+   - Binary search for sparsity-constrained selection
+   - Gradual mask updating mechanism
+
+### Step 5: Adaptive Tuning Module
+1. Implement APT adapter salience scoring:
+   - Per-parameter salience calculation
+   - Adapter-level importance aggregation
+2. Implement dynamic rank adjustment:
+   - Top-half adapter selection
+   - Rank interpolation formula
+   - Parameter initialization for new ranks
+   - Output-preserving expansion
+
+### Step 6: Self-Distillation Framework
+1. Implement teacher-student architecture with shared parameters:
+   - Duplicate tuning layers as teachers
+   - Shared frozen parameters
+2. Implement distillation objectives:
+   - Layer-wise MSE loss
+   - Dynamic layer mapping function φ(·)
+   - Moving average coefficient μ scheduling
+
+### Step 7: Training Loop Implementation
+1. Implement main training loop following Algorithm 1:
+   ```python
+   for t in range(T):
+       # Forward pass and loss computation
+       # Cache summed hidden states
+       # Backward pass
+       # Calculate approximated salience
+       # Update global scores with exponential moving average
+       # Select blocks via binary search against constraints
+       # Update masks gradually
+       # Apply parameter updates
+       
+       # Periodically adjust ranks based on adapter importance
+       # Reset optimizer when parameter counts change
+   ```
+
+### Step 8: Sparsity Scheduling
+1. Implement cubic sparsity scheduling:
+   ```
+   γ_t = γ_T + (1-γ_T)(1-t/T)³
+   ```
+2. Schedule distillation coefficient μ to increase linearly from 0 to 1
+
+### Step 9: Baseline Implementations
+1. Implement all comparison methods:
+   - LoRA (standard implementation)
+   - LoRA+Prune with Mask Tuning
+   - Prune+Distill (CoFi)
+   - LoRA+Prune+Distill
+   - LLMPruner (for LLaMA comparisons)
+
+### Step 10: Evaluation Framework
+1. Implement comprehensive evaluation suite:
+   - Training metrics collection (memory, time)
+   - Inference metrics collection (throughput, memory)
+   - Task-specific performance evaluation
+2. Create reporting system that matches paper's tables and figures
+
+### Step 11: Hyperparameter Configuration
+1. Set up configuration files matching Table 6 specifications
+2. Implement automatic logging of all hyperparameters
+3. Ensure reproducibility through fixed random seeds ""
+
+### Step 12: Experiment Execution
+1. Run experiments on specified datasets:
+   - RoBERTa on SST-2 and MNLI
+   - T5 on CNN/DM
+   - LLaMA on Alpaca
+2. Collect results for all baseline comparisons
+3. Generate all figures and tables presented in the paper
+
+## 4. Critical Ambiguities and Uncertainties
+
+1. **Optimizer Type**: The specific optimizer (Adam, AdamW, etc.) is not specified in the paper ""
+
+2. **Random Seeds**: The paper does not specify random seed settings for reproducibility ""
+
+3. **Gradient Accumulation**: Whether gradient accumulation is used for larger batch sizes is not mentioned ""
+
+4. **Weight Decay**: The value of weight decay, if any, is not specified ""
+
+5. **Salience Averaging Parameter**: The momentum parameter β for exponential moving average of salience scores is not specified ""
+
+6. **Layer Mapping Function φ(·)**: The exact implementation of the teacher-student layer mapping function is not detailed beyond "closest non-pruned student layer" ""
+
+7. **Block Definition**: The precise definition of parameter blocks for pruning (especially for gated FFNs in T5/LLaMA) could use more detail ""
+
+8. **Rank Initialization Variance**: The variance σ² for Gaussian initialization of new rank parameters is not specified ""
+
+9. **Multiple APT Adapters per Layer**: It's unclear if multiple APT adapters can exist in a single layer and how they're coordinated ""
+
+10. **Cross-Layer Dependencies**: How pruning decisions in one layer affect others isn't fully explained ""
+
+This reproduction plan provides a comprehensive, step-by-step guide to implementing APT exactly as described in the paper, while clearly identifying areas where the original description lacks sufficient detail for perfect reproduction.

@@ -1,0 +1,103 @@
+# Logic Analysis: main.py
+
+The `main.py` file serves as the central entry point for executing the complete APT pipeline. It orchestrates all components by loading configurations, initializing models with APT adapters, setting up data pipelines, instantiating core modules (pruner, tuner, distiller), launching training, and conducting final evaluation.
+
+## Configuration Loading and Setup
+- Load configuration from config.yaml using PyYAML or similar library
+- Parse command-line arguments to override default settings for model type, dataset, sparsity level, etc.
+- Initialize logging system to record experiment details and progress
+- Set random seeds for reproducibility based on config values
+- Configure distributed training if specified in hardware settings
+
+## Model Initialization Pipeline
+1. Load pretrained model architecture specified in config.model.architectures
+2. Freeze pretrained weights as per standard PEFT practice
+3. Inject APT adapters into designated layers:
+   - Apply to MHA components (q_proj, v_proj) as specified in config.model.adapter.mha_components
+   - Apply to FFN components (intermediate_dense, output_dense) when enabled in config.model.adapter.apply_to_ffn
+4. Initialize adapter parameters with rank=config.training.initial_rank and scaling_factor=config.training.scaling_factor
+5. Move model to GPU device(s) based on hardware configuration
+
+## Data Pipeline Setup
+1. Initialize tokenizer compatible with selected model architecture
+2. Create DatasetLoader instance with max_length settings from config.data.max_length
+3. Load appropriate dataset based on config.data.datasets:
+   - GLUE tasks (classification): sst2, mnli, qnli, qqp, mrpc, cola, rte, stsb
+   - QA task: squad_v2
+   - Summarization: cnn_dm
+   - Instruction following: alpaca
+4. Configure batching strategy with sizes from config.evaluation.inference_batch_size
+5. Create train/val/test dataloaders with proper shuffling and prefetching
+
+## Core Module Instantiation
+1. **AdaptivePruner**: 
+   - Initialize with model and SparsityScheduler using cubic scheduling from config.pruning.scheduler
+   - Configure salience computation with outlier-aware method and kurtosis usage per config.pruning.use_kurtosis
+   - Set update frequency from config.pruning.update_frequency
+
+2. **AdaptiveTuner**:
+   - Initialize with model and max_tuning_params_ratio from config.tuning.max_tuning_params_ratio
+   - Configure rank increase strategy (top_half) from config.tuning.rank_increase_strategy
+   - Set Gaussian initialization std from config.tuning.init_std
+
+3. **SelfDistiller**:
+   - Initialize with student model and layer mapping strategy from config.distillation.teacher_layer_mapping
+   - Configure number of teacher layers from config.distillation.num_teacher_layers
+   - Set distillation coefficient scheduling from config.distillation.distill_loss_weight_start/end
+
+4. **APTrainer**:
+   - Initialize with model, dataloaders, and hyperparameters from config.training
+   - Integrate pruner, tuner, and distiller instances
+   - Configure optimizer type from config.training.optimizer with weight_decay and max_grad_norm
+   - Set precision mode (fp16) from config.hardware.precision
+
+## Training Execution Flow
+1. Launch APTrainer.train() which implements Algorithm 1:
+   - For each step t in total_steps:
+     * Perform forward pass with current model state
+     * Cache summed hidden states for salience computation
+     * Execute backward pass to compute gradients
+     * Calculate approximated salience scores using activation-gradient products
+     * Update global salience scores with momentum from config.training.momentum_salience
+     * Call pruning_step() every update_frequency steps
+     * Call tuning_step() based on adaptive schedule
+     * Apply parameter updates with configured optimizer
+     * Reset optimizer when parameter shapes change due to rank adjustments
+     * Update sparsity constraint γ_t via cubic scheduler
+     * Increment distillation coefficient μ linearly toward 1
+
+2. Monitor training progress with metrics collection:
+   - Track loss curves for both fine-tuning and distillation objectives
+   - Record sparsity progression against target
+   - Log rank distribution across adapters
+   - Measure peak memory usage after each pruning/tuning step
+
+## Post-Training Evaluation
+1. Run final evaluation using Evaluator class:
+   - Compute task-specific performance metrics:
+     * Classification: accuracy from config.evaluation.metrics.classification
+     * QA: F1 score from config.evaluation.metrics.qa
+     * Summarization: ROUGE scores from config.evaluation.metrics.summarization
+     * Instruction following: lm_eval_harness results on Open LLM Leaderboard tasks
+   - Measure efficiency metrics:
+     * Peak training memory from torch.cuda.max_memory_allocated()
+     * Inference time and throughput with batch sizes from config.evaluation.inference_batch_size
+     * Memory footprint comparison normalized to FT and LoRA baselines
+
+2. Generate comprehensive reports matching paper tables:
+   - Table 2/3 equivalents showing performance vs efficiency tradeoffs
+   - Ablation study results (w/o Ap, w/o AT, w/o Ds)
+   - Raw efficiency metrics as in Tables 11/12
+   - Visualization-ready data for Figure 3/4 generation
+
+## Experiment Reproducibility Features
+- Support CLI arguments to reproduce different ablations:
+  --model_type [roberta|t5|llama]
+  --dataset [sst2|mnli|squad|cnn_dm|alpaca]
+  --sparsity_level [0.3|0.4|0.6]
+  --ablation [full|w/o_Ap|w/o_AT|w/o_Ds]
+- Save complete configuration snapshot with results
+- Implement checkpointing system to resume interrupted training
+- Ensure deterministic execution through fixed random seeds
+
+This logic flow ensures faithful reproduction of the APT methodology while maintaining flexibility to explore variations and conduct ablation studies as presented in the paper.

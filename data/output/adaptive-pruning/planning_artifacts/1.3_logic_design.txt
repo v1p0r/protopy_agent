@@ -1,0 +1,55 @@
+----------------------------------------
+[Required packages]
+- torch==2.0.1
+- transformers==4.35.0
+- datasets==2.14.6
+- accelerate==0.27.2
+- numpy==1.24.3
+- tqdm==4.66.1
+
+----------------------------------------
+[Required Other language third-party packages]
+- No third-party dependencies required
+
+----------------------------------------
+[Logic Analysis]
+- ['config/hparams.py', 'Contains global hyperparameters for all experiments as specified in Table 6 of the paper: learning rates, batch sizes, epochs, distillation epochs for GLUE-small, GLUE-big, SQuAD, CNN/DM, and Alpaca tasks. This file is foundational and imported by nearly all other modules to ensure consistent training settings across components.']
+- ['model/base_model.py', 'Implements base model loading using Hugging Face Transformers. Loads RoBERTa, T5, and LLaMA architectures with frozen pretrained weights. Exposes interfaces to inject APT adapters into specific layers (MHA query/value projections and FFN). Depends on hparams for model-specific configurations and serves as the backbone for all downstream modifications.']
+- ['model/apt_adapter.py', 'Defines the core APTAdapter class that extends LoRA with dynamic pruning and tuning capabilities. Implements forward pass with input/output masks (m_i, m_o), low-rank update via Wa and Wb, and rank adjustment logic. Must support merging weights post-training for inference efficiency. Imports from base_model to integrate with transformer layers. Critical dependency for pruner, tuner, and trainer modules.']
+- ['utils/salience.py', 'Implements outlier-aware salience scoring functions: compute_activation_gradient_product computes |∂L/∂H|·|H| summed over batches; compute_kurtosis calculates kurtosis of activation tensors O=W∘X^T to capture outlier importance. normalize_scores adjusts salience by parameter count for density-based ranking. These utilities are used by both AdaptivePruner and AdaptiveTuner for decision-making.']
+- ['pruning/adaptive_pruner.py', 'Implements AdaptivePruner class that uses salience scores to generate binary pruning masks. Key methods: compute_salience aggregates activation-gradient products and kurtosis; generate_mask sorts blocks by salience density and applies binary search to meet sparsity constraint γ_t; apply_mask gradually updates masks (with α=0.01 decay) for stability. Depends on apt_adapter for mask application and salience utils for scoring. Outputs W_B pruning matrices.']
+- ['tuning/adaptive_tuner.py', 'Implements AdaptiveTuner class that dynamically increases adapter ranks. compute_adapter_salience sums parameter-level salience S(W_Bi,j) within each adapter to get layer importance 𝒯(H_apt); adjust_ranks identifies top-half most important adapters and scales their r_apt proportionally to budget Δ_t. On expansion, initializes new Wa rows with N(0,σ²) and new Wb columns with zeros to preserve output. Depends on apt_adapter and salience utils.']
+- ['utils/mask_scheduler.py', 'Implements SparsityScheduler with cubic scheduling: γ_t = γ_T + (1−γ_T)(1−t/T)^3. Provides get_current_sparsity(step) method called by AdaptivePruner at each step. Configured via hparams (target_sparsity, total_steps). Ensures smooth transition to target sparsity without abrupt performance drops.']
+- ['distillation/self_distiller.py', 'Implements SelfDistiller using shared parameters between teacher and student. Uses tunable LoRA layers (Tr) initialized as identity for transformation. Computes MSE loss between teacher Tr(H_s^φ(i)) and student H_t^i outputs across τ sampled layers. φ(·) maps teacher to closest non-pruned student layer. μ coefficient linearly increases from 0 to 1 during training. Shares frozen parameters with student model to reduce memory overhead.']
+- ['data/dataloader.py', 'Implements DatasetLoader supporting multiple datasets: GLUE tasks (SST-2, MNLI), SQuAD v2.0, CNN/DM, and Alpaca instruction-following data. Handles tokenization, batching (sizes defined in paper: 128 for small models, 32/4 for LLaMA), and formatting. Returns PyTorch-compatible datasets used by trainer and evaluator. Requires tokenizer from base_model.']
+- ['train/trainer.py', 'Implements APTrainer orchestrating full training loop (Algorithm 1). At each step: performs forward/backward passes, caches activations/gradients, calls AdaptivePruner.pruning_step() and AdaptiveTuner.tuning_step(), applies changes, updates parameters. Resets optimizer when parameter shapes change. Integrates SelfDistiller for distillation loss (μ scheduling). Manages SparsityScheduler for γ_t control. Main driver module depending on all others.']
+- ['eval/evaluator.py', 'Implements Evaluator measuring both task performance and efficiency metrics. evaluate() computes accuracy/F1/ROUGE/MMLU etc. measure_efficiency() records peak memory (via torch.cuda.max_memory_allocated), inference time (ms), and throughput. Metrics normalized to baselines (FT, LoRA) as in Tables 2–3. Used post-training to generate results matching paper tables.']
+- ['main.py', 'Entry point executing full pipeline: loads config → initializes model with APT adapters → sets up dataloaders → instantiates pruner/tuner/distiller → launches APTrainer.train() → runs final evaluation. Coordinates experiment flow across all components. Accepts CLI args for model type, dataset, sparsity level to reproduce different ablations.']
+
+----------------------------------------
+[Task list]
+- config/hparams.py
+- model/base_model.py
+- model/apt_adapter.py
+- utils/salience.py
+- utils/mask_scheduler.py
+- pruning/adaptive_pruner.py
+- tuning/adaptive_tuner.py
+- distillation/self_distiller.py
+- data/dataloader.py
+- train/trainer.py
+- eval/evaluator.py
+- main.py
+
+----------------------------------------
+[Full API spec]
+
+
+----------------------------------------
+[Shared Knowledge]
+All modules share access to hparams.py for consistent hyperparameter usage. The APTAdapter class is central—both AdaptivePruner and AdaptiveTuner modify its state (masks and ranks). Salience computation functions are reused across pruning and tuning decisions. Trainer manages shared state including current step t, which drives sparsity scheduling and distillation coefficient μ. Memory efficiency is maintained through shared frozen parameters in self-distillation and compressed gradient/activation storage.
+
+----------------------------------------
+[Anything UNCLEAR]
+Clarification needed on: (1) exact variance σ² for Gaussian initialization of new adapter weights; (2) whether gradient accumulation is used for larger effective batch sizes; (3) specific Adam optimizer variants (AdamW?) and weight decay values; (4) random seed settings for reproducibility; (5) precise implementation of layer mapping function φ(·) when layers are pruned; (6) handling of gated FFNs in T5/LLaMA during block-wise pruning; (7) whether APT adapters are applied to all MHA layers uniformly or selectively.
+

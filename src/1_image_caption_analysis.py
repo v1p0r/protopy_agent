@@ -13,17 +13,17 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--paper_name',type=str)
 parser.add_argument('--model_name',type=str)
-parser.add_argument('--key',type=str)
 parser.add_argument('--input_path', type=str) 
 parser.add_argument('--output_path',type=str)
+parser.add_argument('--base_url',type=str)
 
 args = parser.parse_args()
 
 paper_name = args.paper_name
 model_name = args.model_name
-DASHSCOPE_API_KEY = args.key
 input_path = args.input_path
 output_path = args.output_path
+base_url = args.base_url
 
 # load the image pairs from preprocess.py
 with open(output_path + '/' + 'image_pairs.json', "r", encoding="utf-8") as f:
@@ -33,8 +33,8 @@ payload = json.dumps(image_pairs, ensure_ascii=False, separators=(",", ":"))
 
 # initialize the OpenAI competiable client for qwen3-vl-flash
 client = OpenAI(
-    api_key=DASHSCOPE_API_KEY,
-    base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+    api_key=os.environ["DASHSCOPE_API_KEY"],
+    base_url=base_url,
 )
 
 def api_call(model_name, prompt):

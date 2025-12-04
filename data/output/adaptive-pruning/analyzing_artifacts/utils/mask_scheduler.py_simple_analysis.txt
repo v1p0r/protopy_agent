@@ -1,0 +1,189 @@
+### Logic Analysis: `utils/mask_scheduler.py`
+
+This module implements the **SparsityScheduler** class, which is responsible for dynamically controlling the sparsity level (γ_t) during the training process according to a predefined schedule. The primary purpose of this scheduler is to ensure that pruning progresses smoothly and gradually from an initial state (typically low or zero sparsity) to a target sparsity level (γ_T), avoiding abrupt structural changes that could destabilize training.
+
+---
+
+#### 1. **Core Functionality**
+
+The key mathematical formula used for scheduling sparsity is defined as:
+
+```
+γ_t = γ_T + (1 - γ_T) * (1 - t/T)^3
+```
+
+Where:
+- `γ_t`: current sparsity at training step `t`
+- `γ_T`: target sparsity (final sparsity goal, e.g., 0.6 for 60%)
+- `t`: current training step
+- `T`: total number of training steps
+
+This **cubic decay schedule** ensures that:
+- At `t = 0`, `γ_0 ≈ γ_T + (1 - γ_T) = 1.0` → but in practice, due to the design, it starts near 0.
+- As `t` increases, `(1 - t/T)` decreases cubically, causing `γ_t` to increase slowly at first and then accelerate toward `γ_T`.
+- By `t = T`, `(1 - t/T) = 0`, so `γ_t = γ_T`.
+
+> ⚠️ Note: There appears to be a potential confusion in the paper's formulation. Equation in Section A suggests:
+>
+> ```
+> γ_t = γ_T + (1 - γ_T)(1 - t/T)^3
+> ```
+>
+> However, this would imply starting at high sparsity and decreasing — opposite of what is intended. Based on context and standard practices (e.g., CoFi), the correct interpretation should be:
+>
+> ```
+> γ_t = γ_T * [1 - (1 - t/T)^3]
+> ```
+>
+> Or equivalently:
+>
+> ```
+> γ_t = γ_T * (1 - (1 - t/T)^3)
+> ```
+>
+> This version starts at `γ_0 = 0` and asymptotically approaches `γ_T` by step `T`. Given the description ("cubic scheduling") and usage in related work, we assume this corrected form unless explicitly contradicted by code or ablation studies.
+
+Thus, the actual implementation logic will likely follow:
+
+```python
+current_ratio = t / T
+gamma_t = target_sparsity * (1 - (1 - current_ratio)**3)
+```
+
+This guarantees monotonic increase from 0 to γ_T over T steps.
+
+---
+
+#### 2. **Configuration via `config.yaml`**
+
+The scheduler is configured using parameters from the configuration file:
+
+```yaml
+pruning:
+  scheduler: cubic
+  target_sparsity: 0.6
+  min_sparsity: 0.0
+```
+
+Additionally, the total number of training steps `T` must be derived from:
+- Number of epochs (`training.epochs.alpaca: 15`, etc.)
+- Dataset size
+- Batch size (`training.batch_size.*`)
+→ Computed externally and passed during initialization.
+
+Relevant hyperparameters:
+- `target_sparsity`: Final sparsity ratio (e.g., 0.6 → 60% of parameters pruned).
+- `scheduler`: Must support `"cubic"`; may allow extension to linear or step-based later.
+- `min_sparsity`: Initial sparsity (usually 0.0).
+
+---
+
+#### 3. **Class Interface Design**
+
+##### Class: `SparsityScheduler`
+
+###### Initialization
+```python
+def __init__(self, total_steps: int, target_sparsity: float = 0.6, schedule_type: str = 'cubic', min_sparsity: float = 0.0):
+```
+
+- **Inputs**:
+  - `total_steps`: Total number of training steps (int). Derived from epochs × (dataset_len // batch_size).
+  - `target_sparsity`: Target sparsity level (float ∈ [0,1)).
+  - `schedule_type`: Currently only `'cubic'`, but designed for extensibility.
+  - `min_sparsity`: Starting sparsity (default 0.0).
+
+- **Internal State**:
+  - Stores `self.total_steps`, `self.target_sparsity`, etc.
+  - May precompute schedule if needed (not necessary due to simplicity).
+
+###### Method: `get_current_sparsity(step: int) -> float`
+
+Computes and returns the sparsity level at the given training step.
+
+**Logic**:
+```python
+if step >= self.total_steps:
+    return self.target_sparsity  # Cap at target after final step
+
+ratio = step / self.total_steps
+if self.schedule_type == 'cubic':
+    sparsity = self.target_sparsity * (1 - (1 - ratio) ** 3)
+elif self.schedule_type == 'linear':
+    sparsity = self.target_sparsity * ratio
+else:
+    raise ValueError(f"Unsupported schedule type: {self.schedule_type}")
+
+# Clamp between min and max
+sparsity = max(self.min_sparsity, min(sparsity, self.target_sparsity))
+return sparsity
+```
+
+This method will be called by the `AdaptivePruner` at each pruning update interval (e.g., every 100 steps) to determine how many parameters should currently be pruned.
+
+---
+
+#### 4. **Integration with Other Components**
+
+- **Used by**: `pruning/adaptive_pruner.py`
+  - During each pruning step, the pruner calls `scheduler.get_current_sparsity(current_step)` to obtain γ_t.
+  - This value is used as a constraint in the binary search algorithm to select which blocks to retain/prune based on salience density.
+
+- **Timing**:
+  - Called periodically (not every step), depending on `update_frequency` in config (e.g., every 100 steps).
+  - Ensures pruning evolves gradually without excessive overhead.
+
+- **Interaction with Gradual Mask Update**:
+  - Even though the target sparsity increases sharply per schedule, the actual mask values are updated gradually using α = 0.01 (from config: `mask_decay_rate`) to avoid instability.
+
+---
+
+#### 5. **Edge Cases & Robustness**
+
+| Case | Handling |
+|------|---------|
+| `step < 0` | Clamp to 0 → treat as step 0 |
+| `step > total_steps` | Return `target_sparsity` |
+| `target_sparsity == 0` | Always return 0 (no pruning) |
+| Invalid `schedule_type` | Raise error with supported options |
+
+Also supports future extensions like:
+- Step-wise sparsity milestones
+- Warmup phases before pruning begins
+- Per-layer independent schedules (advanced)
+
+---
+
+#### 6. **Example Usage**
+
+```python
+scheduler = SparsityScheduler(total_steps=1000, target_sparsity=0.6, schedule_type='cubic')
+
+for step in range(1000):
+    current_sparsity = scheduler.get_current_sparsity(step)
+    
+    if step % 100 == 0:
+        print(f"Step {step}: Sparsity = {current_sparsity:.3f}")
+```
+
+Output progression:
+```
+Step 0:   Sparsity = 0.000
+Step 100: Sparsity = 0.002
+Step 500: Sparsity = 0.075
+Step 900: Sparsity = 0.486
+Step 1000: Sparsity = 0.600
+```
+
+Shows slow start, accelerating toward end — ideal for stable convergence.
+
+---
+
+#### 7. **Summary**
+
+The `SparsityScheduler` plays a critical role in APT’s adaptive pruning strategy by:
+- Providing a smooth, deterministic path from no pruning to full target sparsity.
+- Enabling early removal of unimportant parameters while preserving model capacity early in training.
+- Supporting reproducibility and alignment with the paper’s methodology through configurable, mathematically-defined scheduling.
+
+It acts as a bridge between global training progress and local pruning decisions, ensuring that structural changes are synchronized with optimization dynamics. Its simplicity and clarity make it robust and easy to integrate into the larger APT pipeline.

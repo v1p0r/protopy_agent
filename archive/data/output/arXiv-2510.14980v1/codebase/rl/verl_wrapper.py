@@ -1,0 +1,362 @@
+# rl/verl_wrapper.py
+import json
+import re
+import logging
+from typing import List, Tuple, Dict, Any, Optional
+from dataclasses import dataclass
+from utils.config import Config
+from utils.logger import Logger
+from representation.construction_tree import ConstructionTree
+from env.besiegefield import BesiegeFieldSimulator
+from reward.calculator import RewardCalculator
+from utils.validator import JSONValidator
+from env.block_registry import BlockRegistry
+import verl
+
+
+class VERLWrapper:
+    """
+    Wrapper for the verl framework to generate rollouts for compositional machine design.
+    Generates k candidate machine designs per prompt, validates them, simulates in BesiegeField,
+    and returns (ConstructionTree, reward) tuples for use in GRPO training and Pass@k evaluation.
+    """
+
+    def __init__(self, model: Any, config: Config):
+        """
+        Initialize the VERLWrapper with the finetuned LLM model and configuration.
+        
+        Args:
+            model (Any): The finetuned LLM model (e.g., Qwen2.5-14B-Instruct) compatible with verl
+            config (Config): Configuration loader from config.yaml
+        """
+        self.model = model
+        self.config = config
+        self.logger = Logger(__name__)
+        
+        # Load configuration values
+        self.max_input_length = self.config.get("model.max_input_length", 3440)
+        self.max_output_length = self.config.get("model.max_output_length", 1168)
+        self.rollout_temperature = self.config.get("training.rl_finetune.rollout_temperature", 1.0)
+        self.rollout_top_p = self.config.get("training.rl_finetune.rollout_top_p", 0.95)
+        self.simulation_duration = self.config.get("simulation.duration_seconds", 5.0)
+        self.state_log_interval = self.config.get("simulation.state_log_interval", 0.2)
+        self.catapult_height_threshold = self.config.get("simulation.catapult_height_threshold", 3.0)
+        self.collision_threshold = self.config.get("simulation.collision_threshold", 0.01)
+        
+        # Initialize components
+        self.block_registry = BlockRegistry()
+        self.json_validator = JSONValidator()
+        
+        # Build block list string for prompt template
+        self.block_list_str = ", ".join([f'"{block}"' for block in sorted(self.block_registry._valid_block_names)])
+        
+        # Define prompt template as specified in logic analysis
+        self.prompt_template = f"""You are an expert mechanical designer. Given the following task, generate a machine using only the 27 blocks listed below. Follow the construction rules. Output only a valid JSON list of blocks in construction order. Do not include explanations.
+
+TASK: {{task}}
+
+BLOCKS: {self.block_list_str}
+
+RULES:
+- Start with "Starting Block" (id=0).
+- Each subsequent block must have a "parent" (ID of previous block) and "face_id" (0–5, face index on parent).
+- For Spring: use "parent_a", "parent_b", "face_id_a", "face_id_b".
+- Do NOT scale or rotate blocks after attachment.
+- Do NOT use any block not in the list above.
+- No self-collisions allowed.
+
+OUTPUT FORMAT:
+[{{"type": "Starting Block", "id": 0, "parent": null, "face_id": null}}, ...]"""
+        
+        # Initialize simulation and reward components
+        self.simulator_config = {
+            "duration_seconds": self.simulation_duration,
+            "state_log_interval": self.state_log_interval,
+            "gravity": 9.81,
+            "collision_threshold": self.collision_threshold,
+            "catapult_height_threshold": self.catapult_height_threshold
+        }
+        
+        # Initialize reward calculator (task will be inferred per prompt)
+        self.reward_calculator = None  # Will be set per rollout
+        
+        # Set up verl parameters
+        self.verl_params = {
+            "max_new_tokens": self.max_output_length,
+            "temperature": self.rollout_temperature,
+            "top_p": self.rollout_top_p,
+            "do_sample": True,
+            "num_return_sequences": 1,
+            "pad_token_id": 0  # Default for Qwen
+        }
+
+    def _build_prompt(self, task: str) -> str:
+        """
+        Build the complete prompt by substituting the task into the template.
+        Truncates if necessary to respect max_input_length.
+        
+        Args:
+            task (str): Natural language task description
+            
+        Returns:
+            str: Complete prompt string
+        """
+        prompt = self.prompt_template.format(task=task)
+        
+        # Truncate if too long
+        if len(prompt) > self.max_input_length:
+            prompt = prompt[:self.max_input_length]
+            self.logger.warning(f"Prompt truncated to {self.max_input_length} characters")
+            
+        return prompt
+
+    def _extract_json_array(self, text: str) -> Optional[list]:
+        """
+        Extract the first valid JSON array from raw LLM output.
+        Uses regex to find the first [ ... ] pattern and parses it.
+        
+        Args:
+            text (str): Raw text output from LLM
+            
+        Returns:
+            list or None: Parsed JSON array if valid, None otherwise
+        """
+        if not isinstance(text, str):
+            return None
+            
+        # Remove markdown code blocks
+        cleaned = re.sub(r'^\s*```json\s*', '', text, flags=re.IGNORECASE)
+        cleaned = re.sub(r'^\s*```.*?\s*', '', cleaned, flags=re.DOTALL)
+        cleaned = re.sub(r'\s*```$', '', cleaned, flags=re.DOTALL)
+        
+        # Try to find JSON array using regex
+        json_match = re.search(r'\[\s*[\s\S]*?\s*\]', cleaned)
+        if json_match:
+            json_str = json_match.group(0)
+            try:
+                parsed = json.loads(json_str)
+                if isinstance(parsed, list):
+                    return parsed
+            except json.JSONDecodeError:
+                pass
+                
+        # Try direct parsing
+        try:
+            parsed = json.loads(cleaned)
+            if isinstance(parsed, list):
+                return parsed
+        except json.JSONDecodeError:
+            pass
+            
+        # Try to find first [ and last ]
+        start_idx = cleaned.find('[')
+        end_idx = cleaned.rfind(']')
+        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+            json_str = cleaned[start_idx:end_idx+1]
+            try:
+                parsed = json.loads(json_str)
+                if isinstance(parsed, list):
+                    return parsed
+            except json.JSONDecodeError:
+                pass
+                
+        return None
+
+    def _validate_and_create_tree(self, json_data: list) -> Optional[ConstructionTree]:
+        """
+        Validate JSON data and create a ConstructionTree object.
+        
+        Args:
+            json_data (list): List of dictionaries representing blocks
+            
+        Returns:
+            ConstructionTree or None: Valid tree if successful, None otherwise
+        """
+        if not isinstance(json_data, list) or len(json_data) == 0:
+            self.logger.debug("JSON data is not a non-empty list")
+            return None
+            
+        # Validate JSON structure using JSONValidator
+        is_valid, error_msg = self.json_validator.validate_construction_tree(json_data)
+        if not is_valid:
+            self.logger.debug(f"JSON validation failed: {error_msg}")
+            return None
+            
+        # Create ConstructionTree
+        try:
+            tree = ConstructionTree(json_data)
+            is_valid, error_msg = tree.validate()
+            if not is_valid:
+                self.logger.debug(f"ConstructionTree validation failed: {error_msg}")
+                return None
+            return tree
+        except Exception as e:
+            self.logger.debug(f"Failed to create ConstructionTree: {str(e)}")
+            return None
+
+    def _simulate_and_compute_reward(self, tree: ConstructionTree, task: str) -> Optional[float]:
+        """
+        Simulate a machine design and compute its reward.
+        
+        Args:
+            tree (ConstructionTree): Valid construction tree
+            task (str): Task type ("car" or "catapult")
+            
+        Returns:
+            float or None: Reward value if simulation successful, None otherwise
+        """
+        try:
+            # Initialize simulator
+            simulator = BesiegeFieldSimulator(
+                block_list=list(self.block_registry._valid_block_names),
+                physics_config=self.simulator_config
+            )
+            
+            # Build machine
+            build_success = simulator.build_from_tree(tree)
+            if not build_success:
+                self.logger.debug("Failed to build machine in simulator")
+                return None
+                
+            # Check for self-collision
+            has_collision = not simulator.check_self_collision()
+            if has_collision:
+                self.logger.debug("Self-collision detected before simulation")
+                return None
+                
+            # Run simulation
+            simulator.simulate()
+            state_log = simulator.get_state_log()
+            
+            # Check if state_log is empty
+            if not state_log:
+                self.logger.debug("Empty state log after simulation")
+                return None
+                
+            # Initialize reward calculator for this task
+            self.reward_calculator = RewardCalculator(
+                task=task,
+                catapult_height_threshold=self.catapult_height_threshold
+            )
+            
+            # Compute reward
+            reward, r_valid = self.reward_calculator.compute(state_log)
+            
+            if not r_valid:
+                self.logger.debug(f"Simulation invalid: R_valid=False for task {task}")
+                return None
+                
+            return reward
+            
+        except Exception as e:
+            self.logger.debug(f"Simulation or reward calculation failed: {str(e)}")
+            return None
+
+    def _infer_task_type(self, prompt: str) -> str:
+        """
+        Infer task type ("car" or "catapult") from prompt content.
+        Uses simple keyword matching as heuristic.
+        
+        Args:
+            prompt (str): Natural language task description
+            
+        Returns:
+            str: "car" or "catapult"
+        """
+        prompt_lower = prompt.lower()
+        if any(keyword in prompt_lower for keyword in ["throw", "boulder", "launch", "catapult", "projectile"]):
+            return "catapult"
+        elif any(keyword in prompt_lower for keyword in ["drive", "move", "car", "transport", "travel", "go"]):
+            return "car"
+        else:
+            # Default to car if ambiguous
+            return "car"
+
+    def rollout(self, prompt: str, num_rollouts: int) -> List[Tuple[ConstructionTree, float]]:
+        """
+        Generate multiple rollouts for a given prompt using verl framework.
+        For each rollout, parse the output, validate the construction tree,
+        simulate in BesiegeField, and compute the reward.
+        Returns exactly num_rollouts valid (ConstructionTree, reward) tuples.
+        If invalid rollouts are generated, continue until num_rollouts valid ones are obtained.
+        
+        Args:
+            prompt (str): Natural language task description
+            num_rollouts (int): Number of candidate designs to generate (k)
+            
+        Returns:
+            List[Tuple[ConstructionTree, float]]: List of exactly num_rollouts valid (tree, reward) pairs
+        """
+        self.logger.debug(f"Starting rollout for prompt: '{prompt[:50]}...' with k={num_rollouts}")
+        
+        results: List[Tuple[ConstructionTree, float]] = []
+        attempts = 0
+        max_attempts = num_rollouts * 3  # Prevent infinite loops
+        
+        # Infer task type from prompt
+        task = self._infer_task_type(prompt)
+        self.logger.debug(f"Inferred task type: {task}")
+        
+        # Build full prompt
+        full_prompt = self._build_prompt(prompt)
+        
+        while len(results) < num_rollouts and attempts < max_attempts:
+            attempts += 1
+            
+            try:
+                # Use verl framework to generate rollout
+                # Note: verl.rollout() expects model, prompts, and parameters
+                # We assume verl.rollout() returns a list of generated texts
+                # Format: [generated_text1, generated_text2, ...] - but we request 1 per call
+                generated_texts = verl.rollout(
+                    model=self.model,
+                    prompts=[full_prompt],
+                    **self.verl_params
+                )
+                
+                # Extract the generated text (first and only one)
+                if not generated_texts or len(generated_texts) == 0:
+                    self.logger.debug("verl returned empty generation")
+                    continue
+                    
+                generated_text = generated_texts[0]
+                
+                # Extract JSON array from generated text
+                json_data = self._extract_json_array(generated_text)
+                if json_data is None:
+                    self.logger.debug("Failed to extract JSON array from LLM output")
+                    continue
+                    
+                # Validate and create ConstructionTree
+                tree = self._validate_and_create_tree(json_data)
+                if tree is None:
+                    self.logger.debug("Failed to create valid ConstructionTree")
+                    continue
+                    
+                # Simulate and compute reward
+                reward = self._simulate_and_compute_reward(tree, task)
+                if reward is None:
+                    self.logger.debug("Simulation or reward computation failed")
+                    continue
+                    
+                # Success! Add to results
+                results.append((tree, reward))
+                self.logger.debug(f"Valid rollout {len(results)}/{num_rollouts} generated")
+                
+            except Exception as e:
+                self.logger.debug(f"verl rollout failed on attempt {attempts}: {str(e)}")
+                continue
+                
+        # Log if we exceeded max attempts
+        if attempts >= max_attempts and len(results) < num_rollouts:
+            self.logger.warning(f"Exceeded max attempts ({max_attempts}) for prompt '{prompt[:50]}...'. "
+                              f"Only {len(results)}/{num_rollouts} valid rollouts generated.")
+        
+        # Ensure we return exactly num_rollouts (pad with dummy if needed, though paper doesn't specify)
+        # But paper emphasizes discovering promising designs, so we return what we have
+        # We don't pad with zeros because invalid designs provide no signal
+        if len(results) < num_rollouts:
+            self.logger.warning(f"Returning only {len(results)} valid rollouts instead of {num_rollouts}")
+            
+        self.logger.info(f"Completed rollout: {len(results)} valid designs generated for prompt")
+        return results

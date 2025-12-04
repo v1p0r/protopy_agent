@@ -1,0 +1,613 @@
+\documentclass{article} %
+\usepackage{iclr2026_conference,times}
+
+\input{math_commands.tex}
+
+\usepackage{graphicx}
+\usepackage{wrapfig}
+\usepackage[pagebackref=true,breaklinks=true,colorlinks=true,bookmarks=false]{hyperref}
+\usepackage{url}
+\definecolor{deepred}{HTML}{940000}
+\hypersetup{linkcolor=deepred}
+\hypersetup{urlcolor  = [rgb]{0.4,0.15,0.95}}
+\hypersetup{citecolor=[rgb]{0.4,0.15,0.95}}
+
+
+
+\usepackage{xspace}
+\usepackage{slashed}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{tabularx}
+\newcolumntype{C}{>{\centering\arraybackslash}X}
+\usepackage{algorithm,algpseudocode}
+\usepackage{amsfonts}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{amsthm}
+\usepackage{wrapfig}
+\usepackage{adjustbox}
+\usepackage{scalerel}
+\usepackage{enumitem}
+\usepackage{siunitx}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  breakindent=0pt,   %
+  xleftmargin=0pt,   %
+  frame=single,
+  columns=fullflexible,
+  keepspaces=true,
+}
+
+
+\usepackage{epigraph}
+\usepackage[align=center,shadow=true,shadowsize=4.5pt,nobreak=true,framemethod=tikz,skipabove=9.5pt,skipbelow=9pt,innertopmargin=5pt,innerbottommargin=5pt,innerleftmargin=5pt,innerrightmargin=5pt,leftmargin=1.5pt,rightmargin=1.5pt]{mdframed}
+\usetikzlibrary{shadows}
+
+\usepackage{placeins}
+
+
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{float}
+
+\usepackage{color}
+\usepackage{colortbl}
+\definecolor{Gray}{gray}{0.94}
+
+\usepackage{caption}
+
+\usepackage{tocloft}
+\usepackage[toc,page,header]{appendix}
+\usepackage{minitoc}
+\renewcommand{\ptifont}{\large \bf}
+\renewcommand \thepart{}
+\renewcommand \partname{}
+
+
+\usepackage[T1]{fontenc}    %
+\renewcommand{\captionlabelfont}{\footnotesize}
+
+
+
+
+
+\title{\vspace{-4mm}
+Agentic Design of Compositional Machines
+}
+
+\author{
+\fontsize{9.5pt}{\baselineskip}\selectfont Wenqian Zhang\textsuperscript{1}~~~~~~Weiyang Liu\textsuperscript{2,*}~~~~~~Zhen Liu\textsuperscript{1,*,\textdagger}\\[.5mm]
+\fontsize{9pt}{\baselineskip}\selectfont\textsuperscript{1}The Chinese University of Hong Kong (Shenzhen)~~~~\textsuperscript{2}The Chinese University of Hong Kong\\
+\fontsize{9pt}{\baselineskip}\selectfont\textsuperscript{*}Equal Advising~~~~\textsuperscript{\textdagger}Corresponding Author~~~~~~{\tt\href{https://besiegefield.github.io/}{\textbf{besiegefield.github.io}}}
+}
+
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+\newcommand{\expt}{\mathop{\mathbb{E}}}
+\newcommand{\Bignorm}[1]{\Bigl\lVert #1 \Bigr\rVert}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+
+\def\viz{\emph{viz}\onedot}
+\usepackage{xspace}
+\newcommand*{\eg}{{\it e.g.}\@\xspace}
+\newcommand*{\ie}{{\it i.e.}\@\xspace}
+\newcommand*{\cf}{{\it c.f.}\@\xspace}
+
+\newcommand{\envname}{\textbf{BesiegeField}\xspace}
+
+\newcommand{\zl}[1]{{\color{orange}{\bf\sf [Zhen: #1]}}}
+\newcommand{\wy}[1]{\textcolor{cyan}{[Weiyang: #1]}}
+\newcommand{\zwq}[1]{{\color{blue}{\bf\sf [Wenqian: #1]}}}
+
+\newlength\savewidth\newcommand\shline{\noalign{\global\savewidth\arrayrulewidth
+  \global\arrayrulewidth 1pt}\hline\noalign{\global\arrayrulewidth\savewidth}}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}%
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem*{proposition*}{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem*{remark*}{Remark}
+
+\preprintcopy
+
+\begin{document}
+
+
+\doparttoc %
+\faketableofcontents
+\maketitle
+
+
+\begin{figure}[h!]
+  \vspace{-3.5mm}
+  \centering
+  \includegraphics[width=\linewidth]{figures/teaser_final_new.pdf}
+  \vspace{-5mm}
+  \caption{\footnotesize The task of compositional machine design is illustrated in our \envname environment. The figure shows a high-level sketch of the agentic workflow (w/ Gemini Pro 2.5), along with the resulting machines and their simulated performance. The design objective is to create a machine that throws boulders long distances.}
+  \label{fig:teaser_candidate}
+  \vspace{2.5mm}
+\end{figure}
+
+\begin{abstract}
+\vspace{-1.5mm}
+The design of complex machines stands as both a marker of human intelligence and a foundation of engineering practice. Given recent advances in large language models (LLMs), we ask whether they, too, can learn to create. We approach this question through the lens of compositional machine design: a task in which machines are assembled from standardized components to meet functional demands like locomotion or manipulation in a simulated physical environment. To support this investigation, we introduce \envname, a testbed built on the machine-building game Besiege, which enables part-based construction, physical simulation and reward-driven evaluation. Using \envname, we benchmark state-of-the-art LLMs with agentic workflows and identify key capabilities required for success, including spatial reasoning, strategic assembly, and instruction-following. As current open-source models fall short, we explore reinforcement learning (RL) as a path to improvement: we curate a cold-start dataset, conduct RL finetuning experiments, and highlight open challenges at the intersection of language, machine design, and physical reasoning.
+\end{abstract}
+
+
+\vspace{-4.5mm}
+
+\setlength\epigraphwidth{5cm}
+\epigraph{\emph{``Man is a tool-making animal.''}}{--- \textup{Benjamin Franklin}}
+\vspace{-7mm}
+
+\vspace{-1.5mm}
+\section{Introduction}
+\vspace{-1.5mm}
+
+The history of human progress is, at its core, the history of machines, just as the ancient Greeks built the Antikythera mechanism to predict eclipses and Leonardo da Vinci envisioned machines to fly. Today, as large language models (LLMs) begin to approximate---and in some domains, surpass---human cognitive abilities, a natural question arises: 
+
+
+\vspace{-1.5mm}
+\begin{mdframed}[leftmargin=1em, rightmargin=1em]
+\fontsize{9.3pt}{\baselineskip} 
+\itshape Can computational models, like humans, conceive and create complex machines to achieve purposeful goals?
+\vspace{-.35mm}
+\end{mdframed}
+\vspace{-3.75mm}
+
+At the heart of this question lie two tightly coupled concepts: \textit{compositionality}, how parts are put together into assemblies, and \textit{functionality}, the tasks these assemblies perform as they interact with external forces or inputs. While foundation models are already capable of synthesizing 3D shapes and building mechanical parts with computer-aided design (CAD) models, it is the complex compositional structures, in which very different parts and components are orchestrated to smoothly move together, that realize a vast array of demands.
+Just as a clock emerges from the composition of simple and standardized mechanical elements such as gears and flywheels, these same elements, when combined differently, can give rise to entirely different machines, such as a sewing machine. On the other hand, the same functionality may be realized by different part compositions, just as both cars and bicycles can transport a person from place to place. Put it concisely: \textit{composition is shaped by functionality, and functionality is realized through composition}. Since such compositional machines can be expressed programmatically, with types, placements and articulations of parts represented in structured code that LLMs can generate and manipulate, we formalize the above question as:
+
+\vspace{-1.5mm}
+\begin{mdframed}[leftmargin=1em, rightmargin=1em]
+\fontsize{9.3pt}{\baselineskip} 
+\itshape Can LLMs, given standardized mechanical parts and a reward function for the desired functionality, discover diverse spatial part compositions that maximize the reward and complete the task?
+\vspace{-.35mm}
+\end{mdframed}
+\vspace{-3.75mm}
+
+The question is not only about the pursuit of intelligence but also about the practice of engineering. Modern design pipelines are often long and costly, especially in large-scale projects where each iteration demands substantial resources. These projects accumulate vast collections of documents and blueprints, making it difficult to trace, retrieve, or reuse past design efforts. Much essential know-how is passed informally across teams and generations, and in many cases, never fully recorded and since forgotten. An automated machine design system could directly address these challenges.
+
+Rather than merely mimicking patterns from historical designs, such a system should be agentic: capable of exploring the exponentially large design space, leveraging prior knowledge to create novel designs for new demands and constraints, and improving them through feedback. To investigate this concretely, we introduce \envname, an interactive environment built on the machine-design game of Besiege\footnote{\url{https://en.wikipedia.org/wiki/Besiege_(video_game)}}. The environment 
+allows for construction of simple mechanical machines with standardized and semantic parts such as gears and wheels, and
+supports customized physical scenarios in which LLM agents can test constructed machines and evaluate their dynamics and interactions.
+
+Building on \envname, we benchmark state-of-the-art LLMs with different agent designs and strategies for selecting and placing basic mechanical elements to build machines for representative functional demands, a task we term \emph{compositional machine design}. Through these experiments, we empirically identify key capabilities required for this task: accurate spatial reasoning, high-level knowledge of design strategies, and instruction-following in spatial domains. Since only a few proprietary LLMs achieve satisfactory results, we further investigate how reinforcement learning (RL) can improve the performance of open-source LLMs. To this end, we curate a small machine design dataset to cold-start RL finetuning, perform exploratory RL experiments, and highlight key challenges that chart directions for future research. In summary, our contributions are listed below:
+
+\vspace{-1mm}
+\begin{itemize}[leftmargin=*,nosep]
+\setlength\itemsep{0.35em}
+    \item We introduce and formalize the task of \emph{compositional machine design}, where machines are assembled from standardized parts to achieve functional goals.
+    \item We present \envname, an interactive environment 
+    that enables LLM agents to construct, simulate, and evaluate compositional machines in customized physical scenarios.
+    \item We systematically benchmark state-of-the-art LLMs and different agentic workflow designs on representative machine-design tasks.
+    \item We explore RL finetuning of LLMs on this task, for which we curate a cold-start dataset, conduct experiments, and highlight the key challenges.
+\end{itemize}
+
+\vspace{-2mm}
+\section{Compositional Machine Design}
+\vspace{-2mm}
+
+
+
+
+Full machine design involves many coupled elements: geometry, statics and dynamics, demand analysis, failure modes, safety, and even legal constraints~\citep{beitz1996engineering,wong2025llm}. To isolate a tractable subproblem, we focus on the structural composition of machines: how standardized parts are spatially arranged and mechanically linked to produce functional behavior. We refer to this task, introduced in the previous section, as \emph{compositional machine design}. It captures two essential components: (i) the static geometry of a machine as a part-based assembly, and (ii) its compatibility with functional demands, typically assessed through physical simulation. This abstraction omits considerations such as manufacturing constraints, material properties, or domain-specific regulations, but retains the core spatial and behavioral reasoning challenges relevant to design.
+
+This special task of compositional machine design mirrors challenges found in other exploration domains. For example, automatic theorem proving involves a compositional and exponentially large action space, while electronic design automation (EDA) for chip layouts requires spatial reasoning to place components of varying shapes under spatial constraints (albeit in a more regular and grid-constrained fashion than mechanical parts in machines). A unique challenge in machine design, however, is its dependence on diverse long-horizon behaviors, both autonomous and non-autonomous, within an environment. Specifically, a machine may behave differently when operated in different ways (\eg, a bicycle when pedaled versus when braking) or under different external conditions (\eg, driving a car in sunny versus rainy weather). Similarly, many sophisticated machines cannot function without appropriate control policies, as exemplified by aircraft that rely on fly-by-wire systems to stabilize their inherently unstable aerodynamic configurations (which would otherwise be unflyable by a human pilot alone). A key open problem is therefore how to account for the interplay among physics, control policy, and compositional structure in machine design.
+
+
+It is worth noting that, unlike in math theorem proving where one valid proof often suffices (even though multiple proofs may still be valued), design domains typically require generating a diverse set of candidate solutions. This diversity is essential to (i) differentiate products, (ii) adapt to unpredictable market demands, and (iii) account for uncertainty in real-world testing and deployment. Consequently, the task places greater emphasis on diversity, and a model for compositional machine design should function more like a generative model than a simple reward maximizer.
+
+\vspace{-2mm}
+\section{\envname: Playground for Compositional Machine Design}
+\vspace{-2mm}
+
+
+Studying the full problem of compositional machine design is challenging, as it involves the coupling of many interacting factors.
+We therefore focus on a minimalist, component-level setting in which machines are constructed primarily from cuboid primitives with clear functional semantics, together with a small set of specialized exceptions, and operate under a shared control policy in an environment governed by rigid-body and elastic mechanics. This abstraction allows us to properly benchmark the capabilities of existing LLMs and to assess the upper bounds, potential, and challenges of agentic systems and RL algorithms.
+
+To this end, we create \envname, an interactive environment adapted from the machine-building game Besiege, in which players design medieval machines to complete tasks such as destroying castles. 
+Powered by the built-in physics engine, \envname supports physical simulation of mechanical systems such as vehicles and catapults in user-customized environments with terrains, obstacles, external forces (\eg, wind and gravity), and co-existing agents. The environment provides nearly 80 types of building blocks (examples illustrated in Fig.~\ref{fig:block_intro}), including passive ones like drills and logs, and powered ones like powered cogs and wheels.
+Machines are constructed by sequentially attaching new parts to vacant and attachable faces of existing blocks, starting from a root block and thus forming a ``construction tree'' (indeed a directly acyclic graph (DAG), in the sense of operation orders; one block can has two parents in the DAG; the actual structures may contain loops).
+Powered blocks can receive control commands, allowing machines to be operated precisely. During simulation, complete state information (e.g., the position and velocity of each block in the constructed machine) can be recorded for model feedback. Finally, the environment supports custom modifications and can be extended with additional block types and richer physics (\eg, simple fluid simulation). Further details are explained in Appendix \ref{appendix:env}.
+
+
+
+
+\envname is unique in balancing real-world geometry and physics, part-level semantics, and simple compositional rules. Block-stacking environments like LEGO~\citep{fan2022minedojo} and Minecraft~\citep{fan2022minedojo,pun2025generating} allow intuitive combinatorial assembly but do not natively provide realistic physical simulation and rely on generic blocks with limited semantic meaning. CAD modeling~\citep{li2025cad} captures fine-grained geometry and interactions, but its complexity makes rules cumbersome and sequences prohibitively long. By contrast, \envname uses semantically meaningful parts with cuboid-like construction rules—supporting realistic physics while remaining abstract enough for tractable composition. This calibrated balance enables the study of compositional creativity and geometric reasoning at a level of difficulty that both differentiates algorithms and permits rapid experimentation. Moreover, unlike prior environments, \envname supports machine destruction, adding durability and failure analysis to the design space.
+
+
+
+
+\vspace{-2mm}
+\section{Benchmarking LLMs for Compositional Machine Design} \label{sec:agentic}
+\vspace{-1.5mm}
+
+
+\subsection{Benchmark Settings}
+\vspace{-1.5mm}
+
+\textbf{Representative target machines and tasks.} To benchmark and characterize the performance of different LLMs for agentic compositional machine design, we consider two conceptually simple yet representative target machines to build: \textit{car} and \textit{catapult} as shown in Fig.~\ref{fig:task_demo}. While success in both requires understanding part semantics and structural syntax, \textit{car} building primarily tests static relational reasoning, such as enforcing correct part orientations, symmetry, and stability; in contrast, \textit{catapult} building challenges models with dynamic relational reasoning, where parts must coordinate over time to produce causal mechanical effects. Moreover, the two tasks are simple enough to be constructed with only a few blocks so that they fit within the LLM’s context window, yet complex enough to require explicit reasoning about construction strategies and causal dependencies. We evaluate the performance of \textit{cars} and \textit{catapults} by their moving distance and their throwing distance (\ie, the moving distance of the stone), respectively, towards a fixed and given direction. During each simulation, the generated machine will be placed at a designated position, and the active parts will be powered after a few seconds. As there can be reward hacking issues, for \textit{catapults} experiments we surround the designated machine placement position with moderate-height walls. More details about the target machines, rewards, and environments can be found in Appendix~\ref{appendix:env}. 
+
+
+\begin{figure}[t!]
+  \centering
+  \vspace{-3mm}
+  \includegraphics[width=\linewidth]{figures/environment_intro_cropped.pdf}
+  \captionsetup{font=footnotesize} %
+  \vspace{-6.5mm}
+  \caption{\footnotesize Demonstration of the machine design tasks in our experiments. (Left: \textit{car}; Right: \textit{catapult}).}
+  \label{fig:task_demo}
+  \vspace{-1.5mm}
+\end{figure}
+
+\vspace{-.5mm}
+
+\textbf{Machine representations.} In \envname, the default XML representation records all blocks with global 3D positions and uses a built-in algorithm to recover connections. Such a representation, however, does not well encode machine structures. Instead, we propose a parsimonious representation aligned with the game’s building logic, based on pairwise relative attachment relationships (i.e., how one part is rotated and attached to another). Details are explained in Appendix~\ref{sec:tree_rep}.
+\vspace{-.5mm}
+
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.98\linewidth]{figures/xml_intro_v2_cropped.pdf}
+  \vspace{-2.5mm}
+  \captionsetup{font=footnotesize} %
+  \caption{\footnotesize Demonstration of the default XML representation and our construction tree representation. Parent block info is in blue and child info is in red.}
+  \label{fig:XML-intro}
+  \vspace{-4.5mm}
+\end{figure}
+
+\textbf{Performance metrics.} We evaluate our agentic systems using the following quantitative metrics: 1) \textit{file validity rate}, the proportion of generated JSON files that can be successfully parsed into machine construction trees; 2) \textit{spatial validity rate}, the proportion of generated machines that are free from self-collisions; 3) \textit{machine validity rate}, the proportion of machines that satisfy both file and spatial validity; 4) \textit{mean and maximum simulation scores}, the average and highest rewards achieved by generated machines in the environment.
+
+\textbf{Environment feedback.} For the simple target machines \textit{car} and \textit{catapult}, we consider environment feedback within a time window of 5 seconds that is long enough to characterize their designated functionalities. Specifically, for \textit{car} we consider maximum speed and driving distance; for \textit{catapult}, we consider boulder throwing distance and maximum height. We also record the machines' global orientation and broken parts information (if any). Details are elaborated in Appendix~\ref{sec:env_feedback}.
+
+
+
+\begin{figure}[t!]
+  \centering
+  \vspace{-2mm}
+  \includegraphics[width=0.98\linewidth]{figures/gemini_cot_example_v3.pdf}
+  \vspace{-2mm}
+  \captionsetup{font=footnotesize} %
+  \caption{\footnotesize Example CoT of inspector agents (w/ Gemini 2.5 Pro). Blue text highlights the moderate capability of LLMs in spatial reasoning and imagined physical simulation.}
+  \label{fig:gemini-cot-example}
+  \vspace{-1mm}
+\end{figure}
+
+\begin{figure}[t!]
+  \centering
+  \includegraphics[width=0.98\linewidth]{figures/o3_cot_example_v4_green_cropped.pdf}
+  \vspace{-2mm}
+  \captionsetup{font=footnotesize} %
+  \caption{\footnotesize Example CoT of inspector agents (w/ OpenAI o3). Red text highlights reasoning errors.}
+  \label{fig:o3-cot-example}
+  \vspace{-4.5mm}
+\end{figure}
+
+
+
+
+
+
+\vspace{-1.25mm}
+\subsection{Agentic Workflow Design}
+\vspace{-1.25mm}
+
+
+\textbf{Single-agent setting.} We first benchmark if a single LLM agent alone is capable of completing the task. Specifically, one LLM agent is provided with the environment description, the available machine components, the assembly syntax, and the functional requirements (\eg, moving an object forward). The agent generates a chain-of-thought (CoT; \citet{wei2022chain}) to reason about what is needed and why, and then derives an abstract plan (e.g., connecting a lever to a container with a boulder). This plan is later translated into the construction tree representation.
+
+\textbf{Iterative editing.} Because compositional machine design requires both low-level spatial reasoning and high-level ideation, a single agent rarely produces satisfactory machines. We therefore also design an iterative editing workflow that involves three major agents: 1) \emph{designer}, which produces an initial plan from the environment description, the available machine components, the assembly syntax, and the functional requirements; 2) \emph{refiner}, a self-critic agent that which evaluates a draft against requirements and constraints and proposes multiple candidate revisions at each step; 3) \emph{environment querier}, an agent that runs machine simulation and summarizes the environment feedback, in the way that it always provides global information such as machine orientation throughout the trajectory but selectively reports the feedback on specific blocks (\eg, position and speed) for further machine refinement. The workflow begins with a draft from the designer that is later critiqued by an \textit{inspector}, which assess the designed machine in an abstract fashion, then polished once by a refiner. The design then undergoes a fixed number of iterations, each consisting of one querier and one refiner step. At refiner stages, multiple candidates are generated for running Monte Carlo tree search (MCTS; \citet{coulom2006efficient}). The best design found in this search process is selected as output.
+
+
+
+\begin{wrapfigure}{r}{0.55\linewidth}
+  \vspace{-5mm}
+  \centering
+  \includegraphics[width=\linewidth]{figures/besiegefield_pipeline_compressed.pdf}
+  \vspace{-6mm}
+  \caption{\footnotesize Our agentic machine design workflow.}
+  \label{fig:multi-agent-detail}
+  \vspace{-3mm}
+\end{wrapfigure}
+
+\textbf{Hierarchical construction.} Inspired by typical human design processes as well as recent designs of agentic systems \citep{xiao2025verbalized,teng2025atom,zhang2024aflow}, we introduce a meta-designer agent that first analyzes the requirements and constraints, and then constructs a high-level blueprint of the major functional blocks (\eg, the suspension system) and their interconnections. With this blueprint in place, we adopt an autoregressive strategy to build the machine block by block: 1) we begin with the first functional block and dispatch the job to eight parallel builder agents; 2) the valid designs from this stage are evenly distributed to another eight builder agents to construct the second block; and 3) the process iterates in this manner until the entire machine is assembled. Empirically, we find that the meta-designer typically decomposes a machine into three to four functional blocks.
+
+
+\begin{figure}[t!]
+  \centering
+  \vspace{-2mm}
+  \includegraphics[width=\linewidth, clip, trim={0 0.7cm 0 0}]{figures/LLM_Comp_v4_cropped.pdf}
+  \captionsetup{font=footnotesize} %
+  \vspace{-6mm}
+  \caption{\footnotesize Machines produced by agentic systems with different LLMs (Top: \textit{car}; Bottom: \textit{catapult}).}
+  \label{fig:test-time-scaling-comp}
+  \vspace{-1.5mm}
+\end{figure}
+
+
+
+\begin{table}[t!]
+  \scriptsize
+  \centering
+  \setlength{\abovecaptionskip}{5pt}
+\setlength{\belowcaptionskip}{-1pt}
+  \setlength{\tabcolsep}{3pt}
+  \renewcommand{\arraystretch}{1.1}
+  \newcommand{\cgr}[1]{\textcolor[rgb]{.329,.51,.208}{\textbf{#1}}}
+  \newcommand{\cre}[1]{\textcolor[rgb]{1, 0, 0}{\textbf{#1}}}
+  \renewcommand{\pm}{\mathbin{\text{±}}}
+  \begin{tabularx}{\textwidth}{l*{9}{>{\centering\arraybackslash}X}}
+    \multirow{2.4}{*}{Models}
+    & \multicolumn{3}{c}{Single-agent} & \multicolumn{3}{c}{Iterative Editing}& \multicolumn{3}{c}{Hierarchical Design} \\
+    & Mean & Max&Std & Mean & Max&Std& Mean & Max&Std \\
+    \shline
+    \multicolumn{6}{l}{~~~~\textbf{\textit{``Catapult'' Task}}} \\
+    Gemini 2.5 Pro
+       &2.30&9.0 &3.86 
+       &4.67&\bf 21.95&8.68
+       &\bf 9.83&\bf 18.19& 8.35
+       \\
+    OpenAI o3
+      &2.87&5.22 &1.96
+      &\bf 9.14&14.01&3.71
+      &2.00&11.11&3.98
+       \\
+
+    Qwen3-Coder-480B-A35B
+       &1.75&9.24&3.17 
+       &5.10&12.02&5.54
+       &3.90&6.52&2.54
+       \\
+
+    Doubao Seed 1.6
+       &3.18&8.2&2.99
+       &4.82&9.10&3.41
+       &1.73&4.76&2.39
+       \\
+
+    Claude Opus 4
+       &1.19&4.82&2.21
+       &1.18&4.91&2.18
+       &2.27&9.32&4.22
+       \\
+
+    DeepSeek-V3
+       &\bf 3.50&4.86&2.17
+       &3.07&5.24&2.55
+       &2.41&4.93&2.58
+       \\
+
+    Kimi K2
+       &2.57&\bf 9.05&3.72
+       &2.82&11.39&5.23
+       &5.39&12.02&5.16
+       \\
+
+    Llama 4 Scout 17B 16E
+       &3.18&5.64&1.95
+       &1.28&5.94&2.41
+       &3.59&11.83&4.15\\
+    \hline
+    \multicolumn{6}{l}{~~~~\textbf{\textit{``Car'' Task}}} \\
+    Gemini 2.5 Pro
+       &\bf 33.96&\bf 40.85&6.73
+       &\bf 34.34&\bf 41.66&13.96
+       &\bf 29.96&\bf 41.52&7.78\\
+    OpenAI o3
+      &15.28&32.08&8.97
+      &14.34&35.08&11.79
+      &28.39&36.18&11.01\\
+    Qwen3-Coder-480B-A35B
+       &8.87&11.50&4.46
+       &15.24&28.95&13.12
+       &12.59&34.05&10.78\\
+    Doubao Seed 1.6
+       &3.51&9.40&4.85
+       &8.11&10.04&3.58
+       &18.75&26.02&4.38\\
+    Claude Opus 4
+       &9.83&12.98&1.28
+       &8.07&28.04&12.48
+       &14.56&38.67&20.69\\
+    DeepSeek-V3
+       &9.06&10.53&3.68
+       &8.23&18.84&7.12
+       &17.92&31.94&12.85\\
+    Kimi K2
+       &1.75&8.09&2.80
+       &14.36&28.34&9.47
+       &1.94&14.99&5.48
+       \\
+    Llama 4 Scout 17B 16E
+       &0.02&0.03&0.01
+       &3.04&12.76&5.23
+       &1.55&2.00&0.32
+       \\
+  \end{tabularx}
+  \caption{\footnotesize Quantitative results of agentic systems with different LLMs.}
+  \label{tab:agentic}
+  \vspace{-5mm}
+\end{table}
+
+\vspace{-2mm}
+\subsection{Key Empirical Observations}\label{sec:agent_results}
+\vspace{-1mm}
+
+\textbf{General observations.} 
+We find compositional machine design to be a challenging task for LLMs (Fig.~\ref{fig:test-time-scaling-comp} and Table~\ref{tab:agentic}), though not intractable: Gemini 2.5 Pro can consistently construct visually sensible machines with non-trivial performance. We find no evidence that reasoning models outperform non-reasoning ones, suggesting the main bottleneck lies in LLMs’ limited 3D understanding and/or in-context learning. We also find that LLMs, especially reasoning models, still exhibit some spatial and physical reasoning as exemplified by the CoT from Gemini Pro 2.5 (Fig.~\ref{fig:gemini-cot-example}), much like a world model in text space.
+
+\textbf{Failure patterns.} We identified common failure patterns in LLM-generated machines (Fig.~\ref{fig:failure-mode}): 1) \textit{incorrect part orientations}; 2) \textit{incorrect part placements}, where parts attach to wrong parents; 3) \textit{instruction-following failures}, where elements of the high-level blueprint are not strictly observed; 4) \textit{flawed high-level reasoning}, where LLMs fail to recognize correct physics or essential components.
+
+
+
+\textbf{Effect of environment feedback.} It is unsurprising that with the more environment feedback the agents receive, the better performance of generated machines improve in general (Table~\ref{tab:rl_env_feedback}).
+
+
+\textbf{Effect of edit history.} We find that edit histories are generally helpful in decreasing the number of failure attempts in creating valid machines (Table ~\ref{tab:edit_history}), which underscores the importance of longer context window of base models for efficient exploration.
+
+
+\textbf{Hierarchical design.} We observe the mean performance improves with hierarchical design only when the abstract-level reasoning on blueprints is reliable, as shown by the performance of Gemini 2.5 Pro. In the meantime, consistent with the intuition that hierarchical design is more structured and principled, it generally yields lower variance in obtained scores.
+
+
+\textbf{Effect of CoT reasoning.} As shown in Fig.~\ref{fig:failure-mode}, LLMs often fail to faithfully translate high-level machine design plans in their CoT into semantically and geometrically consistent machine construction trees. To better assess the impact of CoT reasoning on high-level design, we feed the CoT generated by Gemini 2.5 Pro (the best-performing model) to other LLMs, prompting them to directly output construction trees. The resulting machines generally show improved performance (Fig.~\ref{fig:LLM-feed-gemini-cot}) and highlight the critical role of high-level semantic reasoning in machine design. 
+
+\textbf{CoT-machine correspondence.} Though the CoT often provides a reasonably high-level blueprint, agents may still generate machines that deviate from the intended structure (Fig.~\ref{fig:failure-mode}). We hypothesize that this misalignment is a key reason many LLMs struggle to build better machines.
+
+
+
+
+\textbf{Machine representation.} We experiment with a coordinate-only representation derived from the default XML (Appendix~\ref{sec:machine_rep}) and our construction tree representation. Results show that the coordinate-only representation performs significantly worse (Table~\ref{tab:rep_comparison}), implying that explicit structural information is necessary for LLM understanding.
+
+\textbf{3D information.} 
+We observe that (Table~\ref{tab:abl:machine-3d-info}) the performance generally improves when we also feed parsed 3D information into the context of LLMs, which implies that LLMs are less capable of understanding relative spatial relationship (\eg, construction trees).
+
+
+\vspace{-2mm}
+\section{Towards Machine Design through Reinforcement Learning}
+\vspace{-2mm}
+
+Although agentic systems show promise in compositional machine design, simply scaling system size is unlikely to be economical, as errors compound rapidly. Like humans who internalize experience, LLM agents should consolidate new knowledge into weights. We thus explore reinforcement learning with verifiable rewards (RLVR) in \envname to develop machine-design capabilities.
+
+\vspace{-2mm}
+\subsection{Experimental Settings}\label{sec: setting}
+\vspace{-1.5mm}
+
+
+\textbf{Cold-start finetuning and dataset curation.} Following recent RLVR practices~\citep{lambert2024tulu,yue2025does,zhu2025surprising}, we curated a small dataset to cold-start LLMs by aligning their reasoning process with expert CoT. Specifically, we collected textual descriptions of machine functionalities from Besiege player communities and prompted Gemini 2.5 Pro to generate corresponding machines. After filtering out invalid generations, we obtained 9,984 valid machine–CoT pairs. We then used this dataset to perform supervised finetuning on Qwen-2.5-14B-Instruct for 12 epochs. Additional training details are provided in Appendix \ref{sec:cold_start_details}.
+
+
+\textbf{Reward design.} 
+We use the reward $R = \texttt{is\_valid} \times \texttt{performance}$ where $\texttt{is\_valid}$ indicates whether constraints are satisfied (Appendix~\ref{sec:reward setting}). For \textit{car}, $\texttt{performance}$ is the maximum travel distance; for \textit{catapult}, it is the product of the boulder’s maximum height and distance, penalizing solutions that are extreme in only one dimension.
+
+\textbf{RL finetuning settings.} 
+We finetune agents specialized in building a single type of machine (either \textit{car} or \textit{catapult}), making our setup closely aligned with one-shot RLVR~\citep{wang2025reinforcement} where a single prompt is used throughout the RL process. We adopt group relative policy optimization (GRPO; \citet{shao2024deepseekmath}) with LoRA parametrization~\citep{hu2022lora}  (rank 64) and mixed-precision training to finetune the cold-started model. We evaluate both the standard GRPO advantage estimator and the pass@k variant~\citep{tang2025optimizing}. In the latter case, due to the implementation of the RLVR framework verl~\citep{sheng2025hybridflow}, the number of rollouts is set equal to $k$. Each experiment is run for 400 iterations on 8 A100 GPUs with per-GPU batch size of 1 and gradient accumulation of 8. We apply KL regularization with strength 0.001 to encourage the model to remain close to its initialization.
+
+
+\begin{table}[t!]
+  \scriptsize
+  \centering
+  \setlength{\tabcolsep}{2.9pt}       %
+  \renewcommand{\arraystretch}{1.25} %
+  \newcommand{\cgr}[1]{\textcolor[rgb]{.329, .51, .208}{\textbf{#1}}} %
+  \newcommand{\cre}[1]{\textcolor[rgb]{1, 0, 0}{\textbf{#1}}}          %
+  \renewcommand{\pm}{\mathbin{\text{±}}} %
+
+\begin{tabularx}{\textwidth}{
+  l|
+  *{3}{>{\centering\arraybackslash}X}| 
+  *{3}{>{\centering\arraybackslash}X}
+}
+\multirow{2}{*}{Models} 
+ & \multicolumn{3}{c|}{\textit{Catapult}}
+ & \multicolumn{3}{c}{\textit{Car}} \\
+ & Validity Ratio & Mean Score & Max Score
+ & Validity Ratio & Mean Score & Max Score \\
+\shline
+Qwen2.5-14B-Instruct           & 11/50 & 0.06 &  2.41 & 46/50 & 4.97 & 19.10 \\
+Qwen2.5-14B-Instruct + Cold-Start     &  9/50 & 0.11 &  5.54 & 40/50 & 4.67 & 20.23 \\
+Qwen2.5-14B-Instruct + RL      & \textbf{12}/50 & 0.13 &  5.92 &   41/50 &  3.72  &   24.08  \\
+Qwen2.5-14B-Instruct + Cold-Start + RL& 11/50 & \textbf{0.14} &  \textbf{7.14} &   \textbf{42}/50  &  \textbf{5.05}  &   \textbf{45.72}  \\
+\end{tabularx}
+\vspace{-2.5mm}
+\caption{\footnotesize Results of RLVR post-training in \envname. We use Qwen2.5-14B as the backbond LLM.}
+\label{tab:rl_general}
+\vspace{-3mm}
+\end{table}
+
+
+
+\vspace{-1.5mm}
+\subsection{Main Results and Observations}
+\vspace{-1mm}
+
+\textbf{General results.} As shown in Fig.~\ref{fig:RL-catapult-valid-rate}, RL finetuning can generally improve the mean performance, mostly by increasing the percentage that machines are valid (including file validity, machine validity and satisfaction of minimum performance threshold). In the meantime, we also find that the maximum reward increases in our best setting. Similar to observations in many other RLVR settings, the entropy of the output distribution quickly drops even with regularization.
+
+\textbf{Pass@k advantage vs. Pass@1 advantage.}
+Since we eventually care about the best performing designs, especially given the low validity rate, our default setting adopts Pass@k advantage estimator. Indeed, Pass@k finetuning is more likely to discovery promising machine designs (Fig.~\ref{fig:RL-catapult-max-score}).
+
+
+\begin{wrapfigure}{r}{0.4\linewidth} %
+  \centering
+  \vspace{-4mm} %
+  \includegraphics[width=\linewidth]{figures/14b_model_sample_v4_cropped.pdf}
+  \captionsetup{font=footnotesize}
+  \vspace{-5.5mm} %
+  \caption{\footnotesize Designs at RL finetuning stages.}
+  \vspace{-3mm} %
+  \label{fig:rl_evolution}
+\end{wrapfigure}
+
+\textbf{Evolution of generated machines during finetuning.} In Fig.~\ref{fig:rl_evolution}, we qualitatively examine how models refine their designs over the course of finetuning. We observe that models typically make detail-level adjustments, such as shifting part positions, while keeping the same high-level design strategy rather than exploring alternative strategies. Although these strategies are often reasonable, the models struggle to find precise configurations that enable smooth coordination among parts. This precision is especially critical for sophisticated mechanisms like catapults to function properly.
+
+\textbf{Cold-start.}
+Not surprisingly, we find that cold-start alone does not enable models to produce satisfactory designs, and that finetuning on the cold-start model is better than on the base model (Table~\ref{tab:rl_general}).
+
+
+
+\vspace{-1.5mm}
+\section{Discussions and Intriguing Insights}
+\vspace{-1.5mm}
+
+\textbf{Capabilities for compositional machine design.} Although tasks such as visual understanding and generation also depend on spatial, physical, and semantic reasoning, compositional machine design introduces unique requirements for LLM capabilities. Without precise spatial placement of machine parts, a design may fail to function correctly; a gear train, for example, will not transmit rotation if the gears are misaligned. Since the design process is typically hierarchical, successful LLMs must be able to accurately translate high-level blueprints into detailed geometric designs. In addition, machine design spans both concept-level reasoning and detailed specification. This dual demand often leads to large design documents and calls for a form of “visual reasoning” expressed through text, similar to what has been studied in LLMs applied to scalable vector graphics (SVG) and CAD models~\citep{qiu2025sgpbench,alrashedy2025generating}. Multimodal reasoning is also important because effective machine design typically relies on integrating textual descriptions with visual or schematic representations. In this work, however, we focus only on pure LLM-based reasoning to isolate and analyze its capabilities for compositional machine design.
+
+
+
+
+\textbf{Challenges in agentic machine design systems.} The task of machine design faces similar challenges found in agentic systems in domains such as legal services and other knowledge-intensive fields. A key difficulty is the highly varied requirements and domain knowledge of different customers. To address this, LLMs need to acquire task-specific knowledge through in-context learning or finetuning. In addition, the complexity of design tasks often requires multiple agents to coordinate, and such pipelines can suffer error accumulation when the base LLM lacks sufficient capability.
+
+\textbf{Exploration in machine design space.} Different from tasks such as theorem proving, the goal of compositional machine design is to discover structures that more effectively achieve desired functionalities. Rather than reusing existing solutions, a practical design agent should be able to propose novel strategies, structural layouts, and part specifications as machine complexity increases. Meeting this requirement calls for RL finetuning methods that prevent models from collapsing into a narrow set of strategies and structures, which recent methods aim to alleviate~\citep{zhu2025flowrl,chen2025pass, cui2025entropy,cheng2025reasoning,liu2025nablagfn}. This demand is closely related to continual RL~\citep{schwarz2018progress}, since finetuned LLMs must avoid catastrophic forgetting, maintain its reasoning ability, and consolidate learned strategies, which is particularly important because large-scale machine design datasets are rare and commercially infeasible to collect.
+
+
+\vspace{-1mm}
+\section{Related Work and Concluding Remarks} 
+\vspace{-1mm}
+
+\textbf{3D graphics codes for generative modeling.} There is a long history in 3D asset generation and engineering design of representing the construction of a target instance as a program or sequence of operations in a domain-specific language~\citep{ritchie2023neurosymbolic,sun20253d,deng2022unsupervised}, which we refer to here as 3D graphics codes~\citep{qiu2025sgpbench, chen2025symbolic}. Unlike geometric representations such as point clouds or meshes, these codes describe objects at a higher semantic level, capturing part composition, design constraints, and user operations in modeling software. 
+Similar to programming languages, 3D graphics codes are inherently discrete and are typically generated with autoregressive models trained from scratch~\citep{yuan2024cadtalk} or with LLMs finetuned on curated datasets~\citep{kulits2025re,chen2025sar3d}. Much of the existing work centers on CAD scripts for individual parts~\citep{wu2023cad, alrashedy2025generating,li2025cad} or Blender macros for single assets~\citep{huang2024blenderalchemy}. Whereas recent studies on LEGO assemblies~\citep{pun2025generating}, Minecraft structures~\citep{fan2022minedojo,liu2024odyssey}, and procedural scene generation~\citep{sun20253d,chen2025symbolic,jones2025shapelib,yuan2024cadtalk} introduce richer compositionality, they still fall short of the task of compositional machine design, which requires assemblies that both function under physical laws and exhibit the precise geometry of real objects.
+
+
+\textbf{LLM agents.} LLM agents are language models organized to operate in iterative loops of perception and action~\citep{yao2023react,minaee2024large,hu2024scenecraft}. They interact with external tools~\citep{schick2023toolformer,liu2024toolnet,kim2024leveraging,qin2024toolllm}, respond to signals from simulated or real environments~\citep{savva2019habitat,shridhar2020alfworld}, incorporate self-reflection to refine their outputs~\citep{hu20243d,alrashedy2025generating,shinn2023reflexion,yu2025generating}, and are commonly organized into multi-agent systems that coordinate roles and exchange information
+~\citep{li2023camel,chen2024agentverse,zhang2024aflow}
+. These designs move beyond one-shot text generation and establish LLMs as adaptive decision makers capable of long-horizon reasoning. Approaches that introduce search over possible solutions~\citep{yao2023tree,putta2024agent,koh2024tree} or reflection on prior attempts~\citep{besta2024graph,deng2024multi,renze2024self,xiao2025verbalized,yu2025generating} have enabled progress on increasingly complex tasks. 
+LLM agents have already been used in design tasks such as code synthesis~\citep{gao2023pal,novikov2025alphaevolve,madaan2023self}, CAD design~\citep{alrashedy2025generating} and game environments~\citep{wang2023voyager,fan2022minedojo}. 
+Partially inspired by these developments, \citet{makatura2023can} proposed a prototypical agent-based design framework that generates mechanical structures from text prompts. Their system treats structure generation as a one-shot process and delegates the search for optimal geometric and physical parameters to external optimization tools. In contrast, our work with \envname explores how LLM agents can directly and iteratively bridge compositional structures to functional goals, framing design as a process of reasoning and adaptation with both accurate simulation and intuitive physics.
+
+
+\textbf{Reinforcement learning with verifiable rewards (RLVR).} Recent studies indicate that, by running RL finetuning with verifiable rewards from simulators or verifiers, reasoning abilities emerge~\citep{shao2024deepseekmath,guo2025deepseek,bai2022constitutional}, even when single prompt is used during finetuning~\citep{wang2025reinforcement}.
+Yet, many methods exhibit loss of diversity as output entropy collapses during reinforcement learning and thus do not fully enable LLMs to explore novel solutions. Examples of mitigation methods include explicit entropy or KL regularization~\citep{cui2025entropy,ouyang2022training}, Pass@k training~\citep{tang2025optimizing,chen2025pass}, and distribution-matching objectives like generative flow networks~\citep{zhu2025flowrl,hu2023amortizing}. 
+\envname provides verifiable rewards and thus enables direct application of RLVR to compositional machine design.
+
+
+
+\textbf{Concluding remarks}. We introduced \textit{compositional machine design}, a simplified yet challenging task that reflects core aspects of real-world machine design. To evaluate LLM performance on this task, we developed \envname, an interactive environment based on the game Besiege. Our results with agentic systems and reinforcement learning demonstrate that LLMs hold promise for solving this problem. While we did not exhaustively explore all designs or integrate multi-modal information, our findings underscore the need to advance fundamental LLM algorithms and capabilities, and point toward exciting future directions in machine design.
+
+
+
+
+
+    
+    
+    
+    
+
+
+\section*{Acknowledgment}
+
+We sincerely thank the developers of Besiege for creating the game and fostering an open and vibrant community, without which our exploration of this exciting idea would not have been possible.
+
+\bibliography{iclr2026_conference}
+\bibliographystyle{iclr2026_conference}
+\input{appendix}
+\end{document}

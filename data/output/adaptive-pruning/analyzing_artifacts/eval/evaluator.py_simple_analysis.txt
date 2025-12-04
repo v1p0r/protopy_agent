@@ -1,0 +1,101 @@
+# Logic Analysis: eval/evaluator.py
+
+The `Evaluator` class in `eval/evaluator.py` is responsible for measuring both task-specific performance and efficiency metrics after model training. This component plays a critical role in generating the results that directly compare APT against baselines as presented in Tables 2, 3, and other evaluation tables in the paper.
+
+## Core Responsibilities
+
+### 1. Task Performance Evaluation
+The evaluator must compute appropriate metrics based on the task type, consistent with the paper's experimental setup:
+
+- **Classification tasks** (SST-2, MNLI, etc.): Accuracy
+- **Question Answering** (SQuAD v2.0): F1 score  
+- **Summarization** (CNN/DM): ROUGE-1, ROUGE-2, ROUGE-L scores
+- **Large Model Evaluation** (LLaMA on Alpaca): Average of four Open LLM Leaderboard tasks:
+  - 25-shot ARC
+  - 10-shot HellaSwag  
+  - 5-shot MMLU
+  - Zero-shot TruthfulQA
+
+These metrics must be computed using the same methodology as described in Section 5.1 and evaluated through the lm-eval-harness package mentioned in the paper.
+
+### 2. Efficiency Metrics Measurement
+The evaluator must measure both training and inference efficiency metrics as defined in Section 5.3:
+
+#### Training Efficiency Metrics:
+- **Relative training peak memory**: Compare to full fine-tuning baseline
+- **Time to Accuracy (TTA)**: For small models, time to reach 97% of final accuracy
+- **Training time per step**: For large models like LLaMA
+
+#### Inference Efficiency Metrics:
+- **Inference peak memory**: Measured via `torch.cuda.max_memory_allocated()`
+- **Inference speedup**: Based on throughput (data processed per second)
+- **Inference time**: Reported in milliseconds
+
+All efficiency metrics should be normalized relative to baselines (FT and LoRA) as shown in Tables 2-3, with "↓" indicating smaller is better.
+
+## Implementation Details from config.yaml
+
+The configuration file provides specific parameters that must be respected:
+
+```yaml
+evaluation:
+  inference_batch_size:
+    small_model: 128
+    llama_7b: 32
+    llama_13b: 4
+  metrics:
+    classification: accuracy
+    qa: f1
+    summarization: rouge
+    instruction_following: lm_eval_harness
+  eval_tasks:
+    open_llm_leaderboard:
+      - arc: 25-shot
+      - hellaswag: 10-shot
+      - mmlu: 5-shot
+      - truthfulqa: 0-shot
+  normalize_metrics: true
+  baseline_ft: true
+  baseline_lora: true
+```
+
+This indicates:
+- Different batch sizes for different model sizes during inference testing
+- Specific metric types mapped to task categories
+- Use of lm-eval-harness for instruction-following evaluation
+- Normalization of metrics to baselines (FT and LoRA)
+
+## Method Breakdown
+
+### evaluate()
+This method will:
+1. Iterate through the test dataset using the configured batch size
+2. Perform forward passes to generate predictions
+3. Compute task-specific metrics based on the task type
+4. Return a dictionary containing all relevant performance metrics
+5. For instruction-following tasks, interface with lm-eval-harness as specified
+
+### measure_efficiency()
+This method will:
+1. Record GPU memory usage before and after inference using PyTorch's memory tracking
+2. Measure inference time by timing multiple forward passes and calculating average
+3. Calculate throughput (samples processed per second)
+4. Normalize all efficiency metrics according to the specified baselines
+5. Return efficiency metrics in the format required for comparison tables
+
+## Integration Requirements
+
+The Evaluator must work seamlessly with:
+- The trained model containing APT adapters
+- The APTAdapter's merge_weights() functionality for inference optimization
+- DatasetLoader for proper data formatting
+- Configuration settings from config.yaml regarding batch sizes and evaluation parameters
+
+## Output Format
+
+The output must match the structure of the paper's evaluation tables:
+- Performance metrics at the precision reported (e.g., 86.4 for MNLI)
+- Efficiency metrics normalized to baselines with appropriate directional indicators
+- Raw values available for reproduction (as referenced in Appendix I)
+
+This evaluator will be crucial for demonstrating APT's claimed advantages: maintaining up to 98% task performance when pruning 60% of RoBERTa/T5 parameters while reducing training memory by up to 70% and speeding up fine-tuning by up to 8×.

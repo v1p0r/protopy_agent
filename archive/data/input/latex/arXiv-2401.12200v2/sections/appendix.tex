@@ -1,0 +1,231 @@
+
+\section{Hyperparameter and Training Details} \label{appendix:hyper-param}
+Our hyper-parameter settings are shown in \cref{tab:appendix-hyperparam}. For GLUE task fine-tuning, we follow the hyper-parameter setting of CoFi~\citep{xia_structured_2022}, separating the tasks into big (MNLI, SST2, QNLI, QQP) and small (MRPC, CoLA, RTE, STSB) based on the dataset size. For instruction tuning on the Alpaca dataset, we train the pruned model for 15 epochs after the pre-tuning pruning process to make sure they converge. However, in practice, such training epochs can be reduced. To adaptively increase the tuning parameters in the {\lmabbr}, at the start of fine-tuning, we initialize adapter ranks to 8, with salient layers' ranks linearly increased. The scaling factors are set as 2 statically. Since evaluating billion-level LLaMA models during instruction tuning with all evaluation tasks would be time-consuming, we did not do the TTA evaluation as small models. We do not conduct any hyper-parameters search for any training for fair comparison.
+
+\input{tables/appendix_hyperparam}
+
+% \subsection{Training Details}
+% Unlike the existing fine-pruning process that keeps the model size fixed with masks to control the model's sparsity throughout training, we gradually prune out structures and shrink the model size during training for training acceleration and memory savings.
+% \todo{define sparsity again -> pruning parameters / total parameters; range of tuning parameter ratio (peak and average)}
+% \qq{put these into implementation details and add to appendix}
+% For task performance evaluation, we report the accuracy of SST2 and MNLI on their dev sets, F1 score on SQUAD V2 dev set, ROUGE 1/2/L scores on the CNN/DM test set, and BLEU score on WMT en-ro test set. As for the instruction-tuning setup, we report the zero-shot multiple choice accuracy of the model on MMLU, while the GPT-4 annotated win rate of the model's generation on AlpacaEval. 
+% \hanna{A section or subsection on training details is missing. there are a lot of hyperparameters that you need to list here or briefly mention and then refer to appendix. Also, there are some details that you've mentioned in the method and I proposed to move here.  }
+When pruning {\lmabbr}s with {\ourmethod}, following \citep{xia_structured_2022}, we first prune and train the {\lmabbr} with the self-distillation objective, and then fine-tune the pruned {\lmabbr} to recover its end-task performance. Given $T$ pruning training steps in total, we set a pre-determined target sparsity $\gamma_T$ (defined as the ratio of pruned parameter size to the total parameter size) and use cubic scheduling to control the {\lmabbr} parameter size, where $\gamma_t = \gamma_T + (1-\gamma_T) (1 - \frac{t}{T})^3$. We adaptively increase the tuning parameters in the pruning stage but restrict them to a specific limit $\Delta_t$ at each training step $t$.
+% \hanna{you can connect these to the variables you defined in the method section. is it one of the delta's? } 
+Towards better training stability in {\lmabbr} pruning, we gradually decrease the pruning masks of pruned blocks by $\alpha < 1$ instead of instantly setting them from ones to zeros. We also use the exponential moving-averaged salience in~\citep{zhang2023adaptive} when calculating the salience score during fine-tuning.
+% For instance, when tuning RoBERTa models, we only tune 0.53\% to 2.13\% of the model parameters. \hanna{why for example? how about other llms?} \todo{maybe moving this into the tables?}
+
+
+\section{Block salience calculation and correlations} \label{appendix:salience-unify}
+As addressed in \cref{sec:apt}, we use the compressed weight-gradient production as the salience metric for identifying the tuning and pruning parameter blocks in {\lmabbr}s. Previous works~\citep{sanh_movement_2020} use salience score defined as the magnitude of the parameters' weight-gradient production, where given a linear layer $H = WX$ (we omit the bias term here for simplicity) in model parameters $\Theta$ trained on the objective $\mathcal{L}$, the salience scoring function $S$ is defined as:
+
+\begin{equation} \label{eq:sensitivity}
+    \begin{split}
+        S(W_{i,j}) &= \sum_{(x, y) \in \mathcal{D}} s(W_{i,j}, x, y) \\
+        &= \sum_{(x, y) \in \mathcal{D}}|\frac{\partial \mathcal{L}(x, y | \Theta)}{\partial W_{i,j}} \cdot W_{i,j}| \\
+        S(W_{:,j}) &= \sum_{(x, y) \in \mathcal{D}}\sum_{i}|\frac{\partial \mathcal{L}(x, y | \Theta)}{\partial W_{i,j}} \cdot W_{i,j}| \\
+        &= \sum_{(x, y) \in \mathcal{D}} (\sum_{i}|\frac{\partial \mathcal{L}(x, y | \Theta)}{\partial X_{j, i}} \cdot X_{j, i}|)
+    \end{split}
+\end{equation}
+
+where $x, y$ are the inputs and labels sampled from the training batch $\mathcal{D}$. $S(W_{i,j})$ denotes the unstructured, sparse parameter's salience, and $S(W_{:, j})$ denotes the salience score of a block in the weight $W$ (for example, rows, columns, attention heads, etc.).
+
+When applying this equation to {\ourarchabbr} layers as defined in \cref{eq:elastic-lora}, there are three different consistent dimensions, namely input dimension $j$, output dimension $i$, and tuning rank dimension $k$. Therefore, the combined salience (including tuning low-rank weights and the frozen weight) of the parameter block shall be calculated as follows:
+\begin{equation} \label{eq:appendix-elastic-salience}
+    \begin{split}
+        S(H, i) &= \sum_l \frac{\partial \mathcal{L}(x, y | \Theta)}{\partial H(X)_{i,l}} \cdot H(X)_{i,l} \\
+                &= \sum_p \frac{\partial \mathcal{L}(x, y | \Theta)}{\partial W_{i,p}} \cdot W_{i,p} \\
+                &+ s\cdot \sum_q \frac{\partial \mathcal{L}(x, y | \Theta)}{\partial {W_B}_{i,q}} \cdot {W_B}_{i,q} \\
+        S(H, j) &= \sum_l \frac{\partial \mathcal{L}(x, y | \Theta)}{\partial X_{j,l}} \cdot X_{j,l} \\
+                &= \sum_p \frac{\partial \mathcal{L}(x, y | \Theta)}{\partial W_{p,j}} \cdot W_{p,j} \\
+                &+ s\cdot \sum_q \frac{\partial \mathcal{L}(x, y | \Theta)}{\partial {W_A}_{q,j}} \cdot {W_A}_{q,j} \\
+        S(H, k) &= s\cdot \sum_l \frac{\partial \mathcal{L}(x, y | \Theta)}{\partial {W_A}_{k,l}} \cdot {W_A}_{k,l} \\
+                &= s\cdot \sum_l \frac{\partial \mathcal{L}(x, y | \Theta)}{\partial {W_B}_{l,k}} \cdot {W_B}_{l,k} \\
+    \end{split}
+\end{equation}
+Therefore, we can notice that the real block-wise salience of the LoRA layer shall be the sum of the block-wise frozen weight salience and the corresponding tuning weight. Hence, the existing work~\citep{zhang2023pruning} that only uses the tuning block salience as layer salience leads to sub-optimal pruning results. Meanwhile, we shall also notice the correlation between the input-, output-dimension, and tuning rank dimensions, which are the summation of the weight-gradient production of parameters on different dimensions. 
+
+\section{Adaptive Pruning and Tuning Details} \label{appendix:binary-search}
+
+\begin{algorithm*}[t!]
+ 	\caption{Adaptive Pruning and Tuning} 
+ 	\label{alg:epa}
+ 	\begin{algorithmic}[1]
+ 		\STATE {{\bfseries Input:} Model $f$; Training dataset $ \mathcal{D} $; total training steps $ T $; Adjustment step set $\mathcal{T}$; Training target $\mathcal{L}$; Initial parameters and masks $\Theta_0, M_0$, training memory budget $\Delta$; Parameter number constraint $\gamma$; Hyperparameters $\alpha\,\beta$.}  
+ 		\FOR{$ t = 1, \dots, T $}  
+            \STATE Forward pass: \( L \leftarrow \mathcal{L}(f(\Theta_t, D_t)) \)
+            \STATE Cache the batch-sequence summed hidden states: $\widetilde{H} \leftarrow \sum_{i, j} (|H|)_{ij}$
+ 		\STATE Backward pass: \( \nabla_{\Theta_t} L \leftarrow \frac{\partial \mathcal{L}(f(\Theta_t, D_t))}{\partial \Theta_t} \)
+            \STATE Calculate approximated salience: $\widetilde{S}(m_i) \leftarrow \widetilde{H} \cdot \sum_{i, j} (|\nabla_{H} L|)_{ij}$
+            \STATE Update global scores: $\overline{S}^{(t)}(m) \leftarrow \beta \overline{S}^{(t-1)}(m) + (1-\beta) \widetilde{S}(m)$;
+ 		\STATE Select blocks: $M_1, M_0 \leftarrow$ Binary search against constraint \cref{eq:parameter-constraint}, with scores $\overline{S}^{(t)}(m)$;
+            \STATE Update masks: $M^{(t)}_1 \leftarrow min(1, M^{(t-1)}_1 + \alpha)$, $M^{(t)}_0 \leftarrow max(0, M^{(t-1)}_0 - \alpha)$;
+            \STATE Update parameters: $\Theta_{t+1} \leftarrow \Theta_t - \alpha \nabla_{\Theta_t} L$
+ 		\ENDFOR
+ 		\STATE \textbf{Output:}  { Parameters and masks $ \Theta^{(T)}, M^{(T)}$.} 
+	\end{algorithmic}
+\end{algorithm*}
+
+We show the detailed algorithm description of our Lightweight Parameter Adjustment as described in \cref{sec:apt} in \cref{alg:epa}. For the details of the algorithm, we first sort all blocks by the salience density, defined as the block salience divided by the number of parameters in the block. For instance, given a RoBERTa-base model with the hidden dimension $d_m = 768$, the number of transformer layers $n_L = 12$, the number of attention heads $n_h = 12$, and the number of FFN neurons $n_f = 3072$, we have:
+\begin{align}
+    \mathcal{C}_{\text{head}} &= 4 \times d_m \times d_m / n_h = 196608\\
+    \mathcal{C}_{\text{neuron}} &= 2 \times d_m = 1536\\
+    \mathcal{C}_{\text{dimension}} &= n_L \times (4 d_m + 2 n_f) = 110592
+\end{align}
+We also omit the bias term for density calculation since it takes up less than 1\% of {\lmabbr}'s parameters. Since the number of heads, neurons, and hidden dimensions is ever-changing during pruning, we re-calculate the density after executing each parameter size change. Meanwhile, for T5 and LLaMA-like models, the FFN layers are gated, consisting of up-, gate-, and down-projection linear layers. Therefore, the number of layers in FFN shall be three instead of two in these {\lmabbr}s. Furthermore, for encoder-decoder {\lmabbr}s like T5, the cross-attention layers in the decoder shall also be counted.
+
+After sorting the blocks by salience density, as {\lmabbr}'s parameter size monotonically increases with the number of MHA heads, FFN neurons, and hidden dimensions, we conduct a binary search algorithm to identify the blocks shall be retained as {\lmabbr}'s parameter size monotonically increases with the number of MHA heads, FFN neurons, and hidden dimensions. Specifically, given a sorted list of $N$ blocks $B = \{b_1,b_2,...,b_N\}$ and function $f$ for identifying the block's category where
+\begin{equation}
+    f(b_i) = 
+    \begin{cases} 
+    0 & \text{if } b_i \text{ is a head} \\
+    1 & \text{if } b_i \text{ is a neuron} \\
+    2 & \text{if } b_i \text{ is a dimension} \\
+    \end{cases}
+\end{equation}
+given any index $i$, we can calculate the parameter number of the {\lmabbr} consisting of the top-$i$ blocks by:
+\begin{equation}
+\begin{split}
+    \mathcal{C}_{\text{top-}i} &= (4 d_h' \cdot n_h' + 2 n_f') \cdot d_m' \\
+    n_h' &= \sum_{j=0}^{i-1} \delta(0, f(b_j)) \\
+    n_f' &= \sum_{j=0}^{i-1} \delta(1, f(b_j)) \\
+    d_m' &= \sum_{j=0}^{i-1} \delta(2, f(b_j)) \\
+\end{split}
+\end{equation}
+where $\delta(i, j)$ is the Kronecker delta function that valued 1 if $i=j$ and otherwise 0. Hence, we can use binary search to get the top-$i$ salient blocks, which shall be retained given a parameter constraint, and the rest of the block shall be pruned. In our implementation, for training stability, we do not set the pruned blocks' corresponding masks to 0 directly but gradually decrease their values by $\alpha = 0.01$.
+
+% \begin{equation}
+%     \begin{split} \label{eq:parameter-constraint}
+%         \mathcal{C}(\Theta, \mathcal{M}) &= \sum_{k=1}^n \mathcal{C}(\theta^k, M^k) = \sum_{k=1}^{n_f} \mathcal{C}(\theta^k_f, M^k_f) + \sum_{k=1}^{n_t} \mathcal{C}(\theta^k_t, M^k_t) \\
+%         &\approx \sum_{k_f} (\sum m^{k_f}_p \cdot \sum m^{k_f}_h) + \sum_{k_t} ((\sum m^{k_t}_p + \sum m^{k_t}_h) \cdot \sum m^{k_t}_r \\
+%         &\approx \sum_{k_f} (\sum m^{k_f}_p \cdot \sum m^{k_f}_h)
+%     \end{split}
+% \end{equation}
+
+\input{tables/bert_additional_results}
+
+\input{tables/roberta_detailed_results}
+
+\section{Additional Baseline Comparisons} \label{sec:appendix-additional-exp}
+In this section, we further compare {\ourmethod} to existing parameter-efficient pruning methods, such as PST and LRP. In the meantime, we also show detailed results of {\ourmethod} pruning compared to the LoRA+Distill baseline with more tasks in the GLUE benchmark and LLaMA-2 13B model pruning results.
+
+\subsection{Comparison to PST and LRP}
+We compare {\ourmethod} with the state-of-the-art joint use of unstructured pruning~\citep{ijcai2022p586} and structured pruning~\citep{zhang2023pruning} with PEFT on $\text{BERT}_{\text{base}}$ model, showing in \cref{tab:bert-additional-result}. We can see that {\ourmethod} outperforms existing baselines in both 50\% and 10\% pruning density settings with a notable margin. The performance gain is credited to our more accurate pruning strategy considering frozen and tuning parameters. At the same time, our efficient self-distillation technique used in conjunction with salient parameters added in training also boosts performance recovery.
+
+\subsection{Further Comparison to LoRA+Distill}
+We show the detailed comparison between {\ourmethod} and the LoRA+Distill baseline in \cref{tab:roberta-detailed-results}. {\ourmethod} reaches superior task performance compared to the baseline in all seven GLUE tasks listed in the table, with on average 93.5\% fine-tuned {\lmabbr} performance maintained, notably outperforming the joint use of LoRA and knowledge distillation. In particular, the results of STS-B cannot be reproduced when conducting CoFi distillation with LoRA parameters tuned only, so we exclude the comparison on STS-B. Among the other seven tasks in the GLUE benchmark, we find that tasks with relatively smaller dataset sizes, namely CoLA, MRPC, and RTE, reach superior performance gain when using {\ourmethod}. We conclude that this is because, compared to simple fine-tuning, knowledge distillation with salient parameters added in training is more robust and not prone to overfitting the training data.
+
+\subsection{LLaMA-2 13B Pruning Results}
+\input{tables/llama_results}
+
+As shown in \cref{tab:llama-results}, when pruning LLaMA-2 13B models, {\ourmethod} maintains 90.0\% performance of the unpruned LoRA-tuned baseline. Compared to the pruning result on 7B models that maintain 86.4\% dense model performance, better accuracies can be recovered in larger models (13B). At the same time, under the same pre-tuning pruning settings, {\ourmethod} performs better than the LLMPruner baseline on all four evaluation tasks, indicating the effectiveness of considering outlier parameters in large {\lmabbr} pruning. Nonetheless, the LoRA+Prune baseline reaches slightly better results than {\ourmethod} when pruning 13B models, illustrating that there is still room for improving pre-tuning pruning methods in future works. More specifically, among the four tasks we use for evaluating large {\lmabbr}s, TruthfulQA benefits the most from Alpaca fine-tuning. We can see that {\ourmethod} reaches superior results on TruthfulQA than existing baselines regardless of model size. The {\lmabbr}'s capabilities on ARC and HellaSawg downgrade the most when pruning large {\lmabbr} before fine-tuning, implying possibilities of catastrophic forgetting in this paradigm.
+
+
+
+% \section{Detailed Efficiency Evaluation}
+% We show the detailed efficiency evaluation results of \cref{fig:perf-efficiency-tradeoff} in \cref{tab:roberta-base-sst2} with 40\% density pruning of the $\text{RoBERTa}_{\text{base}}$ model on SST-2 dataset, where we can notice that {\ourmethod} can reach a certain accuracy faster then LoRA and results in substantial inference speedup and memory reduction, while the training memory cost overhead is also minimal compared to LoRA.
+
+% The detailed efficiency comparisons of RoBERTa, T5, and LLaMA models are shown in Fig.~\ref{fig:perf-efficiency-tradeoff}.
+
+% \begin{figure}[htbp]
+%     \begin{minipage}{0.5\textwidth}
+%         \begin{figure}[H]
+%             \centering
+%             \includegraphics[width=\textwidth]{figures/roberta_base_sst2_radar.pdf}
+%         \end{figure}
+%     \end{minipage}
+%     \caption{Radar map for performance, training, and inference efficiency on RoBERTa SST2.}
+%     \label{fig:radar}
+% \end{figure}
+
+% \todo{Radar map needs font refinement}
+
+% We use radar charts to thoroughly compare the training-inference efficiency and the model's performance with different tuning-pruning strategies, where we set the score of the best and worst results for each metric to 1 and 0 while applying linear transformation for the results in between. As shown in \cref{fig:radar}, instead of focusing on only one aspect (either efficiency or performance) of fine-tuning, {\ourmethod} achieves the best tradeoff for all metrics indicating training-inference time and memory consumption.
+
+% \input{tables/llama_2_13b_results}
+
+% \input{tables/roberta_sst2_training_efficiency}
+
+\section{Efficiency and Performance Tradeoff Analysis}
+
+\begin{figure*}[t!]
+    \centering
+    \includegraphics[width=\textwidth]{figures/plot_tradeoff_scatter.pdf}
+    \caption{The performance-efficiency tradeoff of {\ourmethod} compared to baseline methods. All metrics are normalized using LoRA tuning w/o pruning as the baseline. The circular dots with vertical axes on the left indicate training speed v.s. performance, with their sizes denoting the peak training memory usage. The squared dots with axes on the right indicate inference speedup v.s. performance, with sizes denoting inference memory usage.}
+    \label{fig:perf-efficiency-tradeoff}
+    \vspace{-10pt}
+\end{figure*}
+
+We use \cref{fig:perf-efficiency-tradeoff} to clearly show the {\lmabbr}s' end-task performance and efficiency tradeoffs between different tuning, pruning, and distillation baselines. We add several extra baselines to conduct more detailed comparisons between {\ourmethod} with existing PEFT, pruning, and distillation methods: 
+
+\noindent \textbf{LoRA+Prune w/distill}: we first use LoRA to fully converge a model on the task dataset, and then use Mask-Tuning~\citep{kwon_fast_2022} to prune the {\lmabbr}. Afterward, we utilize the converged model before pruning as the teacher model and distill its knowledge to the pruned student model with static knowledge distillation objectives.
+
+\noindent \textbf{LoRA+Prune w/o retrain}: we use Mask-Tuning to prune a LoRA-tuned converged model but do not conduct any retraining to recover the pruned models' performance. Therefore, the {\lmabbr}'s training time will be reduced, yet its performance is lower than the LoRA+Prune baseline.
+
+With the same target sparsity in RoBERTa and LLaMA pruning setups, {\ourmethod} achieves on-par end-task performance with full fine-tuning and LoRA tuning baselines. Meanwhile, {\ourmethod}-tuned models reach similar or even better inference time and memory efficiency than existing baselines. {\ourmethod}-pruned T5 {\lmabbr}s' inference efficiency is slightly worse because more decoder parameters (with less computations happening) are pruned than the baselines. Moreover, when pruning RoBERTa and T5 models, {\ourmethod} achieves faster training time than all pruning and distillation baselines. Specifically, the training speed of {\ourmethod} in RoBERTa models is even higher than LoRA tuning without pruning. In LLaMA model pruning, {\ourmethod} costs significantly less training memory than both LLMPruner and LoRA+Prune baselines.
+
+\section{Pruning Sparsity Analysis} \label{appendix:sparsity}
+
+\begin{figure}[ht!]
+  \centering
+  % \subfloat[Task performance v.s. relative inference efficiency on RoBERTa, T5, and LLaMA-2 7B models with {\ourmethod} and baselines.]{
+  %   \includegraphics[width=0.4\columnwidth]{figures/pruning_tradeoff.pdf}
+  %   \label{fig:prune-tradeoff}
+  % }
+  % \hfill
+  \begin{minipage}[b]{\textwidth}
+    \subfloat[Comparison of different initial ranks of LoRA layers pruning with {\ourmethod} on RoBERTa with SST2 task accuracy, relative training peak memory and speed to 97\% fine-tuning accuracy to the fine-tuning model.]{
+    \includegraphics[width=0.45\columnwidth]{figures/tuning_tradeoff.pdf}
+    \label{fig:rank-tradeoff}
+    }
+    \hfill
+    \subfloat[Training initial sparsity trade-off with 30\% target sparsity model's relative performances to the LoRA-tuned LLaMA2-7B and 13B models.]{
+        \includegraphics[width=0.45\columnwidth]{figures/llama_init_density.pdf}
+        \label{fig:llama-init-tradeoff}
+    }
+  \end{minipage}
+  \caption{Detailed analysis in {\ourmethod} with different initial, target sparsities, and adaptive tuning schedules.}
+  \label{fig:figureTableCombo}
+\end{figure}
+
+% \begin{figure}[t!]
+
+%     % \vspace{-10pt}
+% \end{figure}
+
+We further show the task performance changing trajectory with different pruning sparsities in \cref{fig:prune-tradeoff}. {\ourmethod} achieves superior inference speedup and less inference memory consumption than baselines targeting the same task performance. Compared to the LoRA+Prune baseline, when pruning RoBERTa models targeting similar task accuracy, {\ourmethod} gains 21.8\% more inference speedup and 7\% more memory reduction. For T5 model pruning with 97\% dense model performance maintained, {\ourmethod} results in 62.7\% more inference speedup with 24.8\% more inference memory reduced compared to the LoRA+Prune baseline.
+When pruning large LLaMA2-7B models, {\ourmethod} prunes gets 6.7\% more speedup and 9.2\% more inference memory reduction than the LoRA+Prune baseline, with about 85\% dense model performance maintained.
+
+\section{Distillation Strategy Comparison} \label{appendix:distillation}
+
+\input{tables/ablate_distillation}
+
+We show the further analysis in \cref{tab:ablate-distillation} to compare the self-distillation technique we use in {\ourmethod} and traditional knowledge distillation methods. When ablating the dynamic layer mapping strategy in our self-distillation approach, the {\lmabbr} performance decreased by 0.8\% with similar training time and memory consumption. When training without distillation objectives (w/o self-distillation), the {\lmabbr} performance drops by 1.7\%. Nonetheless, the training is slightly faster with less memory costs. These results present that using distillation objectives for better {\lmabbr} task performance will sacrifice training efficiency as a tradeoff.
+Furthermore, we also demonstrate the comparisons with existing static knowledge distillation strategies, using the converged full-parameter fine-tuned {\lmabbr} (FT teacher) and LoRA-tuned {\lmabbr} (LoRA teacher) as the teacher model. We calculate the time consumption for both teacher and student training when using these distillation baselines. As shown in \cref{tab:ablate-distillation}, using fully fine-tuned models as the teacher will incur more memory cost than dense model fine-tuning, while {\ourmethod} only consumes 70\%. In the meantime, the training convergence speed of {\ourmethod} training is two times faster than the traditional knowledge distillation method with a fine-tuned teacher. Furthermore, using a LoRA-tuned model as the teacher will result in extremely slow training speed. In addition, simply tuning the LoRA layers with knowledge distillation objectives doesn't help reduce the training memory consumption, as the memory consumption is still 96.1\% than full fine-tuning.
+
+\section{Adaptive Pruning and Tuning Analysis} \label{sec:analysis}
+% \noindent \textbf{Does bigger bottleneck dimension help?} \label{sec:discuss-r}
+
+% \begin{figure}[htbp]
+%     \centering
+%     \includegraphics[width=0.5\textwidth]{figures/lora_r_corr.pdf}
+%     \caption{The correlation between the starting LoRA rank dimension with training time speedup, memory reduction, and overall accuracy on MNLI dataset with $\text{RoBERTa}_{\text{base}}$ model.}
+%     \label{fig:corr-lora-r}
+% \end{figure}
+% \noindent \textbf{{\ourmethod} recovers task performance under different inference efficiency settings.} Shown in \cref{fig:prune-tradeoff}, {\ourmethod} maintains more than 91.2\% accuracy compared to fine-tuning under 95\% sparsity, gaining 6.8$\times$ speedup while reducing the inference memory consumption to 42.7\%. Pruning becomes challenging when the sparsity is more than 90\% for small models. When pruning billion-level LLMs such as the LLaMA-2 model, as depicted in \cref{tab:llama-results}, {\ourmethod} maintains 86.4\% performance for 7B model and 90.4\% performance for 13B model when 30\% parameters are pruned. In the meantime, comparing \cref{fig:prune-tradeoff} and \cref{fig:llama-tradeoff}, the task performance drop brought by pruning is more significant for LLaMA models. The result implies that larger models (13B v.s. 7B) could have more redundant parameters. However, pruning them under instruction-tuning is more challenging than single-task fine-tuning (LLaMA v.s. RoBERTa).
+
+% \todo{Better clarify: adding more parameters in fine-tuning}
+\noindent \textbf{Effects of adaptive tuning strategies on end-task performance and training efficiency.}
+As the trajectories shown in \cref{fig:rank-tradeoff}, simply enlarging the initial tuning parameter number in {\ourmethod} will not improve or even hurt the model's final performance. Moreover, the training memory consumption grows even higher than fine-tuning when the tuning layer ranks become extremely large (initial ranks set as 256). Therefore, this result proves that adding tuning parameters according to layer salience is better than uniformly increasing them before tuning.
+
+% \todo{pruning before fine-tuning xxx}
+\noindent \textbf{Effects of early pruning on task accuracy and training memory in LLaMA pruning.}
+\cref{fig:llama-init-tradeoff} shows the effect of the initial density on LLaMA models' task performance under the 30\% sparsity pruning setting. We find that densely-trained models only perform better in TruthfulQA with fewer parameters pruned before tuning. The accuracy reaches 48.6 and 47.4 when not pruning before tuning, compared to 46.6 and 44.7 when directly pruning to the target sparsity for both 7B and 13B models. Training the {\lmabbr} densely harms the model performance while costing extra memory for all other tasks. These results demonstrate that pruning during training hurts large LM performance under distillation-free settings, and we hypothesize this is due to the training instability issue when parameters are set to zeros during fine-tuning.
+% On the other hand, it also opens up the possibility that with decent structured pruning strategies, one can discard irrelevant parameters in large {\lmabbr} before training for superior training efficiency.
+
+\section{Absolute Efficiency Metrics} \label{sec:raw-efficiency-results}
+We report the raw efficiency evaluation results in \cref{tab:raw-efficiency} and \cref{tab:raw-llama-efficiency}, including training and inference time and memory consumption. The training times are measured in seconds, and the inference times are measured in milliseconds. All memory footprints are measured in MB. We report the time-to-accuracy for RoBERTa and T5 model training to measure the training time. For LLaMA model training, we measure the training time per epoch to represent training time consumption. 
+
+\input{tables/raw_roberta_efficiency}
+
+\input{tables/raw_llama_efficiency}

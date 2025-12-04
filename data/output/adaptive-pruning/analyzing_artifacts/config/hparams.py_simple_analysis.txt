@@ -1,0 +1,78 @@
+# Logic Analysis: config/hparams.py
+
+The `config/hparams.py` file serves as the central configuration hub for the entire APT system, ensuring consistency across all modules by providing globally accessible hyperparameters. This analysis is based on the paper's Table 6, the provided config.yaml, and the overall experimental design.
+
+## Core Structure and Organization
+
+The file should define a comprehensive set of hyperparameters organized by task categories (GLUE-small, GLUE-big, SQuAD, CNN/DM, Alpaca) as specified in the paper's Table 6. These parameters will be imported by nearly all other modules to maintain consistency throughout training, pruning, tuning, and evaluation.
+
+## Key Hyperparameter Categories
+
+### Training Parameters
+- **Learning Rates**: Must match values from Table 6 and config.yaml:
+  - 2e-4 for GLUE-small, GLUE-big, and SQuAD tasks
+  - 1e-4 for CNN/DM and Alpaca tasks
+- **Batch Sizes**: As specified in both paper and config:
+  - 32 for GLUE tasks and Alpaca
+  - 16 for CNN/DM
+- **Epochs**: Directly from Table 6:
+  - 40 epochs for GLUE and SQuAD tasks
+  - 16 epochs for CNN/DM
+  - 15 epochs for Alpaca
+
+### Distillation Parameters
+- **Distill Epochs**: Critical for the self-distillation component:
+  - 20 epochs for GLUE-small, GLUE-big, and SQuAD
+  - 6 epochs for CNN/DM
+  - Null/None for Alpaca (distillation-free setting as mentioned in paper)
+
+### APT-Specific Parameters
+- **Target Sparsity**: Default 60% as used in main experiments (Table 2)
+- **Initial Rank**: Set to 8 as stated in Appendix A
+- **Scaling Factor**: Static value of 2.0 following LoRA implementation
+- **Mask Decay Rate**: α = 0.01 for gradual mask updating (from Appendix C)
+- **Momentum for Salience**: β = 0.9 (inferred from typical EMA values, though not explicitly stated)
+
+### Optimization Settings
+- **Optimizer**: Adam (specified in config.yaml, though paper doesn't explicitly state)
+- **Weight Decay**: 0.0 (explicitly stated in config.yaml)
+- **Max Gradient Norm**: 1.0 for gradient clipping
+
+## Implementation Strategy
+
+The file should expose these parameters through well-organized dictionaries that can be easily imported:
+
+```python
+# Example structure
+GLUE_SMALL_HPARAMS = {
+    'learning_rate': 2e-4,
+    'batch_size': 32,
+    'epochs': 40,
+    'distill_epochs': 20
+}
+
+GLUE_BIG_HPARAMS = { ... }
+
+SQUAD_HPARAMS = { ... }
+
+CNN_DM_HPARAMS = { ... }
+
+ALPACA_HPARAMS = { ... }
+```
+
+Additionally, model-specific configurations should include:
+- Architecture specifications (RoBERTa-base, T5-base, LLaMA variants)
+- Adapter application rules (MHA components: q_proj, v_proj; FFN components)
+- Block types for pruning (mha_head, ffn_neuron, hidden_dimension)
+
+## Integration with Other Components
+
+This configuration file will be foundational for:
+- **Model initialization**: Determining which pretrained models to load
+- **Data loading**: Setting batch sizes and sequence lengths
+- **Training loop**: Controlling learning rate, epochs, and optimization
+- **Pruning scheduler**: Providing target sparsity and update frequency
+- **Adaptive tuning**: Setting initial rank and maximum parameter budget
+- **Distillation**: Configuring teacher-student dynamics and loss weighting
+
+The parameters must exactly match those used in the paper's experiments to ensure reproducibility, particularly the learning rates, batch sizes, and epoch counts specified in Table 6. The distillation settings are especially important as they represent a key efficiency advantage of APT over methods requiring separate teacher models.

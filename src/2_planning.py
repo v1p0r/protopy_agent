@@ -6,28 +6,29 @@ from pathlib import Path
 from collections import defaultdict
 from utils import group_text_by_section
 import argparse
+from pathlib import Path
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--paper_name',type=str)
 parser.add_argument('--input_path', type=str) 
 parser.add_argument('--output_path',type=str)
 parser.add_argument('--model_name',type=str)
-parser.add_argument('--key',type=str)
-
+parser.add_argument('--base_url',type=str)
 args    = parser.parse_args()
 
 paper_name = args.paper_name
 input_path = args.input_path
 output_path = args.output_path
 model_name = args.model_name
-DASHSCOPE_API_KEY = args.key
+base_url = args.base_url
 
 image_information_path = os.path.join(output_path, "image_extracted_information.json")
+paper_dir = Path(output_path) 
+paper_md = next(paper_dir.glob("*/auto/*.md"), None)
 
-paper_path = os.path.join(output_path, 'extracted_paper.json')
 client = OpenAI(
-    api_key=DASHSCOPE_API_KEY,
-    base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+    api_key=os.environ["DASHSCOPE_API_KEY"],
+    base_url=base_url,
 )
 
 def api_call(model_name, prompt):
@@ -37,7 +38,7 @@ def api_call(model_name, prompt):
     )
     return completion
 
-with open(f'{paper_path}') as f:
+with open(f'{paper_md}') as f:
         processed_paper = f.read()
 
 with open(image_information_path, "r", encoding="utf-8") as f:

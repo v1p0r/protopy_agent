@@ -1,0 +1,72 @@
+### Logic Analysis: `model/apt_adapter.py`
+
+The `APTAdapter` class is the core architectural innovation of the APT framework, extending standard LoRA with **dynamic pruning** and **adaptive tuning** capabilities. It must support runtime modification of both its structural dimensions (via binary masks) and parameter count (via rank adjustment), while maintaining compatibility with frozen pretrained weights.
+
+#### 1. Core Components & Initialization
+- **Base Parameters**: Inherits from LoRA structure:
+  - `W`: Frozen pretrained weight matrix (not updated).
+  - `Wa` ∈ ℝ^(r×d_in): Low-rank decomposition matrix, initialized as Gaussian N(0, σ²). The paper does not specify σ; we use `init_std=0.02` from config.yaml.
+  - `Wb` ∈ ℝ^(d_out×r): Low-rank decomposition matrix, initialized as zeros.
+  - `scaling`: Scalar multiplier (default 2.0 per config) applied to low-rank update.
+- **Pruning Masks**:
+  - `mask_in` ∈ {0,1}^d_in: Binary mask for input dimension. When element j is 0, input feature j is pruned.
+  - `mask_out` ∈ {0,1}^d_out: Binary mask for output dimension. When element i is 0, output neuron i is pruned.
+  - Masks are learned via salience scoring in `AdaptivePruner`, not trained directly.
+- **Dynamic Rank Support**:
+  - `rank`: Current rank r_apt, initially set to `initial_rank=8` (config).
+  - Must allow safe expansion during training without disrupting optimization.
+
+#### 2. Forward Pass Implementation
+The forward computation follows Equation (2) in the paper:
+```python
+output = mask_out * (W + scaling * Wb @ Wa) @ (input * mask_in)
+```
+Key considerations:
+- **Hadamard Product**: Element-wise masking ensures pruned dimensions contribute zero.
+- **Gradient Flow**: Gradients only flow through unpruned parameters due to mask multiplication.
+- **Efficiency**: Since `W` is frozen, only `Wa` and `Wb` are involved in gradient computation.
+- **Integration**: This adapter is injected into specific layers (MHA q/v_proj, FFN dense layers) of base models.
+
+#### 3. Dynamic Rank Adjustment (`increase_rank`)
+This method enables adaptive tuning by expanding the adapter's capacity:
+- **New Rank Calculation**: 
+  ```python
+  new_rank = floor(current_rank * (Δ_target / Δ_current))
+  ```
+  where Δ denotes total tuning parameters. Called by `AdaptiveTuner.adjust_ranks()`.
+- **Parameter Initialization**:
+  - Expand `Wa` from (r, d_in) → (r', d_in): Append new rows sampled from N(0, 0.02²).
+  - Expand `Wb` from (d_out, r) → (d_out, r'): Append new columns filled with zeros.
+- **Output Preservation**: Zero initialization of new `Wb` columns ensures no change in output pre/post-expansion.
+- **Optimizer Handling**: After rank increase, the trainer resets the optimizer state to avoid instability from sudden shape changes.
+
+#### 4. Weight Merging (`merge_weights`)
+For inference efficiency, merged weights eliminate adapter overhead:
+```python
+merged_weight = W + scaling * Wb @ Wa
+```
+Post-merging:
+- The adapter can be removed.
+- Only the merged linear layer remains, reducing FLOPs and memory.
+- Pruning masks remain effective—pruned dimensions stay inactive.
+
+#### 5. Integration with Other Modules
+- **With `AdaptivePruner`**: Receives updated `mask_in` and `mask_out` tensors. Applies gradual updates (α=0.01) rather than abrupt changes.
+- **With `AdaptiveTuner`**: Exposes current rank and allows rank expansion. Provides access to `Wb` gradients for salience scoring.
+- **With `SelfDistiller`**: Shares `W`, `Wa`, `Wb` between teacher and student when applicable.
+- **With Base Model**: Replaces or wraps original linear layers in transformer architecture.
+
+#### 6. Design Constraints from Paper & Config
+- **Sparsity Control**: Mask shapes determine model size at any step t, guided by `SparsityScheduler` using cubic schedule.
+- **Memory Efficiency**: Only small `Wa`/`Wb` matrices are tuned; full `W` remains frozen.
+- **Stability Mechanisms**:
+  - Gradual mask decay (not instant zeroing).
+  - Output-preserving rank expansion.
+  - Optimizer reset on shape change.
+
+#### 7. Unclear Aspects to Address
+- **Initialization Variance**: Use `init_std=0.02` from config unless contradicted later.
+- **Mask Gradient Blocking**: Ensure masks are detached from graph during backward pass.
+- **Layer-Specific Behavior**: Whether all MHA layers apply adapters uniformly depends on global configuration.
+
+This module serves as the central interface between static pretrained models and dynamic adaptation logic, enabling both structured pruning and efficient fine-tuning within a unified framework.

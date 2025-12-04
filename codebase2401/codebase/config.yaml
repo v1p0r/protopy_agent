@@ -1,0 +1,76 @@
+# config.yaml
+
+model:
+  name: "roberta-base"  # Base model to fine-tune; options: roberta-base, t5-base, llama-7b, llama-13b
+  tokenizer: "auto"     # Use default tokenizer from HuggingFace AutoTokenizer
+  use_gradient_checkpointing: false
+
+data:
+  task: "sst2"          # Task name: sst2, mnli, squad_v2, cnn_dm, alpaca
+  dataset_path: null    # Auto-load from HuggingFace datasets
+  max_length: 512       # Maximum sequence length for tokenization
+  batch_size: 32        # Per-GPU batch size during training
+  eval_batch_size: 128  # Batch size for evaluation (small models), LLaMA uses 32/4
+
+training:
+  optimizer: "AdamW"
+  learning_rate: 3e-5   # From CoFi baseline setting for large datasets (SST-2, MNLI)
+  weight_decay: 0.01
+  adam_epsilon: 1e-8
+  epochs: 15            # For Alpaca instruction tuning; GLUE tasks may stop early
+  warmup_steps: 100     # Not explicitly stated; assumed based on standard practice
+  max_steps: -1         # Use epochs instead
+  gradient_accumulation_steps: 1
+  mixed_precision: "fp16"
+
+apt:
+  initial_rank: 8       # Initial low-rank adapter dimension
+  alpha_scaling: 2.0    # LoRA scaling factor, kept constant
+  target_sparsity: 0.6  # 60% sparsity (40% remaining) for RoBERTa/T5; adjust per experiment
+  sparsity_schedule: "cubic"  # Cubic scheduling: s(t) = s_target * (t / T)^3
+  update_frequency: 100 # Every 100 steps, perform pruning/tuning adjustment (assumed; not specified in paper)
+  max_tuning_params_ratio: 0.01  # Limit on tuning parameters relative to total (approximate)
+
+pruning:
+  apply_to: 
+    - "mha.query"       # Apply APT adapters and pruning to MHA query projections
+    - "mha.value"       # Apply to value projections
+    - "ffn"             # Apply to feed-forward network layers
+  structured_blocks:
+    - "attention_head"
+    - "ffn_neuron"
+    - "hidden_dimension"
+  salience:
+    method: "outlier_aware"
+    use_kurtosis: true  # Include kurtosis in salience scoring to preserve outlier-sensitive parameters
+  mask_decay_step: 0.01 # Gradual mask decay per step (assumed); prevents abrupt removal
+
+distillation:
+  enabled: true         # Use self-distillation by default
+  teacher_momentum: 0.999  # EMA momentum for teacher parameters (standard value; not specified)
+  lambda_start: 0.0     # Start of distillation weight
+  lambda_end: 1.0       # End of distillation weight
+  lambda_schedule: "linear"  # Linearly scale λ_t from 0 to 1 over training
+  layer_mapping: "closest_non_pruned"  # Map pruned student layers to closest non-pruned teacher layer
+  transformation_module: "lora"  # Use tunable LoRA-like module initialized as identity
+
+eval:
+  inference_batch_size:
+    small: 128          # SST-2, MNLI, SQuAD
+    llama_7b: 32        # As specified in paper
+    llama_13b: 4
+  lm_eval_tasks:        # For LLaMA evaluation via lm-eval-harness
+    - "arc_challenge"
+    - "hellaswag"
+    - "mmlu"
+    - "truthfulqa_mc"
+  lm_eval_batches: 32   # Batch size for lm-eval-harness
+  compute_speedup: true
+  compute_memory: true
+
+output:
+  output_dir: "outputs/apt"
+  save_model: true
+  save_final_only: true
+  log_level: "info"
+  report_to: "none"     # Options: none, wandb, tensorboard

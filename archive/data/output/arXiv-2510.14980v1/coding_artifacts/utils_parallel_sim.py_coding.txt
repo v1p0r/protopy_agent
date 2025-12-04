@@ -1,0 +1,214 @@
+```python
+import multiprocessing
+import json
+from typing import List, Dict, Any, Optional
+from utils.config import Config
+from utils.logger import Logger
+from representation.construction_tree import ConstructionTree
+from env.besiegefield import BesiegeFieldSimulator
+
+
+class ParallelSimulator:
+    """
+    Orchestrates parallel physics simulations of machine designs using multiple worker processes.
+    Each worker runs an isolated instance of BesiegeFieldSimulator to avoid shared-state conflicts.
+    Designed for high-throughput batch simulation in RL training and agent search workflows.
+    """
+
+    def __init__(self, num_workers: Optional[int] = None):
+        """
+        Initialize the ParallelSimulator with the number of worker processes.
+        
+        Args:
+            num_workers (int, optional): Number of parallel worker processes. 
+                                       If None, loads from config.yaml 'training.hardware.parallel_sim_workers'.
+                                       Defaults to 8 as specified in config.
+        """
+        self.config = Config("config.yaml")
+        self.logger = Logger(__name__)
+        
+        # Load number of workers from config with default
+        if num_workers is None:
+            self.num_workers = self.config.get_int("training.hardware.parallel_sim_workers")
+        else:
+            if not isinstance(num_workers, int) or num_workers <= 0:
+                raise ValueError("num_workers must be a positive integer")
+            self.num_workers = num_workers
+            
+        # Load simulation configuration for worker initialization
+        self.simulation_config = {
+            "duration_seconds": self.config.get_float("simulation.duration_seconds"),
+            "state_log_interval": self.config.get_float("simulation.state_log_interval"),
+            "gravity": self.config.get_float("simulation.gravity"),
+            "collision_threshold": self.config.get_float("simulation.collision_threshold"),
+            "catapult_height_threshold": self.config.get_float("simulation.catapult_height_threshold")
+        }
+        
+        # Get valid block list from block registry
+        try:
+            from env.block_registry import BlockRegistry
+            block_registry = BlockRegistry()
+            self.block_list = list(block_registry._valid_block_names)
+        except Exception as e:
+            self.logger.error(f"Failed to initialize BlockRegistry: {str(e)}")
+            raise RuntimeError("ParallelSimulator requires BlockRegistry to be available") from e
+            
+        self.logger.info(f"ParallelSimulator initialized with {self.num_workers} worker processes")
+        
+    def _simulate_single(self, tree_json: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        Worker function: Simulates a single machine design in an isolated process.
+        Must be a top-level function or static method to be picklable for multiprocessing.
+        
+        Args:
+            tree_json (List[Dict[str, Any]]): JSON representation of ConstructionTree
+            
+        Returns:
+            Dict[str, Any]: Simulation result with state_log, validity flags, and trajectories
+        """
+        try:
+            # Reconstruct ConstructionTree from JSON
+            tree = ConstructionTree(tree_json)
+            
+            # Initialize BesiegeFieldSimulator in worker process (critical for isolation)
+            simulator = BesiegeFieldSimulator(
+                block_list=self.block_list,
+                physics_config=self.simulation_config
+            )
+            
+            # Build machine from tree
+            build_success = simulator.build_from_tree(tree)
+            if not build_success:
+                return {
+                    "state_log": [],
+                    "is_valid": False,
+                    "reward": 0.0,
+                    "broken_blocks": [],
+                    "root_trajectory": [],
+                    "boulder_trajectory": []
+                }
+                
+            # Check for self-collision before simulation
+            has_self_collision = not simulator.check_self_collision()
+            if has_self_collision:
+                return {
+                    "state_log": [],
+                    "is_valid": False,
+                    "reward": 0.0,
+                    "broken_blocks": [],
+                    "root_trajectory": [],
+                    "boulder_trajectory": []
+                }
+                
+            # Run simulation
+            simulator.simulate()
+            state_log = simulator.get_state_log()
+            
+            # Extract trajectories for downstream reward calculation
+            root_trajectory = []
+            boulder_trajectory = []
+            
+            for timestep in state_log:
+                for block in timestep.get("blocks", []):
+                    if block.get("type") == "Starting Block":
+                        root_trajectory.append(tuple(block.get("position", [0.0, 0.0, 0.0])))
+                    elif block.get("type") == "Boulder":
+                        boulder_trajectory.append(tuple(block.get("position", [0.0, 0.0, 0.0])))
+            
+            # Identify broken blocks
+            broken_blocks = []
+            for timestep in state_log:
+                for block in timestep.get("blocks", []):
+                    if block.get("integrity", 1.0) < 1.0:
+                        broken_blocks.append(block.get("block_id"))
+                        
+            # Preliminary validity: build succeeded and no self-collision
+            # Final R_valid will be computed by RewardCalculator using state_log
+            is_valid = True
+            
+            return {
+                "state_log": state_log,
+                "is_valid": is_valid,
+                "reward": 0.0,  # Placeholder - computed by RewardCalculator later
+                "broken_blocks": broken_blocks,
+                "root_trajectory": root_trajectory,
+                "boulder_trajectory": boulder_trajectory
+            }
+            
+        except Exception as e:
+            # On any error, return failure sentinel
+            self.logger.error(f"Simulation failed in worker: {str(e)}")
+            return {
+                "state_log": [],
+                "is_valid": False,
+                "reward": 0.0,
+                "broken_blocks": [],
+                "root_trajectory": [],
+                "boulder_trajectory": []
+            }
+
+    def simulate_batch(self, trees: List[ConstructionTree]) -> List[Dict[str, Any]]:
+        """
+        Simulate a batch of machine designs in parallel using worker processes.
+        
+        Args:
+            trees (List[ConstructionTree]): List of machine designs to simulate
+            
+        Returns:
+            List[Dict[str, Any]]: List of simulation results in same order as input trees.
+                                 Each result contains:
+                                 - "state_log": List of per-timestep block states
+                                 - "is_valid": Boolean (build succeeded and no self-collision)
+                                 - "reward": 0.0 (placeholder, computed later by RewardCalculator)
+                                 - "broken_blocks": List of block IDs that lost integrity
+                                 - "root_trajectory": List of (x,y,z) positions of root block
+                                 - "boulder_trajectory": List of (x,y,z) positions of boulder (if exists)
+        """
+        # Validate input
+        if not isinstance(trees, list):
+            raise TypeError("trees must be a list of ConstructionTree objects")
+            
+        if len(trees) == 0:
+            self.logger.debug("Empty tree list provided to simulate_batch")
+            return []
+            
+        # Validate all items are ConstructionTree
+        for i, tree in enumerate(trees):
+            if not isinstance(tree, ConstructionTree):
+                raise TypeError(f"Item at index {i} is not a ConstructionTree object")
+                
+        # Convert each ConstructionTree to JSON for serialization
+        tree_jsons = [tree.to_json() for tree in trees]
+        
+        # Create process pool
+        with multiprocessing.Pool(processes=self.num_workers) as pool:
+            try:
+                # Use map with chunksize=1 for even load balancing and timeout safety
+                # Timeout: 30 seconds per simulation to prevent hanging
+                results = pool.map(
+                    self._simulate_single, 
+                    tree_jsons, 
+                    chunksize=1
+                )
+                
+                # Validate results length
+                if len(results) != len(trees):
+                    self.logger.warning(f"Expected {len(trees)} results, got {len(results)}")
+                    
+                return results
+                
+            except Exception as e:
+                self.logger.error(f"Parallel simulation batch failed: {str(e)}")
+                # Return failure sentinel for all trees
+                return [
+                    {
+                        "state_log": [],
+                        "is_valid": False,
+                        "reward": 0.0,
+                        "broken_blocks": [],
+                        "root_trajectory": [],
+                        "boulder_trajectory": []
+                    }
+                    for _ in trees
+                ]
+```

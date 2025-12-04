@@ -1,0 +1,90 @@
+# Logic Analysis: utils/salience.py
+
+This module implements the core salience computation functions used by both the AdaptivePruner and AdaptiveTuner components. The salience scores are fundamental to APT's decision-making process for both pruning unimportant parameters and tuning important ones.
+
+## 1. compute_activation_gradient_product Function
+
+**Purpose**: Calculate the primary component of outlier-aware salience scoring based on activation-gradient magnitude product, compressed across batches.
+
+**Mathematical Foundation**: Implements Equation (5) from the paper:
+```
+Ŝ(W_:j) = Σ_(x,y∈𝒟_t) Σ_i |∂ℒ/∂H_j,i| · Σ_(x,y∈𝒟_t) Σ_i |H_j,i|
+```
+
+**Implementation Logic**:
+1. Input consists of activations H and their corresponding gradients ∂L/∂H
+2. Sum absolute values of activations across batch and sequence dimensions: `sum(|H|)`
+3. Sum absolute values of gradients across batch and sequence dimensions: `sum(|∂L/∂H|)`
+4. Compute element-wise product of these two summed tensors
+5. Return the resulting salience score tensor
+
+**Key Design Considerations**:
+- **Memory Efficiency**: By summing across batches before multiplication, we significantly reduce memory consumption compared to storing full gradient tensors
+- **Compression Strategy**: This approach follows the paper's emphasis on "compressing the activation and gradients by summing along batches before production"
+- **Batch Processing**: The function should handle mini-batches efficiently, accumulating statistics across multiple forward/backward passes if needed for more stable estimates
+
+**Edge Cases**:
+- Handle zero/near-zero activations or gradients to prevent numerical instability
+- Ensure proper dimension alignment between activation and gradient tensors
+- Support different tensor layouts (batch-first vs sequence-first)
+
+## 2. compute_kurtosis Function
+
+**Purpose**: Calculate the kurtosis of activation tensors to capture outlier importance, which is crucial for preserving block outlier parameters that play a crucial role in task-specific capabilities.
+
+**Mathematical Foundation**: Computes the fourth standardized moment (kurtosis) of activation distributions:
+```
+Kurt(X) = E[(X - μ)⁴] / (E[(X - μ)²])²
+```
+
+**Implementation Logic**:
+1. For each activation channel/neuron/head, compute its mean (μ) and variance (σ²)
+2. Calculate the fourth central moment: E[(X - μ)⁴]
+3. Normalize by the square of variance to get kurtosis
+4. Apply square root as specified in Equation (5): `(Kurt(O_j,:))^(1/2)`
+
+**Key Design Considerations**:
+- **Outlier Detection**: High kurtosis indicates heavy tails in the distribution, signaling the presence of outliers that should be preserved during pruning
+- **Per-Block Calculation**: Compute kurtosis for each parameter block (MHA head, FFN neuron, hidden dimension) separately
+- **Numerical Stability**: Use numerically stable algorithms for moment calculation to avoid overflow/underflow
+- **Efficient Implementation**: Leverage PyTorch's optimized statistical functions when possible
+
+**Connection to Paper**: This directly addresses the concern that "block outlier parameters play a crucial role in task-specific capabilities" and prevents their averaging out during block-level salience measurement.
+
+## 3. normalize_scores Function
+
+**Purpose**: Adjust raw salience scores by parameter count to create salience density metrics used in the efficient search algorithm.
+
+**Mathematical Foundation**: Implements the "salience density" concept mentioned in Appendix C:
+```
+Salience Density = Salience Score / Parameter Count
+```
+
+**Implementation Logic**:
+1. Take raw salience scores (combination of activation-gradient product and kurtosis term)
+2. Divide by the number of parameters in each corresponding block
+3. Return normalized scores suitable for comparative ranking
+
+**Key Design Considerations**:
+- **Fair Comparison**: Enables fair comparison between different types of blocks (e.g., MHA heads vs FFN neurons) that have different parameter counts
+- **Binary Search Compatibility**: The normalized scores are used in conjunction with binary search to identify top-salient blocks given sparsity constraints
+- **Parameter Count Accuracy**: Must accurately calculate parameter counts for each block type:
+  - MHA head: 4 × d_model × d_head (including Q,K,V,O projections)
+  - FFN neuron: 2 × d_model (input and output weights)
+  - Hidden dimension: n_layers × (4 × d_head × n_heads + 2 × ffn_size)
+
+**Integration with Pruning Algorithm**: These normalized scores are fed into the binary search algorithm described in Section 4.2 to determine which blocks to retain while meeting the sparsity constraint γ_t.
+
+## Overall Module Integration
+
+The three functions work together to implement the complete outlier-aware salience scoring system:
+
+1. **compute_activation_gradient_product** provides the base importance signal from gradient information
+2. **compute_kurtosis** adds the outlier sensitivity component to preserve important extreme values
+3. **normalize_scores** prepares the combined score for use in the pruning/search algorithm
+
+These utilities are called by both:
+- **AdaptivePruner**: Uses full outlier-aware salience for pruning decisions
+- **AdaptiveTuner**: Uses standard salience (activation-gradient product) for adapter importance ranking
+
+The module must be designed for efficiency since it will be called frequently during training, potentially at every step or every few steps depending on the update_frequency parameter in config.yaml.

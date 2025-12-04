@@ -1,0 +1,588 @@
+## pruning/adaptive_pruner.py
+"""
+Adaptive pruner implementation for APT framework.
+
+Implements the AdaptivePruner class that dynamically identifies and removes unimportant 
+parameter blocks from the language model during fine-tuning. This component enables both 
+training and inference efficiency improvements by gradually increasing model sparsity 
+according to a scheduled constraint while maintaining task performance through careful 
+selection of which parameters to prune.
+
+Based on Section 4.2 of the paper and config.yaml specifications.
+"""
+
+import torch
+import torch.nn as nn
+from typing import Dict, List, Tuple, Optional, Any
+from dataclasses import dataclass
+import math
+
+# Import from local modules
+from utils.salience import (
+    compute_activation_gradient_product,
+    compute_kurtosis,
+    compute_outlier_aware_salience,
+    normalize_scores,
+    get_block_parameter_count
+)
+from utils.mask_scheduler import SparsityScheduler
+from config.hparams import (
+    PRUNING_CONFIG, TRAINING_CONFIG,
+    USE_KURTOSIS, BLOCK_TYPES, UPDATE_FREQUENCY,
+    DEFAULT_MASK_DECAY_RATE, MIN_SPARSITY, TARGET_SPARSITY
+)
+
+
+@dataclass
+class BlockInfo:
+    """Information about a parameter block for pruning decisions."""
+    name: str
+    layer_idx: int
+    block_type: str  # 'mha_head', 'ffn_neuron', 'hidden_dimension'
+    submodule_path: str
+    shape: Tuple[int, ...]
+    param_count: int
+
+
+class AdaptivePruner:
+    """
+    Adaptive pruner that dynamically identifies and removes unimportant parameter blocks.
+    
+    This class implements the adaptive pruning strategy described in Section 4.2 of the paper.
+    It computes outlier-aware salience scores using activation-gradient products and kurtosis
+    to identify less important blocks, then applies binary pruning masks to remove them while
+    satisfying sparsity constraints.
+    
+    The pruner works by:
+    1. Computing salience scores for all parameter blocks
+    2. Sorting blocks by salience density (salience / parameter count)
+    3. Using binary search to identify top-salient blocks to retain given current sparsity target
+    4. Gradually applying pruning masks for training stability
+    
+    Based on Algorithm 1 and Appendix C of the paper.
+    """
+    
+    def __init__(self, 
+                 model: nn.Module, 
+                 sparsity_scheduler: SparsityScheduler,
+                 update_frequency: Optional[int] = None,
+                 mask_decay_rate: Optional[float] = None):
+        """
+        Initialize the adaptive pruner.
+        
+        Args:
+            model: The model containing APT adapters to be pruned
+            sparsity_scheduler: Scheduler controlling sparsity progression
+            update_frequency: How often to update masks (default: from config)
+            mask_decay_rate: Rate at which to gradually apply masks (default: from config)
+            
+        Raises:
+            ValueError: If model has no APT adapters or invalid configuration values
+            TypeError: If arguments have incorrect types
+        """
+        # Validate inputs
+        if not hasattr(model, 'get_layer_info') or not hasattr(model, 'adapters'):
+            raise ValueError("Model must have get_layer_info() method and adapters attribute")
+            
+        if len(model.adapters) == 0:
+            raise ValueError("Model has no APT adapters to prune")
+            
+        if not isinstance(sparsity_scheduler, SparsityScheduler):
+            raise TypeError("sparsity_scheduler must be a SparsityScheduler instance")
+        
+        # Set default values from configuration if not provided
+        self.update_frequency = update_frequency or UPDATE_FREQUENCY
+        self.mask_decay_rate = mask_decay_rate or TRAINING_CONFIG.mask_decay_rate
+        
+        # Validate configuration values
+        if self.update_frequency <= 0:
+            raise ValueError(f"update_frequency must be positive, got {self.update_frequency}")
+            
+        if not (0.0 < self.mask_decay_rate <= 1.0):
+            raise ValueError(f"mask_decay_rate must be in (0,1], got {self.mask_decay_rate}")
+        
+        # Store references
+        self.model = model
+        self.sparsity_scheduler = sparsity_scheduler
+        
+        # Initialize tracking variables
+        self.step_count = 0
+        self.block_info: List[BlockInfo] = []
+        self.global_salience_scores: Dict[str, torch.Tensor] = {}
+        self.current_masks: Dict[str, Tuple[torch.Tensor, torch.Tensor]] = {}
+        
+        # Momentum for exponential moving average of salience scores
+        self.momentum_salience = TRAINING_CONFIG.momentum_salience
+        
+        # Build block information from model structure
+        self._build_block_info()
+        
+        # Initialize masks to all ones (no pruning initially)
+        self._initialize_masks()
+        
+        # Track last update step
+        self.last_update_step = -1
+    
+    def _build_block_info(self):
+        """Build information about all parameter blocks available for pruning."""
+        self.block_info = []
+        
+        # Get model configuration from first adapter as representative
+        first_adapter_name = next(iter(self.model.adapters.keys()))
+        first_adapter = self.model.adapters[first_adapter_name]
+        
+        # Extract model architecture details
+        model_config = {
+            'hidden_dim': first_adapter.in_features,
+            'num_heads': first_adapter.in_features // 64,  # Assume head_dim=64 if not specified
+            'ffn_size': 4 * first_adapter.in_features,     # Standard FFN expansion ratio
+            'num_layers': len(set(info.layer_idx for info in self.model.get_layer_info()))
+        }
+        
+        # Create block info for each adapter
+        for adapter_name, adapter in self.model.adapters.items():
+            layer_info = [info for info in self.model.get_layer_info() if adapter_name in info.submodule_path]
+            if not layer_info:
+                continue
+                
+            info = layer_info[0]  # Should be unique
+            
+            # Determine block type based on component
+            if 'mha' in info.layer_type or 'cross_attn' in info.layer_type:
+                block_type = 'mha_head'
+            elif 'ffn' in info.layer_type:
+                block_type = 'ffn_neuron'
+            else:
+                block_type = 'hidden_dimension'
+            
+            # Calculate parameter count for this block type
+            param_count = get_block_parameter_count(block_type, model_config, info.layer_idx)
+            
+            # Create block info
+            block_info = BlockInfo(
+                name=adapter_name,
+                layer_idx=info.layer_idx,
+                block_type=block_type,
+                submodule_path=info.submodule_path,
+                shape=(adapter.in_features, adapter.out_features),
+                param_count=param_count
+            )
+            
+            self.block_info.append(block_info)
+    
+    def _initialize_masks(self):
+        """Initialize all masks to ones (no initial pruning)."""
+        self.current_masks = {}
+        for adapter_name, adapter in self.model.adapters.items():
+            # Initialize input and output masks to ones
+            mask_in = torch.ones(adapter.in_features, dtype=torch.float, device=adapter.device)
+            mask_out = torch.ones(adapter.out_features, dtype=torch.float, device=adapter.device)
+            self.current_masks[adapter_name] = (mask_in, mask_out)
+            
+            # Apply to adapter
+            adapter.set_masks(mask_in, mask_out)
+    
+    def compute_salience(self, 
+                        activations: Dict[str, torch.Tensor],
+                        gradients: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+        """
+        Compute outlier-aware salience scores for all parameter blocks.
+        
+        Implements Equation (5) from the paper:
+        Ŝ(W_:j) = Σ_(x,y∈𝒟_t) Σ_i |∂ℒ/∂H_j,i| · Σ_(x,y∈𝒟_t) Σ_i |H_j,i| + (Kurt(O_j,:))^(1/2)
+        
+        Args:
+            activations: Dictionary mapping adapter names to activation tensors
+            gradients: Dictionary mapping adapter names to gradient tensors
+                        
+        Returns:
+            Dictionary mapping block names to salience score tensors
+            
+        Raises:
+            KeyError: If activation/gradient keys don't match adapter names
+            ValueError: If tensor shapes are incompatible
+            RuntimeError: If computation fails due to numerical issues
+        """
+        salience_scores = {}
+        
+        # Validate inputs
+        missing_activations = set(self.model.adapters.keys()) - set(activations.keys())
+        if missing_activations:
+            raise KeyError(f"Missing activations for adapters: {missing_activations}")
+            
+        missing_gradients = set(self.model.adapters.keys()) - set(gradients.keys())
+        if missing_gradients:
+            raise KeyError(f"Missing gradients for adapters: {missing_gradients}")
+        
+        try:
+            for adapter_name in self.model.adapters.keys():
+                # Get corresponding activation and gradient tensors
+                act_tensor = activations[adapter_name]
+                grad_tensor = gradients[adapter_name]
+                
+                # Validate tensor compatibility
+                if act_tensor.shape != grad_tensor.shape:
+                    raise ValueError(f"Activation and gradient shapes mismatch for {adapter_name}: "
+                                   f"{act_tensor.shape} vs {grad_tensor.shape}")
+                
+                # Compute outlier-aware salience score
+                score = compute_outlier_aware_salience(
+                    act_tensor, 
+                    grad_tensor, 
+                    use_kurtosis=USE_KURTOSIS
+                )
+                
+                # Ensure non-negative scores
+                score = torch.clamp(score, min=0.0)
+                
+                # Apply exponential moving average with momentum
+                if adapter_name in self.global_salience_scores:
+                    old_score = self.global_salience_scores[adapter_name]
+                    new_score = (self.momentum_salience * old_score + 
+                               (1 - self.momentum_salience) * score)
+                    salience_scores[adapter_name] = new_score
+                else:
+                    salience_scores[adapter_name] = score
+            
+            # Update global scores
+            self.global_salience_scores = salience_scores.copy()
+            
+            return salience_scores
+            
+        except Exception as e:
+            raise RuntimeError(f"Failed to compute salience scores: {str(e)}")
+    
+    def generate_mask(self, 
+                     salience_scores: Dict[str, torch.Tensor],
+                     current_sparsity: float) -> Dict[str, Tuple[torch.Tensor, torch.Tensor]]:
+        """
+        Generate binary pruning masks based on salience scores and sparsity constraint.
+        
+        Uses binary search over sorted blocks by salience density to identify which blocks
+        to retain while meeting the current sparsity requirement γ_t.
+        
+        Args:
+            salience_scores: Salience scores for each block
+            current_sparsity: Current target sparsity ratio [0,1)
+            
+        Returns:
+            Dictionary mapping adapter names to (input_mask, output_mask) tuples
+            
+        Raises:
+            ValueError: If sparsity value is invalid or no valid solution exists
+            RuntimeError: If binary search fails to converge
+        """
+        # Validate sparsity constraint
+        if not (MIN_SPARSITY <= current_sparsity <= TARGET_SPARSITY):
+            raise ValueError(f"current_sparsity must be in [{MIN_SPARSITY}, {TARGET_SPARSITY}], "
+                           f"got {current_sparsity}")
+        
+        # Collect all blocks with their salience scores and parameter counts
+        blocks_with_data = []
+        param_counts = {}
+        
+        for adapter_name in self.model.adapters.keys():
+            # Get adapter reference
+            adapter = self.model.adapters[adapter_name]
+            
+            # Get salience score for this adapter
+            if adapter_name not in salience_scores:
+                continue
+                
+            score = salience_scores[adapter_name]
+            
+            # Find corresponding block info
+            block_info = next((b for b in self.block_info if b.name == adapter_name), None)
+            if block_info is None:
+                continue
+                
+            # Use mean salience as block-level score
+            block_score = torch.mean(score).item()
+            
+            # Store for processing
+            blocks_with_data.append({
+                'name': adapter_name,
+                'score': block_score,
+                'param_count': block_info.param_count,
+                'in_features': adapter.in_features,
+                'out_features': adapter.out_features
+            })
+            
+            param_counts[adapter_name] = block_info.param_count
+        
+        # Sort blocks by salience density (score / param_count) in descending order
+        blocks_with_data.sort(key=lambda x: x['score'] / max(x['param_count'], 1), reverse=True)
+        
+        # Binary search to find minimum number of top blocks to retain
+        left, right = 0, len(blocks_with_data)
+        best_retained = []
+        
+        while left <= right:
+            mid = (left + right) // 2
+            retained_blocks = blocks_with_data[:mid]
+            
+            # Calculate total parameters in retained blocks
+            total_retained_params = sum(b['param_count'] for b in retained_blocks)
+            
+            # Calculate total parameters in all blocks
+            total_params = sum(b['param_count'] for b in blocks_with_data)
+            
+            # Calculate achieved sparsity
+            if total_params > 0:
+                achieved_sparsity = 1.0 - (total_retained_params / total_params)
+            else:
+                achieved_sparsity = 0.0
+            
+            # Check if constraint is satisfied
+            if achieved_sparsity >= current_sparsity:
+                best_retained = retained_blocks
+                right = mid - 1  # Try fewer blocks
+            else:
+                left = mid + 1   # Need more blocks
+        
+        # Generate masks based on retained blocks
+        masks = {}
+        retained_names = {b['name'] for b in best_retained}
+        
+        for adapter_name, adapter in self.model.adapters.items():
+            # Default: keep all dimensions (mask = 1)
+            mask_in = torch.ones(adapter.in_features, dtype=torch.float, device=adapter.device)
+            mask_out = torch.ones(adapter.out_features, dtype=torch.float, device=adapter.device)
+            
+            # Prune if not in retained set
+            if adapter_name not in retained_names:
+                # Set masks to zero for pruned blocks
+                mask_in.fill_(0.0)
+                mask_out.fill_(0.0)
+            
+            masks[adapter_name] = (mask_in, mask_out)
+        
+        return masks
+    
+    def apply_mask(self, 
+                  masks: Dict[str, Tuple[torch.Tensor, torch.Tensor]], 
+                  gradual: bool = True):
+        """
+        Apply pruning masks to the model's APT adapters.
+        
+        Args:
+            masks: Dictionary mapping adapter names to (input_mask, output_mask) tuples
+            gradual: Whether to apply masks gradually for stability (default: True)
+            
+        Raises:
+            KeyError: If mask keys don't match adapter names
+            ValueError: If mask shapes are incompatible
+        """
+        # Validate masks
+        missing_adapters = set(self.model.adapters.keys()) - set(masks.keys())
+        if missing_adapters:
+            raise KeyError(f"Missing masks for adapters: {missing_adapters}")
+        
+        for adapter_name, (mask_in, mask_out) in masks.items():
+            # Get corresponding adapter
+            if adapter_name not in self.model.adapters:
+                continue
+                
+            adapter = self.model.adapters[adapter_name]
+            
+            # Validate mask shapes
+            if mask_in.shape != (adapter.in_features,):
+                raise ValueError(f"Input mask shape mismatch for {adapter_name}: "
+                               f"expected ({adapter.in_features},), got {mask_in.shape}")
+                               
+            if mask_out.shape != (adapter.out_features,):
+                raise ValueError(f"Output mask shape mismatch for {adapter_name}: "
+                               f"expected ({adapter.out_features},), got {mask_out.shape}")
+            
+            # Apply masks gradually for stability
+            if gradual and GRADUAL_MASK_UPDATE:
+                current_mask_in, current_mask_out = self.current_masks.get(adapter_name, 
+                                                                        (mask_in, mask_out))
+                
+                # Gradual update: move toward target mask
+                new_mask_in = (current_mask_in + self.mask_decay_rate * 
+                             (mask_in - current_mask_in))
+                new_mask_out = (current_mask_out + self.mask_decay_rate * 
+                              (mask_out - current_mask_out))
+                
+                # Clamp to [0,1] range
+                new_mask_in = torch.clamp(new_mask_in, 0.0, 1.0)
+                new_mask_out = torch.clamp(new_mask_out, 0.0, 1.0)
+            else:
+                # Direct assignment
+                new_mask_in = mask_in
+                new_mask_out = mask_out
+            
+            # Update stored masks
+            self.current_masks[adapter_name] = (new_mask_in, new_mask_out)
+            
+            # Apply to adapter
+            adapter.set_masks(new_mask_in, new_mask_out)
+    
+    def should_update(self, step: int) -> bool:
+        """
+        Determine whether pruning should be updated at current step.
+        
+        Args:
+            step: Current training step
+            
+        Returns:
+            Boolean indicating whether to perform pruning update
+        """
+        # Never update before warmup
+        if step < 0:
+            return False
+            
+        # Update frequency check
+        if (step - self.last_update_step) < self.update_frequency:
+            return False
+            
+        # Don't update too frequently
+        if step <= self.last_update_step:
+            return False
+            
+        return True
+    
+    def pruning_step(self, 
+                   activations: Dict[str, torch.Tensor],
+                   gradients: Dict[str, torch.Tensor],
+                   step: int):
+        """
+        Perform one step of adaptive pruning.
+        
+        This method orchestrates the complete pruning process:
+        1. Check if update is needed
+        2. Compute salience scores
+        3. Generate masks based on current sparsity target
+        4. Apply masks to model
+        5. Update internal state
+        
+        Args:
+            activations: Activation tensors from forward pass
+            gradients: Gradient tensors from backward pass
+            step: Current training step
+            
+        Raises:
+            RuntimeError: If any part of the pruning process fails
+        """
+        # Check if update is needed
+        if not self.should_update(step):
+            return
+            
+        try:
+            # Update step counter
+            self.step_count = step
+            
+            # Get current target sparsity from scheduler
+            current_sparsity = self.sparsity_scheduler.get_current_sparsity(step)
+            
+            # Skip if no sparsity required
+            if current_sparsity <= MIN_SPARSITY:
+                return
+                
+            # Compute salience scores
+            salience_scores = self.compute_salience(activations, gradients)
+            
+            # Generate pruning masks
+            masks = self.generate_mask(salience_scores, current_sparsity)
+            
+            # Apply masks to model
+            self.apply_mask(masks, gradual=GRADUAL_MASK_UPDATE)
+            
+            # Update last update step
+            self.last_update_step = step
+            
+        except Exception as e:
+            raise RuntimeError(f"Failed to complete pruning step: {str(e)}")
+    
+    def get_sparsity_stats(self) -> Dict[str, Any]:
+        """
+        Get current sparsity statistics.
+        
+        Returns:
+            Dictionary containing sparsity information across all adapters
+        """
+        total_in_dims = 0
+        total_out_dims = 0
+        active_in_dims = 0
+        active_out_dims = 0
+        
+        for adapter_name, adapter in self.model.adapters.items():
+            if adapter_name in self.current_masks:
+                mask_in, mask_out = self.current_masks[adapter_name]
+                active_in_dims += int(mask_in.sum().item())
+                active_out_dims += int(mask_out.sum().item())
+                total_in_dims += adapter.in_features
+                total_out_dims += adapter.out_features
+        
+        input_sparsity = 1.0 - (active_in_dims / total_in_dims) if total_in_dims > 0 else 0.0
+        output_sparsity = 1.0 - (active_out_dims / total_out_dims) if total_out_dims > 0 else 0.0
+        
+        return {
+            'input_sparsity': input_sparsity,
+            'output_sparsity': output_sparsity,
+            'overall_sparsity': (input_sparsity + output_sparsity) / 2,
+            'active_input_dimensions': active_in_dims,
+            'active_output_dimensions': active_out_dims,
+            'total_input_dimensions': total_in_dims,
+            'total_output_dimensions': total_out_dims,
+            'step_count': self.step_count,
+            'last_update_step': self.last_update_step,
+            'update_frequency': self.update_frequency
+        }
+    
+    def reset(self):
+        """Reset pruner state."""
+        self.step_count = 0
+        self.global_salience_scores = {}
+        self.last_update_step = -1
+        self._initialize_masks()
+    
+    def get_current_masks(self) -> Dict[str, Tuple[torch.Tensor, torch.Tensor]]:
+        """
+        Get current pruning masks.
+        
+        Returns:
+            Dictionary mapping adapter names to (input_mask, output_mask) tuples
+        """
+        return self.current_masks.copy()
+    
+    def get_block_info(self) -> List[BlockInfo]:
+        """
+        Get information about all blocks available for pruning.
+        
+        Returns:
+            List of BlockInfo objects
+        """
+        return self.block_info.copy()
+    
+    def get_update_frequency(self) -> int:
+        """
+        Get the update frequency for pruning operations.
+        
+        Returns:
+            Number of steps between updates
+        """
+        return self.update_frequency
+    
+    def set_update_frequency(self, frequency: int):
+        """
+        Set the update frequency for pruning operations.
+        
+        Args:
+            frequency: Number of steps between updates
+        """
+        if frequency <= 0:
+            raise ValueError(f"Update frequency must be positive, got {frequency}")
+        self.update_frequency = frequency
+    
+    def extra_repr(self) -> str:
+        """
+        Extra representation string for debugging.
+        
+        Returns:
+            String representation of key properties
+        """
+        return f"update_frequency={self.update_frequency}, " \
+               f"mask_decay_rate={self.mask_decay_rate:.4f}, " \
+               f"momentum_salience={self.momentum_salience:.4f}"

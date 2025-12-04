@@ -5,6 +5,7 @@ from tqdm import tqdm
 import sys
 from utils import extract_planning, content_to_json
 import copy
+from pathlib import Path
 
 import argparse
 
@@ -13,17 +14,22 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--paper_name',type=str)
 parser.add_argument('--model_name',type=str)
 parser.add_argument('--output_path',type=str, default="")
+parser.add_argument('--base_url',type=str)
 
 args = parser.parse_args()
-
-client = OpenAI(api_key = os.environ["DASHSCOPE_API_KEY"], base_url="https://dashscope-intl.aliyuncs.com/compatible-mode/v1")
 
 paper_name = args.paper_name
 gpt_version = args.model_name
 output_dir = args.output_path
+base_url = args.base_url
 
-with open(f'{output_dir}/extracted_paper.json') as f:
-    paper_content = json.load(f)
+client = OpenAI(api_key = os.environ["DASHSCOPE_API_KEY"], base_url=base_url)
+
+paper_dir = Path(output_dir) 
+paper_md = next(paper_dir.glob("*/auto/*.md"), None)
+
+with open(f'{paper_md}') as f:
+        processed_paper = f.read()
 
 with open(f'{output_dir}/planning_config.yaml') as f: 
     config_yaml = f.read()
@@ -84,7 +90,7 @@ def get_write_msg(todo_file_name, todo_file_desc):
         draft_desc = f"Write the logic analysis in '{todo_file_name}'."
 
     write_msg=[{'role': 'user', "content": f"""## Paper
-{paper_content}
+{processed_paper}
 
 -----
 

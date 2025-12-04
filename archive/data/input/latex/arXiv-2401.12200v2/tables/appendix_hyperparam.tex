@@ -1,0 +1,15 @@
+% Please add the following required packages to your document preamble:
+% \usepackage{booktabs}
+\begin{table}[htbp]
+\centering
+\begin{tabular}{@{}llllll@{}}
+\toprule
+Hypeparameter  & GLUE-small & GLUE-big & SQuAD & CNN/DM & Alpaca \\ \midrule
+Learning rate  & 2e-4       & 2e-4     & 2e-4  & 1e-4   & 1e-4   \\
+Batch size     & 32         & 32       & 32    & 16     & 32     \\
+Epochs         & 40         & 40       & 40    & 16     & 15     \\
+Distill epochs & 20         & 20       & 20    & 6      & -      \\ \bottomrule
+\end{tabular}
+\caption{Hyperparameters used in {\ourmethod} experiments}
+\label{tab:appendix-hyperparam}
+\end{table}

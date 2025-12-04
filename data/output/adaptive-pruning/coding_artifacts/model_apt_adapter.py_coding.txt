@@ -1,0 +1,334 @@
+## Code: model/apt_adapter.py
+```python
+## model/apt_adapter.py
+"""
+Implementation of the APT (Adaptive Pruning and Tuning) adapter module.
+
+The APTAdapter extends LoRA by adding dynamic pruning masks and adaptive rank adjustment
+capabilities, enabling both training and inference efficiency improvements as described
+in the paper. This module supports structured pruning of input/output dimensions and
+dynamic expansion of tuning capacity during fine-tuning.
+
+Key features:
+- Binary pruning masks for input and output dimensions
+- Dynamic rank adjustment with output-preserving initialization
+- Weight merging for inference efficiency
+- Compatibility with frozen pretrained language models
+
+Based on Section 4.1 of the paper and config.yaml specifications.
+"""
+
+import torch
+import torch.nn as nn
+from typing import Optional, Tuple, Dict, Any
+import math
+
+# Import from local modules
+from config.hparams import (
+    TRAINING_CONFIG, TUNING_CONFIG,
+    INIT_STD, DEFAULT_SCALING_FACTOR
+)
+
+
+class APTAdapter(nn.Module):
+    """
+    APT (Adaptive Pruning and Tuning) Adapter module that extends LoRA with dynamic
+    pruning and tuning capabilities.
+    
+    This adapter allows for:
+    - Structured pruning via binary input/output masks
+    - Adaptive rank adjustment during training
+    - Efficient weight merging for inference
+    
+    The forward pass computes: H_apt(X) = m_o ∘ (W + s · W_B W_A) X ∘ m_i
+    where m_i and m_o are binary pruning masks, and W_A, W_B are low-rank matrices.
+    
+    Based on Equation (2) in the paper and Section 4.1.
+    """
+    
+    def __init__(self, 
+                 in_features: int, 
+                 out_features: int, 
+                 rank: int = None, 
+                 scaling: float = None):
+        """
+        Initialize the APT adapter with specified dimensions and rank.
+        
+        Args:
+            in_features: Input dimension d_i
+            out_features: Output dimension d_o  
+            rank: Initial rank r_apt (default: from config)
+            scaling: Scaling factor s (default: from config)
+            
+        Raises:
+            ValueError: If rank is larger than min(in_features, out_features)
+        """
+        super().__init__()
+        
+        # Set default values from configuration if not provided
+        self.rank = rank or TRAINING_CONFIG.initial_rank
+        self.scaling = scaling or TRAINING_CONFIG.scaling_factor
+        
+        # Validate rank constraints
+        max_possible_rank = min(in_features, out_features)
+        if self.rank > max_possible_rank:
+            raise ValueError(f"Rank {self.rank} cannot exceed min(in_features, out_features) = {max_possible_rank}")
+        
+        # Store dimensions
+        self.in_features = in_features
+        self.out_features = out_features
+        
+        # Initialize low-rank decomposition matrices (W_A and W_B)
+        # W_A: [rank x in_features] - initialized with Gaussian noise
+        self.Wa = nn.Parameter(torch.zeros(self.rank, in_features))
+        self.Wa.data.normal_(mean=0.0, std=INIT_STD)
+        
+        # W_B: [out_features x rank] - initialized with zeros
+        self.Wb = nn.Parameter(torch.zeros(out_features, self.rank))
+        
+        # Initialize binary pruning masks
+        # mask_in: [in_features] - 1 for retained, 0 for pruned input dimensions
+        # mask_out: [out_features] - 1 for retained, 0 for pruned output dimensions
+        self.mask_in = nn.Parameter(torch.ones(in_features), requires_grad=False)
+        self.mask_out = nn.Parameter(torch.ones(out_features), requires_grad=False)
+        
+        # Register buffer to track whether weights have been merged
+        self.register_buffer('merged', torch.tensor(False))
+        
+        # Reset parameters to ensure proper initialization
+        self.reset_parameters()
+    
+    def reset_parameters(self):
+        """Reset adapter parameters to initial state."""
+        # Re-initialize Wa with Gaussian noise
+        self.Wa.data.normal_(mean=0.0, std=INIT_STD)
+        
+        # Re-initialize Wb with zeros
+        nn.init.zeros_(self.Wb)
+        
+        # Reset merged state
+        self.merged.fill_(False)
+    
+    def forward(self, x: torch.Tensor, 
+                mask_in: Optional[torch.Tensor] = None, 
+                mask_out: Optional[torch.Tensor] = None) -> torch.Tensor:
+        """
+        Forward pass through the APT adapter.
+        
+        Computes: H_apt(X) = m_o ∘ (W + s · W_B W_A) X ∘ m_i
+        where ∘ denotes Hadamard product (element-wise multiplication).
+        
+        Args:
+            x: Input tensor of shape [..., in_features]
+            mask_in: Optional custom input mask (overrides self.mask_in)
+            mask_out: Optional custom output mask (overrides self.mask_out)
+            
+        Returns:
+            Output tensor of shape [..., out_features]
+            
+        Raises:
+            RuntimeError: If attempting to use merged weights without merging first
+        """
+        # Use provided masks or fall back to stored masks
+        input_mask = mask_in if mask_in is not None else self.mask_in
+        output_mask = mask_out if mask_out is not None else self.mask_out
+        
+        # Apply input masking
+        masked_input = x * input_mask
+        
+        # Compute low-rank update: scaling * Wb @ Wa @ masked_input
+        # Using efficient computation order: Wb @ (Wa @ masked_input)
+        intermediate = torch.matmul(masked_input, self.Wa.t())  # [..., rank]
+        low_rank_update = torch.matmul(intermediate, self.Wb.t())  # [..., out_features]
+        scaled_update = self.scaling * low_rank_update
+        
+        # Apply output masking
+        masked_output = scaled_update * output_mask
+        
+        return masked_output
+    
+    def increase_rank(self, new_rank: int, init_type: str = 'lora'):
+        """
+        Increase the adapter's rank to expand tuning capacity.
+        
+        This method implements the adaptive tuning strategy described in Section 4.3.
+        When increasing rank from r_apt to r'_apt:
+        - New rows in Wa are initialized with N(0, σ²)
+        - New columns in Wb are initialized with zeros
+        - This preserves layer output before/after expansion
+        
+        Args:
+            new_rank: Target rank to increase to
+            init_type: Initialization type ('lora' or 'zero')
+            
+        Raises:
+            ValueError: If new_rank is less than current rank
+            RuntimeError: If adapter weights have been merged
+        """
+        if self.merged.item():
+            raise RuntimeError("Cannot increase rank after weights have been merged.")
+            
+        if new_rank <= self.rank:
+            raise ValueError(f"New rank ({new_rank}) must be greater than current rank ({self.rank})")
+        
+        # Store current parameters
+        current_Wa = self.Wa.data.clone()
+        current_Wb = self.Wb.data.clone()
+        
+        # Create new parameter tensors with expanded dimensions
+        new_Wa = torch.zeros(new_rank, self.in_features, device=self.Wa.device, dtype=self.Wa.dtype)
+        new_Wb = torch.zeros(self.out_features, new_rank, device=self.Wb.device, dtype=self.Wb.dtype)
+        
+        # Copy existing parameters to new tensors
+        new_Wa[:self.rank, :] = current_Wa
+        new_Wb[:, :self.rank] = current_Wb
+        
+        # Initialize new parameters based on specified type
+        if init_type == 'lora':
+            # Standard LoRA initialization: new Wa rows ~ N(0, σ²), new Wb columns = 0
+            new_Wa[self.rank:, :].normal_(mean=0.0, std=INIT_STD)
+            # Wb new columns already zero-initialized
+        elif init_type == 'zero':
+            # Zero initialization for both new Wa rows and Wb columns
+            pass
+        else:
+            raise ValueError(f"Unknown initialization type: {init_type}. Use 'lora' or 'zero'.")
+        
+        # Update parameters and rank
+        self.Wa = nn.Parameter(new_Wa)
+        self.Wb = nn.Parameter(new_Wb)
+        self.rank = new_rank
+    
+    def merge_weights(self):
+        """
+        Merge adapter weights into a single equivalent linear transformation.
+        
+        After merging, the adapter can be removed and only the merged weight matrix
+        needs to be used during inference, improving efficiency.
+        
+        The merged weight matrix represents: W_merged = W + scaling * Wb @ Wa
+        However, since W (original weight) is not stored here, this method prepares
+        for external merging by storing the combined low-rank contribution.
+        
+        This enables inference efficiency as described in Figure 1.
+        """
+        if self.merged.item():
+            print("Warning: Weights are already merged. Skipping.")
+            return
+        
+        # Mark as merged
+        self.merged.fill_(True)
+        
+        # Detach parameters from computational graph
+        self.Wa = nn.Parameter(self.Wa.data, requires_grad=False)
+        self.Wb = nn.Parameter(self.Wb.data, requires_grad=False)
+    
+    def unmerge_weights(self):
+        """Unmerge weights to resume training with separate low-rank matrices."""
+        if not self.merged.item():
+            print("Warning: Weights are not merged. Skipping.")
+            return
+        
+        # Mark as unmerged
+        self.merged.fill_(False)
+        
+        # Restore parameters with gradients enabled
+        self.Wa = nn.Parameter(self.Wa.data, requires_grad=True)
+        self.Wb = nn.Parameter(self.Wb.data, requires_grad=True)
+    
+    def get_current_rank(self) -> int:
+        """
+        Get the current rank of the adapter.
+        
+        Returns:
+            Current rank value
+        """
+        return self.rank
+    
+    def get_parameter_count(self) -> int:
+        """
+        Get total number of trainable parameters in this adapter.
+        
+        Returns:
+            Total count of trainable parameters
+        """
+        return sum(p.numel() for p in self.parameters() if p.requires_grad)
+    
+    def set_masks(self, mask_in: torch.Tensor, mask_out: torch.Tensor):
+        """
+        Set binary pruning masks for input and output dimensions.
+        
+        Args:
+            mask_in: Binary mask for input dimension [in_features]
+            mask_out: Binary mask for output dimension [out_features]
+            
+        Raises:
+            ValueError: If mask dimensions don't match expected shapes
+        """
+        if mask_in.shape != (self.in_features,):
+            raise ValueError(f"mask_in shape {mask_in.shape} doesn't match expected ({self.in_features},)")
+            
+        if mask_out.shape != (self.out_features,):
+            raise ValueError(f"mask_out shape {mask_out.shape} doesn't match expected ({self.out_features},)")
+        
+        # Ensure masks are binary (0 or 1)
+        mask_in = (mask_in > 0).float()
+        mask_out = (mask_out > 0).float()
+        
+        # Update masks
+        self.mask_in.data.copy_(mask_in)
+        self.mask_out.data.copy_(mask_out)
+    
+    def get_masks(self) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Get current binary pruning masks.
+        
+        Returns:
+            Tuple of (input_mask, output_mask)
+        """
+        return self.mask_in.clone(), self.mask_out.clone()
+    
+    def get_sparsity_stats(self) -> Dict[str, Any]:
+        """
+        Get sparsity statistics for this adapter.
+        
+        Returns:
+            Dictionary containing sparsity information
+        """
+        input_sparsity = 1.0 - (self.mask_in.sum().item() / self.in_features)
+        output_sparsity = 1.0 - (self.mask_out.sum().item() / self.out_features)
+        
+        return {
+            'input_sparsity': input_sparsity,
+            'output_sparsity': output_sparsity,
+            'overall_sparsity': (input_sparsity + output_sparsity) / 2,
+            'active_input_dims': int(self.mask_in.sum().item()),
+            'active_output_dims': int(self.mask_out.sum().item()),
+            'total_params': self.get_parameter_count(),
+            'rank': self.rank
+        }
+    
+    def apply_grad_mask(self):
+        """
+        Apply gradient masking to ensure gradients only flow through unpruned parameters.
+        
+        This should be called before optimizer step to enforce sparsity constraints.
+        """
+        if self.Wa.grad is not None:
+            # Mask gradients for Wa based on input mask
+            self.Wa.grad = self.Wa.grad * self.mask_in.unsqueeze(0)
+        
+        if self.Wb.grad is not None:
+            # Mask gradients for Wb based on output mask  
+            self.Wb.grad = self.Wb.grad * self.mask_out.unsqueeze(1)
+    
+    def extra_repr(self) -> str:
+        """
+        Extra representation string for the module.
+        
+        Returns:
+            String representation of key properties
+        """
+        return f'in_features={self.in_features}, out_features={self.out_features}, ' \
+               f'rank={self.rank}, scaling={self.scaling}, merged={self.merged.item()}'
+```

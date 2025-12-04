@@ -1,0 +1,354 @@
+## Code: utils/salience.py
+```python
+## utils/salience.py
+"""
+Salience computation utilities for APT framework.
+
+Implements the core salience scoring functions used by both AdaptivePruner and AdaptiveTuner
+components. These functions calculate outlier-aware salience scores that guide pruning and
+tuning decisions during fine-tuning.
+
+Based on Section 4.2 (Equation 5) and Appendix B of the paper, with parameters from config.yaml.
+"""
+
+import torch
+import torch.nn as nn
+from typing import Dict, Tuple, Optional, Any
+import math
+
+# Import from local modules
+from config.hparams import (
+    PRUNING_CONFIG, USE_KURTOSIS,
+    BLOCK_TYPES, DEFAULT_MASK_DECAY_RATE
+)
+
+
+def compute_activation_gradient_product(activations: torch.Tensor, 
+                                     gradients: torch.Tensor) -> torch.Tensor:
+    """
+    Compute the activation-gradient product for salience scoring.
+    
+    This implements the primary component of outlier-aware salience scoring as described
+    in Equation (5) of the paper:
+    Ŝ(W_:j) = Σ_(x,y∈𝒟_t) Σ_i |∂ℒ/∂H_j,i| · Σ_(x,y∈𝒟_t) Σ_i |H_j,i|
+    
+    The function compresses activations and gradients by summing along batch and sequence
+    dimensions before computing their product, reducing memory consumption.
+    
+    Args:
+        activations: Activation tensor of shape [batch_size, seq_len, dim] or [batch_size, dim]
+        gradients: Gradient tensor of same shape as activations
+        
+    Returns:
+        Salience score tensor of shape [dim] representing the compressed product
+        
+    Raises:
+        ValueError: If activation and gradient tensors have mismatched shapes
+        RuntimeError: If input tensors contain NaN or infinite values
+    """
+    # Validate inputs
+    if activations.shape != gradients.shape:
+        raise ValueError(f"Activation and gradient shapes must match. "
+                        f"Got {activations.shape} vs {gradients.shape}")
+    
+    # Check for NaN or inf values
+    if torch.isnan(activations).any() or torch.isinf(activations).any():
+        raise RuntimeError("Activations contain NaN or infinite values")
+    if torch.isnan(gradients).any() or torch.isinf(gradients).any():
+        raise RuntimeError("Gradients contain NaN or infinite values")
+    
+    # Handle different tensor dimensions
+    if len(activations.shape) == 3:
+        # [batch_size, seq_len, dim] -> sum over batch and sequence dimensions
+        sum_abs_activations = torch.sum(torch.abs(activations), dim=(0, 1))  # [dim]
+        sum_abs_gradients = torch.sum(torch.abs(gradients), dim=(0, 1))     # [dim]
+    elif len(activations.shape) == 2:
+        # [batch_size, dim] -> sum over batch dimension
+        sum_abs_activations = torch.sum(torch.abs(activations), dim=0)     # [dim]
+        sum_abs_gradients = torch.sum(torch.abs(gradients), dim=0)          # [dim]
+    else:
+        raise ValueError(f"Unsupported tensor dimensions: {len(activations.shape)}. "
+                        "Expected 2D or 3D tensors.")
+    
+    # Compute element-wise product of summed absolute values
+    salience_score = sum_abs_activations * sum_abs_gradients
+    
+    # Ensure no negative values due to numerical issues
+    salience_score = torch.clamp(salience_score, min=0.0)
+    
+    return salience_score
+
+
+def compute_kurtosis(tensor: torch.Tensor) -> torch.Tensor:
+    """
+    Compute the kurtosis of a tensor to capture outlier importance.
+    
+    Kurtosis measures the "tailedness" of a distribution, helping identify block outlier
+    parameters that play a crucial role in task-specific capabilities as mentioned in
+    Section 4.2 of the paper.
+    
+    Formula: Kurt(X) = E[(X - μ)⁴] / (E[(X - μ)²])²
+    Then apply square root as specified in Equation (5): (Kurt(O_j,:))^(1/2)
+    
+    Args:
+        tensor: Input tensor of shape [batch_size, seq_len, dim] or [batch_size, dim]
+        
+    Returns:
+        Kurtosis score tensor of shape [dim] with values >= 0
+        
+    Raises:
+        ValueError: If tensor has insufficient samples for kurtosis calculation
+        RuntimeError: If input contains NaN or infinite values
+    """
+    # Validate inputs
+    if torch.isnan(tensor).any() or torch.isinf(tensor).any():
+        raise RuntimeError("Input tensor contains NaN or infinite values")
+    
+    # Check minimum sample size for kurtosis calculation
+    if len(tensor.shape) == 3:
+        n_samples = tensor.shape[0] * tensor.shape[1]
+    else:
+        n_samples = tensor.shape[0]
+    
+    if n_samples < 4:
+        raise ValueError(f"At least 4 samples required for kurtosis calculation, got {n_samples}")
+    
+    # Reshape to [num_samples, dim]
+    if len(tensor.shape) == 3:
+        # [batch_size, seq_len, dim] -> [batch_size*seq_len, dim]
+        flat_tensor = tensor.reshape(-1, tensor.shape[-1])
+    else:
+        flat_tensor = tensor
+    
+    # Compute mean and centered data
+    mean = torch.mean(flat_tensor, dim=0, keepdim=True)  # [1, dim]
+    centered = flat_tensor - mean  # [n_samples, dim]
+    
+    # Compute variance (second central moment)
+    variance = torch.mean(centered ** 2, dim=0)  # [dim]
+    
+    # Avoid division by zero
+    eps = 1e-8
+    variance = torch.clamp(variance, min=eps)
+    
+    # Compute fourth central moment
+    fourth_moment = torch.mean(centered ** 4, dim=0)  # [dim]
+    
+    # Compute kurtosis: fourth_moment / (variance^2)
+    kurtosis = fourth_moment / (variance ** 2)
+    
+    # Apply square root as specified in Equation (5): (Kurt(O_j,:))^(1/2)
+    sqrt_kurtosis = torch.sqrt(kurtosis)
+    
+    # Clamp to ensure non-negative values
+    sqrt_kurtosis = torch.clamp(sqrt_kurtosis, min=0.0)
+    
+    return sqrt_kurtosis
+
+
+def normalize_scores(scores: Dict[str, torch.Tensor], 
+                   param_counts: Dict[str, int]) -> Dict[str, torch.Tensor]:
+    """
+    Normalize salience scores by parameter count to create salience density metrics.
+    
+    This implements the "salience density" concept mentioned in Appendix C, where blocks
+    are sorted by salience divided by parameter number. This enables fair comparison between
+    different types of blocks (MHA heads, FFN neurons, hidden dimensions) that have
+    different parameter counts.
+    
+    Used in conjunction with binary search to identify top-salient blocks given sparsity
+    constraints as described in Section 4.2.
+    
+    Args:
+        scores: Dictionary mapping block names to salience score tensors
+        param_counts: Dictionary mapping block names to parameter counts
+        
+    Returns:
+        Dictionary mapping block names to normalized salience density scores
+        
+    Raises:
+        KeyError: If there's a mismatch between score and parameter count dictionaries
+        ValueError: If any parameter count is zero or negative
+        RuntimeError: If any score tensor contains invalid values
+    """
+    # Validate inputs
+    if set(scores.keys()) != set(param_counts.keys()):
+        missing_in_scores = set(param_counts.keys()) - set(scores.keys())
+        missing_in_counts = set(scores.keys()) - set(param_counts.keys())
+        error_msg = "Mismatch between score and parameter count dictionaries:\n"
+        if missing_in_scores:
+            error_msg += f"Missing in scores: {missing_in_scores}\n"
+        if missing_in_counts:
+            error_msg += f"Missing in param_counts: {missing_in_counts}"
+        raise KeyError(error_msg)
+    
+    # Validate parameter counts
+    for name, count in param_counts.items():
+        if count <= 0:
+            raise ValueError(f"Parameter count for {name} must be positive, got {count}")
+    
+    # Validate score tensors
+    for name, score_tensor in scores.items():
+        if torch.isnan(score_tensor).any() or torch.isinf(score_tensor).any():
+            raise RuntimeError(f"Score tensor for {name} contains NaN or infinite values")
+        
+        # Ensure non-negative scores
+        if torch.any(score_tensor < 0):
+            print(f"Warning: Negative values detected in scores for {name}. Clamping to zero.")
+            score_tensor = torch.clamp(score_tensor, min=0.0)
+    
+    # Compute normalized scores (salience density)
+    normalized_scores = {}
+    for name in scores.keys():
+        score_tensor = scores[name]
+        param_count = param_counts[name]
+        
+        # Normalize by parameter count
+        normalized_score = score_tensor / param_count
+        
+        # Ensure non-negative values
+        normalized_score = torch.clamp(normalized_score, min=0.0)
+        
+        normalized_scores[name] = normalized_score
+    
+    return normalized_scores
+
+
+def combine_salience_components(activation_gradient_score: torch.Tensor,
+                              kurtosis_score: torch.Tensor,
+                              use_kurtosis: bool = True) -> torch.Tensor:
+    """
+    Combine activation-gradient product and kurtosis components into final salience score.
+    
+    Implements the complete outlier-aware salience scoring function from Equation (5):
+    Ŝ((W_:j) = Ṡ(W_:j) + (Kurt(O_j,:))^(1/2)
+    
+    Args:
+        activation_gradient_score: Tensor from compute_activation_gradient_product
+        kurtosis_score: Tensor from compute_kurtosis  
+        use_kurtosis: Whether to include kurtosis component (controlled by config)
+        
+    Returns:
+        Combined salience score tensor
+        
+    Raises:
+        ValueError: If input tensors have mismatched shapes
+        RuntimeError: If inputs contain invalid values
+    """
+    # Validate inputs
+    if activation_gradient_score.shape != kurtosis_score.shape:
+        raise ValueError(f"Score tensors must have matching shapes. "
+                        f"Got {activation_gradient_score.shape} vs {kurtosis_score.shape}")
+    
+    if torch.isnan(activation_gradient_score).any() or torch.isinf(activation_gradient_score).any():
+        raise RuntimeError("Activation-gradient score contains NaN or infinite values")
+    if torch.isnan(kurtosis_score).any() or torch.isinf(kurtosis_score).any():
+        raise RuntimeError("Kurtosis score contains NaN or infinite values")
+    
+    # Combine components based on configuration
+    if use_kurtosis and USE_KURTOSIS:
+        combined_score = activation_gradient_score + kurtosis_score
+    else:
+        # Only use activation-gradient product when kurtosis is disabled
+        combined_score = activation_gradient_score
+    
+    # Ensure non-negative values
+    combined_score = torch.clamp(combined_score, min=0.0)
+    
+    return combined_score
+
+
+def get_block_parameter_count(block_type: str, 
+                           config: Dict[str, Any],
+                           layer_idx: Optional[int] = None) -> int:
+    """
+    Calculate the number of parameters in a specific type of model block.
+    
+    Used to compute salience density for different block types (MHA head, FFN neuron, 
+    hidden dimension) as required for the binary search algorithm in Appendix C.
+    
+    Args:
+        block_type: Type of block ('mha_head', 'ffn_neuron', 'hidden_dimension')
+        config: Model configuration dictionary containing architecture details
+        layer_idx: Optional layer index for layer-specific calculations
+        
+    Returns:
+        Number of parameters in the specified block type
+        
+    Raises:
+        ValueError: If block_type is not supported
+        KeyError: If required configuration keys are missing
+    """
+    # Extract configuration values with defaults
+    hidden_dim = config.get('hidden_dim', 768)
+    num_heads = config.get('num_heads', 12)
+    head_dim = hidden_dim // num_heads
+    ffn_size = config.get('ffn_size', 3072)
+    num_layers = config.get('num_layers', 12)
+    
+    if block_type == 'mha_head':
+        # For MHA head: 4 linear projections (Q,K,V,O) each of size head_dim * hidden_dim
+        # Q,K,V: each head_dim * hidden_dim, O: hidden_dim * hidden_dim shared across heads
+        # But since O is shared, we prorate it per head: (hidden_dim * hidden_dim) / num_heads
+        qkv_params_per_head = 3 * head_dim * hidden_dim  # Q, K, V projections
+        o_proj_params_per_head = (hidden_dim * hidden_dim) / num_heads  # Pro-rated O projection
+        total_params = int(qkv_params_per_head + o_proj_params_per_head)
+        
+    elif block_type == 'ffn_neuron':
+        # For FFN neuron: 2 parameters (input and output weights)
+        # Each neuron connects to all hidden_dim inputs and outputs
+        total_params = 2 * hidden_dim
+        
+    elif block_type == 'hidden_dimension':
+        # For hidden dimension: affects all layers
+        # Each dimension impacts: 4 * head_dim * num_heads (attention) + 2 * ffn_size (FFN)
+        attention_params = 4 * head_dim * num_heads
+        ffn_params = 2 * ffn_size
+        total_params = int(attention_params + ffn_params)
+        
+    else:
+        raise ValueError(f"Unsupported block type: {block_type}. "
+                        f"Supported types: {BLOCK_TYPES}")
+    
+    return total_params
+
+
+def compute_outlier_aware_salience(activations: torch.Tensor,
+                                 gradients: torch.Tensor,
+                                 use_kurtosis: bool = True) -> torch.Tensor:
+    """
+    Compute the complete outlier-aware salience score combining multiple components.
+    
+    This is the main entry point function that orchestrates the computation of salience
+    scores used for both pruning and tuning decisions in APT.
+    
+    Args:
+        activations: Activation tensor from forward pass
+        gradients: Gradient tensor from backward pass  
+        use_kurtosis: Whether to include kurtosis component for outlier detection
+        
+    Returns:
+        Final salience score tensor ready for decision making
+        
+    Raises:
+        See individual component functions for potential exceptions
+    """
+    # Compute base activation-gradient product
+    activation_gradient_score = compute_activation_gradient_product(activations, gradients)
+    
+    # Compute kurtosis component if enabled
+    if use_kurtosis and USE_KURTOSIS:
+        kurtosis_score = compute_kurtosis(activations)
+    else:
+        # Create zero tensor with same shape as activation_gradient_score
+        kurtosis_score = torch.zeros_like(activation_gradient_score)
+    
+    # Combine components into final salience score
+    final_score = combine_salience_components(
+        activation_gradient_score, 
+        kurtosis_score, 
+        use_kurtosis=use_kurtosis
+    )
+    
+    return final_score
+```

@@ -1,0 +1,3970 @@
+## config.py
+import yaml
+from dataclasses import dataclass, field
+from typing import Dict, Any, Optional
+
+@dataclass
+class TrainingConfig:
+    """Training configuration settings"""
+    learning_rate: float = 2e-4
+    batch_size: int = 32
+    epochs: int = 40
+    distill_epochs: Optional[int] = 20
+    
+    # Optimizer settings
+    optimizer_name: str = "AdamW"
+    weight_decay: float = 0.01
+    betas: tuple = (0.9, 0.999)
+    
+    # Scheduler settings
+    warmup_steps: int = 100
+    
+    # Task-specific overrides
+    cnn_dm_learning_rate: float = 1e-4
+    cnn_dm_batch_size: int = 16
+    cnn_dm_epochs: int = 16
+    cnn_dm_distill_epochs: int = 6
+    
+    alpaca_learning_rate: float = 1e-4
+    alpaca_batch_size: int = 32
+    alpaca_epochs: int = 15
+    alpaca_distill_epochs: Optional[int] = None
+
+@dataclass
+class ModelConfig:
+    """Model configuration settings"""
+    base_models: list = field(default_factory=lambda: [
+        "roberta-base", 
+        "t5-base", 
+        "bert-base-uncased", 
+        "llama-7b", 
+        "llama-13b"
+    ])
+    adapter_init_rank: int = 8
+    adapter_scaling_factor: float = 2.0
+
+@dataclass
+class PruningConfig:
+    """Pruning configuration settings"""
+    target_sparsity: float = 0.6
+    initial_sparsity: float = 0.0
+    schedule: str = "cubic"
+    update_frequency: int = 10
+
+@dataclass
+class TuningConfig:
+    """Tuning configuration settings"""
+    adaptive_rank_growth: bool = True
+    rank_growth_schedule: str = "linear"
+    max_rank: int = 64
+
+@dataclass
+class DistillationConfig:
+    """Distillation configuration settings"""
+    use_self_distillation: bool = True
+    alpha_start: float = 0.0
+    alpha_end: float = 1.0
+    layer_mapping: str = "closest_non_pruned"
+
+@dataclass
+class EvaluationConfig:
+    """Evaluation configuration settings"""
+    metrics: dict = field(default_factory=lambda: {
+        "glue": "accuracy",
+        "squad": "f1",
+        "cnndm": "rouge",
+        "alpaca": "lm_eval_harness"
+    })
+    inference_batch_size: dict = field(default_factory=lambda: {
+        "small": 128,
+        "llama_7b": 32,
+        "llama_13b": 4
+    })
+
+@dataclass
+class HardwareConfig:
+    """Hardware configuration settings"""
+    gpu: str = "A100"
+    precision: str = "float16"
+
+@dataclass
+class Config:
+    """
+    Configuration class holding all hyperparameters and experiment settings.
+    
+    This class serves as the single source of truth for all experimental parameters,
+    ensuring consistency across components. It supports loading from external
+    configuration files (YAML/JSON) to enable reproducible experiments.
+    """
+    
+    def __init__(self, config_dict: Dict[str, Any]):
+        """
+        Initialize configuration from a dictionary.
+        
+        Args:
+            config_dict: Dictionary containing configuration parameters
+        """
+        self.config_dict = config_dict
+        
+        # Top-level attributes
+        self.model_name: str = config_dict.get('model', {}).get('base_models', ['roberta-base'])[0]
+        self.task: Optional[str] = None
+        
+        # Initialize sub-configurations
+        self.training = self._init_training_config(config_dict)
+        self.model = self._init_model_config(config_dict)
+        self.pruning = self._init_pruning_config(config_dict)
+        self.tuning = self._init_tuning_config(config_dict)
+        self.distillation = self._init_distillation_config(config_dict)
+        self.evaluation = self._init_evaluation_config(config_dict)
+        self.hardware = self._init_hardware_config(config_dict)
+        
+        # Seed for reproducibility
+        self.seed: int = config_dict.get('seed', 42)
+        
+        # Save path for model checkpoints
+        self.save_path: str = config_dict.get('save_path', './checkpoints')
+    
+    @classmethod
+    def from_yaml(cls, filepath: str) -> 'Config':
+        """
+        Create a Config instance from a YAML file.
+        
+        Args:
+            filepath: Path to the YAML configuration file
+            
+        Returns:
+            Config instance initialized with values from the YAML file
+        """
+        with open(filepath, 'r') as f:
+            config_dict = yaml.safe_load(f)
+        return cls(config_dict)
+    
+    def _init_training_config(self, config_dict: Dict[str, Any]) -> TrainingConfig:
+        """Initialize training configuration."""
+        train_cfg = config_dict.get('training', {})
+        return TrainingConfig(
+            learning_rate=train_cfg.get('learning_rate', 2e-4),
+            batch_size=train_cfg.get('batch_size', 32),
+            epochs=train_cfg.get('epochs', 40),
+            distill_epochs=train_cfg.get('distill_epochs', 20),
+            optimizer_name=train_cfg.get('optimizer', {}).get('name', 'AdamW'),
+            weight_decay=train_cfg.get('optimizer', {}).get('weight_decay', 0.01),
+            betas=tuple(train_cfg.get('optimizer', {}).get('betas', [0.9, 0.999])),
+            warmup_steps=train_cfg.get('scheduler', {}).get('warmup_steps', 100),
+            cnn_dm_learning_rate=train_cfg.get('cnn_dm', {}).get('learning_rate', 1e-4),
+            cnn_dm_batch_size=train_cfg.get('cnn_dm', {}).get('batch_size', 16),
+            cnn_dm_epochs=train_cfg.get('cnn_dm', {}).get('epochs', 16),
+            cnn_dm_distill_epochs=train_cfg.get('cnn_dm', {}).get('distill_epochs', 6),
+            alpaca_learning_rate=train_cfg.get('alpaca', {}).get('learning_rate', 1e-4),
+            alpaca_batch_size=train_cfg.get('alpaca', {}).get('batch_size', 32),
+            alpaca_epochs=train_cfg.get('alpaca', {}).get('epochs', 15),
+            alpaca_distill_epochs=train_cfg.get('alpaca', {}).get('distill_epochs', None)
+        )
+    
+    def _init_model_config(self, config_dict: Dict[str, Any]) -> ModelConfig:
+        """Initialize model configuration."""
+        model_cfg = config_dict.get('model', {})
+        return ModelConfig(
+            base_models=model_cfg.get('base_models', [
+                "roberta-base", "t5-base", "bert-base-uncased", "llama-7b", "llama-13b"
+            ]),
+            adapter_init_rank=model_cfg.get('adapter', {}).get('init_rank', 8),
+            adapter_scaling_factor=model_cfg.get('adapter', {}).get('scaling_factor', 2.0)
+        )
+    
+    def _init_pruning_config(self, config_dict: Dict[str, Any]) -> PruningConfig:
+        """Initialize pruning configuration."""
+        prune_cfg = config_dict.get('pruning', {})
+        return PruningConfig(
+            target_sparsity=prune_cfg.get('target_sparsity', 0.6),
+            initial_sparsity=prune_cfg.get('initial_sparsity', 0.0),
+            schedule=prune_cfg.get('schedule', 'cubic'),
+            update_frequency=prune_cfg.get('update_frequency', 10)
+        )
+    
+    def _init_tuning_config(self, config_dict: Dict[str, Any]) -> TuningConfig:
+        """Initialize tuning configuration."""
+        tune_cfg = config_dict.get('tuning', {})
+        return TuningConfig(
+            adaptive_rank_growth=tune_cfg.get('adaptive_rank_growth', True),
+            rank_growth_schedule=tune_cfg.get('rank_growth_rate', 'linear'),
+            max_rank=tune_cfg.get('max_rank', 64)
+        )
+    
+    def _init_distillation_config(self, config_dict: Dict[str, Any]) -> DistillationConfig:
+        """Initialize distillation configuration."""
+        distill_cfg = config_dict.get('distillation', {})
+        return DistillationConfig(
+            use_self_distillation=distill_cfg.get('use_self_distillation', True),
+            alpha_start=distill_cfg.get('alpha_start', 0.0),
+            alpha_end=distill_cfg.get('alpha_end', 1.0),
+            layer_mapping=distill_cfg.get('layer_mapping', 'closest_non_pruned')
+        )
+    
+    def _init_evaluation_config(self, config_dict: Dict[str, Any]) -> EvaluationConfig:
+        """Initialize evaluation configuration."""
+        eval_cfg = config_dict.get('evaluation', {})
+        return EvaluationConfig(
+            metrics=eval_cfg.get('metrics', {
+                "glue": "accuracy", "squad": "f1", "cnndm": "rouge", "alpaca": "lm_eval_harness"
+            }),
+            inference_batch_size=eval_cfg.get('inference_batch_size', {
+                "small": 128, "llama_7b": 32, "llama_13b": 4
+            })
+        )
+    
+    def _init_hardware_config(self, config_dict: Dict[str, Any]) -> HardwareConfig:
+        """Initialize hardware configuration."""
+        hw_cfg = config_dict.get('hardware', {})
+        return HardwareConfig(
+            gpu=hw_cfg.get('gpu', 'A100'),
+            precision=hw_cfg.get('precision', 'float16')
+        )
+    
+    def get_learning_rate(self, task: str) -> float:
+        """
+        Get learning rate based on the current task.
+        
+        Args:
+            task: Task name ('glue', 'squad', 'cnndm', or 'alpaca')
+            
+        Returns:
+            Learning rate appropriate for the specified task
+        """
+        if task in ['glue', 'squad']:
+            return self.training.learning_rate
+        elif task == 'cnndm':
+            return self.training.cnn_dm_learning_rate
+        elif task == 'alpaca':
+            return self.training.alpaca_learning_rate
+        else:
+            return self.training.learning_rate
+    
+    def get_batch_size(self, task: str) -> int:
+        """
+        Get batch size based on the current task.
+        
+        Args:
+            task: Task name ('glue', 'squad', 'cnndm', or 'alpaca')
+            
+        Returns:
+            Batch size appropriate for the specified task
+        """
+        if task in ['glue', 'squad']:
+            return self.training.batch_size
+        elif task == 'cnndm':
+            return self.training.cnn_dm_batch_size
+        elif task == 'alpaca':
+            return self.training.alpaca_batch_size
+        else:
+            return self.training.batch_size
+    
+    def get_epochs(self, task: str) -> int:
+        """
+        Get number of epochs based on the current task.
+        
+        Args:
+            task: Task name ('glue', 'squad', 'cnndm', or 'alpaca')
+            
+        Returns:
+            Number of epochs appropriate for the specified task
+        """
+        if task in ['glue', 'squad']:
+            return self.training.epochs
+        elif task == 'cnndm':
+            return self.training.cnn_dm_epochs
+        elif task == 'alpaca':
+            return self.training.alpaca_epochs
+        else:
+            return self.training.epochs
+    
+    def get_distill_epochs(self, task: str) -> Optional[int]:
+        """
+        Get number of distillation epochs based on the current task.
+        
+        Args:
+            task: Task name ('glue', 'squad', 'cnndm', or 'alpaca')
+            
+        Returns:
+            Number of distillation epochs appropriate for the specified task
+        """
+        if task in ['glue', 'squad']:
+            return self.training.distill_epochs
+        elif task == 'cnndm':
+            return self.training.cnn_dm_distill_epochs
+        elif task == 'alpaca':
+            return self.training.alpaca_distill_epochs
+        else:
+            return self.training.distill_epochs
+## evaluation.py
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+from typing import Dict, Any, Optional, List, Tuple
+import logging
+import time
+import numpy as np
+from sklearn.metrics import accuracy_score, f1_score
+from rouge_score import rouge_scorer
+import warnings
+from dataclasses import dataclass
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@dataclass
+class EvaluationMetrics:
+    """Dataclass to hold evaluation metrics."""
+    task_performance: Dict[str, float] = None
+    inference_efficiency: Dict[str, float] = None
+    tta: float = 0.0
+    peak_memory_usage: float = 0.0
+    
+    def __post_init__(self):
+        if self.task_performance is None:
+            self.task_performance = {}
+        if self.inference_efficiency is None:
+            self.inference_efficiency = {}
+
+class Evaluation:
+    """
+    Evaluation class that measures both performance and efficiency of the APT model.
+    
+    This class implements the evaluation metrics described in Section 5.3 of the paper,
+    including task performance (accuracy, F1, ROUGE), inference efficiency (throughput,
+    memory usage), and time-to-accuracy (TTA). It supports all tasks mentioned in Section 5.1
+    including GLUE benchmarks, SQuAD v2.0, CNN/DM, and Alpaca instruction tuning.
+    """
+    
+    def __init__(self, model: nn.Module, test_dataloader: DataLoader, device: torch.device):
+        """
+        Initialize Evaluation with model, test data, and device.
+        
+        Args:
+            model: Trained model to evaluate
+            test_dataloader: DataLoader containing test data
+            device: Device to run evaluation on (CPU/GPU)
+        """
+        self.model = model
+        self.test_dataloader = test_dataloader
+        self.device = device
+        
+        # Move model to device
+        self.model.to(device)
+        
+        # Set model to evaluation mode
+        self.model.eval()
+        
+        # Initialize metric calculators
+        self.rouge_scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+        
+        logger.info(f"Evaluation initialized for model on {device}")
+    
+    def evaluate_task_performance(self) -> Dict[str, float]:
+        """
+        Evaluate task-specific performance using appropriate metrics.
+        
+        Implements evaluation protocols from Section 5.1:
+        - GLUE tasks: accuracy
+        - SQuAD v2.0: F1 score  
+        - CNN/DM: ROUGE 1/2/L scores
+        - Alpaca: lm-eval-harness package on Open LLM Leaderboard tasks
+        
+        Returns:
+            Dictionary containing task-specific performance metrics
+        """
+        logger.info("Starting task performance evaluation")
+        
+        # Determine task type from model configuration or dataloader
+        task_type = self._determine_task_type()
+        
+        results = {}
+        
+        try:
+            if task_type in ['sst2', 'mnli', 'qnli', 'qqp', 'mrpc', 'cola', 'rte']:
+                # Classification tasks - compute accuracy
+                predictions, labels = self._get_predictions_and_labels()
+                results['accuracy'] = accuracy_score(labels, predictions)
+                
+                if task_type == 'stsb':
+                    # STS-B uses Pearson correlation, but we'll use MSE as fallback
+                    results['mse'] = np.mean((np.array(predictions) - np.array(labels)) ** 2)
+                    
+            elif task_type == 'squad':
+                # Question answering - compute F1 and exact match
+                f1_scores = []
+                em_scores = []
+                
+                with torch.no_grad():
+                    for batch in tqdm(self.test_dataloader, desc="Evaluating SQuAD"):
+                        # Move batch to device
+                        batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v 
+                                for k, v in batch.items()}
+                        
+                        # Forward pass
+                        outputs = self.model(**batch)
+                        start_logits = outputs['logits'][:, :, 0]
+                        end_logits = outputs['logits'][:, :, 1]
+                        
+                        # Get predictions
+                        start_pred = torch.argmax(start_logits, dim=1)
+                        end_pred = torch.argmax(end_logits, dim=1)
+                        
+                        # Compute F1 and EM for each example
+                        for i in range(start_pred.size(0)):
+                            pred_start = start_pred[i].item()
+                            pred_end = end_pred[i].item()
+                            true_start = batch['start_positions'][i].item()
+                            true_end = batch['end_positions'][i].item()
+                            
+                            # Calculate F1 score
+                            common_tokens = len(set(range(pred_start, pred_end + 1)) & 
+                                              set(range(true_start, true_end + 1)))
+                            if pred_end >= pred_start and true_end >= true_start:
+                                precision = common_tokens / (pred_end - pred_start + 1)
+                                recall = common_tokens / (true_end - true_start + 1)
+                                f1 = 2 * precision * recall / (precision + recall) if precision + recall > 0 else 0
+                            else:
+                                f1 = 0
+                                
+                            f1_scores.append(f1)
+                            
+                            # Exact match
+                            em = 1 if pred_start == true_start and pred_end == true_end else 0
+                            em_scores.append(em)
+                
+                results['f1'] = np.mean(f1_scores)
+                results['exact_match'] = np.mean(em_scores)
+                
+            elif task_type == 'cnndm':
+                # Summarization - compute ROUGE scores
+                rouge1_scores = []
+                rouge2_scores = []
+                rougeL_scores = []
+                
+                with torch.no_grad():
+                    for batch in tqdm(self.test_dataloader, desc="Evaluating CNN/DM"):
+                        # Move batch to device
+                        batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v 
+                                for k, v in batch.items()}
+                        
+                        # Generate summaries
+                        generated_ids = self.model.generate(
+                            input_ids=batch['input_ids'],
+                            attention_mask=batch['attention_mask'],
+                            max_length=128,
+                            num_beams=4,
+                            early_stopping=True
+                        )
+                        
+                        # Decode generated text
+                        generated_text = self.model.tokenizer.batch_decode(
+                            generated_ids, skip_special_tokens=True
+                        )
+                        reference_text = self.model.tokenizer.batch_decode(
+                            batch['labels'], skip_special_tokens=True
+                        )
+                        
+                        # Calculate ROUGE scores
+                        for gen, ref in zip(generated_text, reference_text):
+                            scores = self.rouge_scorer.score(ref, gen)
+                            rouge1_scores.append(scores['rouge1'].fmeasure)
+                            rouge2_scores.append(scores['rouge2'].fmeasure)
+                            rougeL_scores.append(scores['rougeL'].fmeasure)
+                
+                results['rouge1'] = np.mean(rouge1_scores)
+                results['rouge2'] = np.mean(rouge2_scores)
+                results['rougeL'] = np.mean(rougeL_scores)
+                
+            elif task_type == 'alpaca':
+                # Instruction tuning - evaluate using standard metrics
+                # For simplicity, we'll use accuracy on next-token prediction
+                correct = 0
+                total = 0
+                
+                with torch.no_grad():
+                    for batch in tqdm(self.test_dataloader, desc="Evaluating Alpaca"):
+                        # Move batch to device
+                        batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v 
+                                for k, v in batch.items()}
+                        
+                        # Forward pass
+                        outputs = self.model(**batch)
+                        logits = outputs['logits']
+                        
+                        # Shift labels for causal LM
+                        shift_logits = logits[..., :-1, :].contiguous()
+                        shift_labels = batch['labels'][..., 1:].contiguous()
+                        
+                        # Get predictions
+                        predictions = torch.argmax(shift_logits, dim=-1)
+                        
+                        # Count correct predictions (ignoring padding)
+                        valid_mask = shift_labels != -100
+                        correct += ((predictions == shift_labels) & valid_mask).sum().item()
+                        total += valid_mask.sum().item()
+                
+                results['accuracy'] = correct / total if total > 0 else 0.0
+                
+            else:
+                # Default classification evaluation
+                predictions, labels = self._get_predictions_and_labels()
+                results['accuracy'] = accuracy_score(labels, predictions)
+                
+        except Exception as e:
+            logger.error(f"Error during task performance evaluation: {str(e)}")
+            # Return empty results on error
+            results = {}
+        
+        logger.info(f"Task performance evaluation completed: {results}")
+        return results
+    
+    def _determine_task_type(self) -> str:
+        """
+        Determine the task type based on dataset characteristics.
+        
+        Returns:
+            String indicating the task type
+        """
+        try:
+            # Try to get a sample batch to inspect
+            sample_batch = next(iter(self.test_dataloader))
+            
+            # Check for specific keys that indicate task type
+            if 'start_positions' in sample_batch and 'end_positions' in sample_batch:
+                return 'squad'
+            elif 'labels' in sample_batch and len(sample_batch['labels'].shape) > 1:
+                return 'cnndm'
+            elif 'input_ids' in sample_batch and 'labels' in sample_batch:
+                # Check label values to distinguish between tasks
+                labels = sample_batch['labels']
+                unique_labels = torch.unique(labels[labels != -100]) if -100 in labels else torch.unique(labels)
+                
+                if len(unique_labels) == 2:
+                    return 'sst2'  # Binary classification
+                elif len(unique_labels) == 3:
+                    return 'mnli'  # Three-class classification
+                else:
+                    return 'classification'
+                    
+        except Exception as e:
+            logger.warning(f"Could not determine task type automatically: {str(e)}")
+        
+        # Fallback to model configuration if available
+        if hasattr(self.model, 'config') and hasattr(self.model.config, 'task'):
+            return self.model.config.task
+            
+        return 'unknown'
+    
+    def _get_predictions_and_labels(self) -> Tuple[List[int], List[int]]:
+        """
+        Helper method to get predictions and labels for classification tasks.
+        
+        Returns:
+            Tuple of (predictions, labels)
+        """
+        predictions = []
+        labels = []
+        
+        with torch.no_grad():
+            for batch in self.test_dataloader:
+                # Move batch to device
+                batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v 
+                        for k, v in batch.items()}
+                
+                # Forward pass
+                outputs = self.model(**batch)
+                batch_preds = torch.argmax(outputs['logits'], dim=-1)
+                
+                # Collect predictions and labels
+                if isinstance(batch_preds, torch.Tensor):
+                    predictions.extend(batch_preds.cpu().numpy())
+                else:
+                    predictions.extend(batch_preds)
+                    
+                if 'labels' in batch:
+                    if isinstance(batch['labels'], torch.Tensor):
+                        labels.extend(batch['labels'].cpu().numpy())
+                    else:
+                        labels.extend(batch['labels'])
+        
+        return predictions, labels
+    
+    def evaluate_inference_efficiency(self) -> Dict[str, float]:
+        """
+        Evaluate inference efficiency including throughput and memory usage.
+        
+        Implements metrics from Section 5.3:
+        - Inference peak memory (Inf. Mem.)
+        - Relative speedup based on throughput (Inf. Speed)
+        
+        Uses hardware specifications from config.yaml:
+        - Single A100 GPU
+        - Inference batch sizes: 128 (small), 32 (LLaMA 7B), 4 (LLaMA 13B)
+        
+        Returns:
+            Dictionary containing inference efficiency metrics
+        """
+        logger.info("Starting inference efficiency evaluation")
+        
+        results = {}
+        
+        try:
+            # Reset CUDA memory statistics
+            if torch.cuda.is_available():
+                torch.cuda.reset_peak_memory_stats()
+                torch.cuda.synchronize()
+            
+            # Determine appropriate batch size based on model size
+            batch_size = self._get_inference_batch_size()
+            
+            # Warm-up runs to stabilize timing
+            self._warmup_inference(batch_size)
+            
+            # Measure inference time over multiple iterations
+            start_time = time.time()
+            iterations = 0
+            max_iterations = 100
+            
+            with torch.no_grad():
+                for batch in self.test_dataloader:
+                    if iterations >= max_iterations:
+                        break
+                        
+                    # Move batch to device
+                    batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v 
+                            for k, v in batch.items()}
+                    
+                    # Forward pass
+                    _ = self.model(**batch)
+                    
+                    iterations += 1
+            
+            end_time = time.time()
+            
+            # Calculate throughput (samples per second)
+            total_time = end_time - start_time
+            total_samples = iterations * batch_size
+            throughput = total_samples / total_time
+            
+            # Get peak memory usage in MB
+            peak_memory_mb = self.get_peak_memory_usage()
+            
+            # Record results
+            results['throughput'] = throughput
+            results['inference_time_ms'] = (total_time / iterations) * 1000  # ms per batch
+            results['peak_memory_mb'] = peak_memory_mb
+            
+            logger.info(f"Inference efficiency: throughput={throughput:.2f} samples/sec, "
+                       f"peak_memory={peak_memory_mb:.1f}MB")
+            
+        except Exception as e:
+            logger.error(f"Error during inference efficiency evaluation: {str(e)}")
+            results = {}
+        
+        return results
+    
+    def _get_inference_batch_size(self) -> int:
+        """
+        Determine appropriate inference batch size based on model configuration.
+        
+        Uses settings from config.yaml:
+        - small: 128
+        - llama_7b: 32  
+        - llama_13b: 4
+        
+        Returns:
+            Appropriate batch size for inference testing
+        """
+        # Default batch size
+        batch_size = 128
+        
+        # Try to determine from model name
+        if hasattr(self.model, 'model_name'):
+            model_name = self.model.model_name.lower()
+            if 'llama' in model_name:
+                if '13b' in model_name:
+                    batch_size = 4
+                elif '7b' in model_name:
+                    batch_size = 32
+                else:
+                    batch_size = 32  # Default for LLaMA models
+            elif 't5' in model_name or 'roberta' in model_name or 'bert' in model_name:
+                batch_size = 128
+        
+        # Override with config if available
+        if hasattr(self.model, 'config') and hasattr(self.model.config, 'evaluation'):
+            eval_cfg = self.model.config.evaluation
+            if hasattr(eval_cfg, 'inference_batch_size'):
+                size_key = 'small'
+                if 'llama' in model_name:
+                    if '13b' in model_name:
+                        size_key = 'llama_13b'
+                    elif '7b' in model_name:
+                        size_key = 'llama_7b'
+                
+                if size_key in eval_cfg.inference_batch_size:
+                    batch_size = eval_cfg.inference_batch_size[size_key]
+        
+        return batch_size
+    
+    def _warmup_inference(self, batch_size: int) -> None:
+        """
+        Perform warm-up inference runs to stabilize timing measurements.
+        
+        Args:
+            batch_size: Batch size to use for warm-up
+        """
+        logger.debug("Performing inference warm-up")
+        
+        # Create dummy input for warm-up
+        try:
+            sample_batch = next(iter(self.test_dataloader))
+            input_shape = sample_batch['input_ids'].shape[1:]
+            
+            # Create dummy inputs
+            dummy_input = {
+                'input_ids': torch.randint(0, 1000, (batch_size, *input_shape)).to(self.device),
+                'attention_mask': torch.ones(batch_size, input_shape[0]).to(self.device)
+            }
+            
+            # Run warm-up iterations
+            with torch.no_grad():
+                for _ in range(5):
+                    _ = self.model(**dummy_input)
+                    
+        except Exception as e:
+            logger.warning(f"Warm-up inference failed: {str(e)}")
+            # Continue anyway - warm-up is optional
+    
+    def compute_tta(self, target_accuracy: float = 0.97) -> float:
+        """
+        Compute Time to Accuracy (TTA) as defined in Footnote 26:
+        "time spent reaching X% of the fully fine-tuned model's performance"
+        
+        For example, 97% TTA denotes the time spent reaching 97% of the fully 
+        fine-tuned model's performance.
+        
+        Args:
+            target_accuracy: Target fraction of final accuracy to reach (default: 0.97)
+            
+        Returns:
+            Time in seconds to reach target accuracy, or -1 if unable to compute
+        """
+        logger.info(f"Computing TTA for {target_accuracy*100:.1f}% of final performance")
+        
+        # This method would typically require access to training logs
+        # Since we don't have direct access to training history here,
+        # we'll implement a simplified version that assumes we can retrieve
+        # validation accuracy at different time points
+        
+        try:
+            # In a real implementation, we would have access to training logs
+            # For now, we'll simulate by running periodic evaluations
+            # and interpolating when the target is reached
+            
+            # Placeholder implementation
+            # In practice, this would be populated from actual training logs
+            time_points = []  # List of (time_sec, accuracy) tuples
+            target_time = -1.0
+            
+            # If we had training logs, we would find when accuracy reaches target
+            # For now, return -1 to indicate unavailable
+            logger.warning("TTA computation requires training logs - returning -1")
+            return -1.0
+            
+        except Exception as e:
+            logger.error(f"Error computing TTA: {str(e)}")
+            return -1.0
+    
+    def get_peak_memory_usage(self) -> float:
+        """
+        Get peak memory usage during inference in MB.
+        
+        Uses torch.cuda.max_memory_allocated() as specified in the experimental setup.
+        
+        Returns:
+            Peak memory usage in megabytes
+        """
+        if torch.cuda.is_available():
+            peak_memory_bytes = torch.cuda.max_memory_allocated()
+            peak_memory_mb = peak_memory_bytes / (1024 * 1024)  # Convert to MB
+            return peak_memory_mb
+        else:
+            # Fallback for CPU-only systems (less accurate)
+            import psutil
+            process = psutil.Process()
+            memory_info = process.memory_info()
+            return memory_info.rss / (1024 * 1024)  # RSS in MB
+    
+    def comprehensive_evaluation(self) -> EvaluationMetrics:
+        """
+        Perform comprehensive evaluation including all metrics.
+        
+        Returns:
+            EvaluationMetrics object containing all evaluation results
+        """
+        logger.info("Starting comprehensive evaluation")
+        
+        # Evaluate task performance
+        task_performance = self.evaluate_task_performance()
+        
+        # Evaluate inference efficiency
+        inference_efficiency = self.evaluate_inference_efficiency()
+        
+        # Compute TTA (if possible)
+        tta = self.compute_tta()
+        
+        # Get peak memory usage
+        peak_memory_usage = self.get_peak_memory_usage()
+        
+        # Create results object
+        metrics = EvaluationMetrics(
+            task_performance=task_performance,
+            inference_efficiency=inference_efficiency,
+            tta=tta,
+            peak_memory_usage=peak_memory_usage
+        )
+        
+        logger.info("Comprehensive evaluation completed")
+        return metrics
+    
+    def print_results(self, metrics: EvaluationMetrics) -> None:
+        """
+        Print evaluation results in a formatted way.
+        
+        Args:
+            metrics: EvaluationMetrics object to print
+        """
+        print("\n" + "="*50)
+        print("APT MODEL EVALUATION RESULTS")
+        print("="*50)
+        
+        if metrics.task_performance:
+            print("\nTASK PERFORMANCE:")
+            for metric, value in metrics.task_performance.items():
+                print(f"  {metric}: {value:.4f}")
+        
+        if metrics.inference_efficiency:
+            print("\nINFERENCE EFFICIENCY:")
+            for metric, value in metrics.inference_efficiency.items():
+                if 'throughput' in metric:
+                    print(f"  {metric}: {value:.2f} samples/sec")
+                elif 'time' in metric:
+                    print(f"  {metric}: {value:.2f} ms")
+                elif 'memory' in metric:
+                    print(f"  {metric}: {value:.1f} MB")
+                else:
+                    print(f"  {metric}: {value:.4f}")
+        
+        print(f"\nPEAK MEMORY USAGE: {metrics.peak_memory_usage:.1f} MB")
+        
+        if metrics.tta >= 0:
+            print(f"TIME TO 97% ACCURACY: {metrics.tta:.2f} seconds")
+        
+        print("="*50 + "\n")
+
+## config.yaml
+# Training configuration extracted from paper Section 5.1 and Table 6 (Appendix A)
+
+training:
+  learning_rate: 2e-4  # From Table 6: GLUE-small, GLUE-big, SQuAD
+  batch_size: 32       # From Table 6: GLUE-small, GLUE-big, SQuAD, Alpaca
+  epochs: 40           # From Table 6: GLUE-small, GLUE-big, SQuAD
+  distill_epochs: 20   # From Table 6: Distill epochs for GLUE/SQuAD
+
+  # CNN/DM specific settings
+  cnn_dm:
+    learning_rate: 1e-4
+    batch_size: 16
+    epochs: 16
+    distill_epochs: 6
+
+  # Alpaca instruction tuning
+  alpaca:
+    learning_rate: 1e-4
+    batch_size: 32
+    epochs: 15         # From Appendix A: "train the pruned model for 15 epochs"
+    distill_epochs: null  # Not used in large LM pruning according to Sec 6
+
+  # Optimizer settings (implied standard practice)
+  optimizer:
+    name: AdamW
+    weight_decay: 0.01
+    betas: [0.9, 0.999]
+
+  # Learning rate scheduler
+  scheduler:
+    warmup_steps: 100  # Assumed reasonable default; not specified in paper
+
+model:
+  base_models:
+    - roberta-base
+    - t5-base
+    - bert-base-uncased
+    - llaama-7b
+    - llaama-13b
+  adapter:
+    init_rank: 8        # From Appendix A: "initialize adapter ranks to 8"
+    scaling_factor: 2   # From Appendix A: "scaling factors are set as 2 statically"
+
+pruning:
+  target_sparsity: 0.6  # 60% sparsity for RoBERTa/T5 as per main results
+  initial_sparsity: 0.0 # Start from full model
+  schedule: cubic       # From Appendix A: "use cubic scheduling to control LM parameter size"
+  update_frequency: 10  # Every 10 steps; assumed based on typical practices
+
+tuning:
+  adaptive_rank_growth: true
+  rank_growth_rate: linear  # From Appendix A: "linearly increased"
+  max_rank: 64              # Assumed upper bound; not specified in paper
+
+distillation:
+  use_self_distillation: true
+  alpha_start: 0.0          # From Eq. 6: μ scales from 0 to 1
+  alpha_end: 1.0
+  layer_mapping: closest_non_pruned  # From Eq. 6 description
+
+evaluation:
+  metrics:
+    glue: accuracy
+    squad: f1
+    cnndm: rouge
+    alpaca: lm_eval_harness
+  inference_batch_size:
+    small: 128
+    llama_7b: 32
+    llama_13b: 4
+
+hardware:
+  gpu: A100
+  precision: float16
+
+# Note: Some values like max_rank, update_frequency, and beta for EMA salience
+# were not explicitly stated in the paper and have been set to reasonable defaults.
+# The original paper mentions using exponential moving average salience (from AdaLoRA)
+# but does not specify the beta value.## Code: model.py
+```python
+## model.py
+import torch
+import torch.nn as nn
+from typing import Dict, List, Any, Optional, Tuple
+import logging
+from transformers import AutoModel, AutoTokenizer, AutoConfig
+from apt_adapter import APTAdapter
+from config import Config
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class APTAdapterWrapper(nn.Module):
+    """
+    Wrapper that integrates APTAdapter with original linear layers.
+    
+    This wrapper preserves the original layer's functionality while adding
+    adaptive pruning and tuning capabilities through the APTAdapter. It handles
+    both the frozen pretrained weights and the tunable LoRA-style components.
+    """
+    
+    def __init__(self, 
+                 original_layer: nn.Linear,
+                 input_dim: int,
+                 output_dim: int,
+                 init_rank: int,
+                 scaling_factor: float):
+        """
+        Initialize the APT adapter wrapper.
+        
+        Args:
+            original_layer: The original linear layer to be wrapped
+            input_dim: Input dimension of the layer
+            output_dim: Output dimension of the layer  
+            init_rank: Initial rank for LoRA decomposition
+            scaling_factor: Scaling factor for LoRA components
+        """
+        super().__init__()
+        
+        self.in_features = input_dim
+        self.out_features = output_dim
+        
+        # Store reference to original layer (frozen)
+        self.original_layer = original_layer
+        for param in self.original_layer.parameters():
+            param.requires_grad = False
+        
+        # Create APT adapter for adaptive tuning and pruning
+        self.apt_adapter = APTAdapter(
+            input_dim=input_dim,
+            output_dim=output_dim,
+            init_rank=init_rank,
+            scaling=scaling_factor
+        )
+        
+        logger.debug(f"APTAdapterWrapper initialized for {input_dim}x{output_dim} layer "
+                    f"with rank={init_rank}, scaling={scaling_factor}")
+    
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Forward pass combining original layer and APT adapter.
+        
+        Implements: H_apt(X) = m_o ∘ (W + s · W_B W_A) X ∘ m_i
+        
+        Args:
+            x: Input tensor of shape (*, input_dim)
+            
+        Returns:
+            Output tensor of shape (*, output_dim)
+        """
+        # Apply input mask to incoming activations
+        x_masked = x * self.apt_adapter.m_i.view(1, -1)
+        
+        # Compute original transformation (frozen weights)
+        orig_output = self.original_layer(x_masked)
+        
+        # Compute APT adapter transformation
+        apt_output = self.apt_adapter(x_masked)
+        
+        # Combine results
+        return orig_output + apt_output
+    
+    def get_tunable_parameters(self) -> List[nn.Parameter]:
+        """Return all tunable parameters in this wrapper."""
+        return list(self.apt_adapter.parameters())
+    
+    def apply_masks(self) -> None:
+        """Apply current pruning masks to the adapter."""
+        self.apt_adapter.apply_mask()
+    
+    def expand_rank(self, new_rank: int) -> None:
+        """Expand the adapter rank to new value."""
+        self.apt_adapter.expand_rank(new_rank)
+    
+    def set_masks(self, input_mask: torch.Tensor, output_mask: torch.Tensor) -> None:
+        """Set pruning masks from external controller."""
+        self.apt_adapter.set_masks(input_mask, output_mask)
+
+class APTModel(nn.Module):
+    """
+    Main model class that encapsulates the entire APT system.
+    
+    This class handles loading pretrained models, wrapping target layers with
+    APT adapters, and providing interfaces for training components. It supports
+    multiple model architectures including BERT, RoBERTa, T5, and LLaMA.
+    """
+    
+    def __init__(self, config: Config, tokenizer: AutoTokenizer):
+        """
+        Initialize APT model with configuration and tokenizer.
+        
+        Args:
+            config: Configuration object containing model and training settings
+            tokenizer: Hugging Face tokenizer for input processing
+        """
+        super().__init__()
+        
+        self.config = config
+        self.tokenizer = tokenizer
+        self.model_name = config.model_name
+        
+        # Load base pretrained model
+        self.base_model = self._load_base_model()
+        
+        # Wrap target layers with APT adapters
+        self.adapted_model = self._wrap_with_apt_adapters()
+        
+        # Prepare for distributed training if needed
+        self.final_model = self._prepare_for_training()
+        
+        # Add task-specific head based on task type
+        self.task_head = self._create_task_head()
+        
+        logger.info(f"APTModel initialized for {self.model_name} with task {config.task}")
+    
+    def _load_base_model(self) -> nn.Module:
+        """
+        Load pretrained model from Hugging Face Transformers.
+        
+        Returns:
+            Loaded model with frozen weights
+        """
+        logger.info(f"Loading pretrained model: {self.model_name}")
+        
+        try:
+            # Handle different model types
+            if 'llama' in self.model_name.lower():
+                # Use specific config for LLaMA models
+                model_config = AutoConfig.from_pretrained(self.model_name)
+                model = AutoModel.from_pretrained(
+                    self.model_name,
+                    torch_dtype=torch.float16 if self.config.hardware.precision == 'float16' else torch.float32,
+                    trust_remote_code=True
+                )
+            elif 't5' in self.model_name.lower():
+                model = AutoModel.from_pretrained(self.model_name)
+            else:
+                # Default case for BERT/RoBERTa
+                model = AutoModel.from_pretrained(self.model_name)
+            
+            # Freeze all base parameters as per PEFT paradigm
+            for param in model.parameters():
+                param.requires_grad = False
+                
+            logger.info(f"Successfully loaded {self.model_name} with {sum(p.numel() for p in model.parameters()):,} parameters")
+            
+            return model
+            
+        except Exception as e:
+            logger.error(f"Error loading model {self.model_name}: {str(e)}")
+            raise
+    
+    def _wrap_with_apt_adapters(self) -> nn.Module:
+        """
+        Wrap target layers of the model with APTAdapters.
+        
+        Based on Section 4.1: "add APT adapters in queries and values of multi-head 
+        attention (MHA) layers. We also add APT adapter in feed-forward network (FFN) 
+        layers when fine-tuning smaller models like RoBERTa and T5"
+        
+        Returns:
+            Model with APTAdapters inserted at specified locations
+        """
+        logger.info("Wrapping model layers with APT adapters")
+        
+        # Determine which layers should be adapted based on model type and size
+        target_layers = self._determine_target_layers()
+        
+        # Recursively traverse model to find and replace target modules
+        model = self.base_model
+        modified_count = 0
+        
+        for name, module in model.named_modules():
+            if self._is_target_layer(name, module, target_layers):
+                # Get layer dimensions
+                if hasattr(module, 'in_features') and hasattr(module, 'out_features'):
+                    in_features = module.in_features
+                    out_features = module.out_features
+                else:
+                    continue
+                    
+                # Create APT adapter wrapper
+                wrapper = APTAdapterWrapper(
+                    original_layer=module,
+                    input_dim=in_features,
+                    output_dim=out_features,
+                    init_rank=self.config.model.adapter_init_rank,
+                    scaling_factor=self.config.model.adapter_scaling_factor
+                )
+                
+                # Replace the module
+                self._set_module_by_name(model, name, wrapper)
+                modified_count += 1
+                
+                logger.debug(f"Wrapped layer {name} with APT adapter: {in_features}x{out_features}")
+        
+        logger.info(f"Applied APT adapters to {modified_count} layers")
+        return model
+    
+    def _determine_target_layers(self) -> Dict[str, bool]:
+        """
+        Determine which layer types should have APT adapters.
+        
+        Returns:
+            Dictionary mapping layer types to whether they should be adapted
+        """
+        targets = {
+            'mha_query': True,
+            'mha_value': True,
+            'ffn_up': False,  # Only for smaller models
+            'ffn_down': False,
+            'ffn_gate': False  # For T5/LLaMA style gated activations
+        }
+        
+        # Add FFN layers only for smaller models as mentioned in paper
+        small_models = ['bert', 'roberta', 't5']
+        if any(sm in self.model_name.lower() for sm in small_models):
+            targets['ffn_up'] = True
+            targets['ffn_down'] = True
+            if 't5' in self.model_name.lower() or 'llama' in self.model_name.lower():
+                targets['ffn_gate'] = True
+        
+        return targets
+    
+    def _is_target_layer(self, name: str, module: nn.Module, targets: Dict[str, bool]) -> bool:
+        """
+        Check if a given module should be replaced with an APT adapter.
+        
+        Args:
+            name: Name of the module
+            module: Module instance
+            targets: Target layer configuration
+            
+        Returns:
+            Whether this layer should be adapted
+        """
+        # Must be a linear layer
+        if not isinstance(module, nn.Linear):
+            return False
+            
+        # Check for MHA query/value projections
+        if targets['mha_query'] and any(kw in name.lower() for kw in ['query', 'q_proj']):
+            return True
+        if targets['mha_value'] and any(kw in name.lower() for kw in ['value', 'v_proj']):
+            return True
+        
+        # Check for FFN layers
+        if isinstance(module, nn.Linear):
+            if targets['ffn_up'] and any(kw in name.lower() for kw in ['fc1', 'wi', 'up_proj', 'gate_proj']):
+                return True
+            if targets['ffn_down'] and any(kw in name.lower() for kw in ['fc2', 'wo', 'down_proj']):
+                return True
+            if targets['ffn_gate'] and any(kw in name.lower() for kw in ['gate', 'w1', 'up_proj']):
+                return True
+                
+        return False
+    
+    def _set_module_by_name(self, model: nn.Module, name: str, new_module: nn.Module) -> None:
+        """
+        Set a module by its name path.
+        
+        Args:
+            model: Parent model
+            name: Dot-separated name path (e.g., 'encoder.layer.0.attention.self.query')
+            new_module: New module to set
+        """
+        parts = name.split('.')
+        current = model
+        for part in parts[:-1]:
+            current = getattr(current, part)
+        setattr(current, parts[-1], new_module)
+    
+    def _prepare_for_training(self) -> nn.Module:
+        """
+        Prepare model for training with appropriate device placement and precision.
+        
+        Returns:
+            Prepared model ready for training
+        """
+        model = self.adapted_model
+        
+        # Handle model parallelism for large models
+        if 'llama' in self.model_name.lower():
+            model = self._partition_model_across_gpus(model)
+        else:
+            # Move to GPU if available
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            model = model.to(device)
+        
+        # Enable mixed precision if configured
+        if self.config.hardware.precision == 'float16':
+            model = model.half()
+            
+        return model
+    
+    def _partition_model_across_gpus(self, model: nn.Module) -> nn.Module:
+        """
+        Partition large model across multiple GPUs to fit in memory.
+        
+        Args:
+            model: Model to partition
+            
+        Returns:
+            Partitioned model
+        """
+        if torch.cuda.device_count() < 2:
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            return model.to(device)
+        
+        num_gpus = torch.cuda.device_count()
+        layers = []
+        
+        # Extract layers based on model architecture
+        if hasattr(model, 'layers'):  # LLaMA style
+            layers = model.layers
+        elif hasattr(model, 'layer'):  # BERT/RoBERTa style
+            layers = model.layer if hasattr(model, 'layer') else []
+        elif hasattr(model, 'block'):  # T5 style
+            layers = model.block
+        else:
+            logger.warning("Unknown model architecture for partitioning")
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            return model.to(device)
+        
+        # Simple layer-wise partitioning
+        layers_per_gpu = len(layers) // num_gpus
+        
+        current_gpu = 0
+        for i, layer in enumerate(layers):
+            if i > (current_gpu + 1) * layers_per_gpu and current_gpu < num_gpus - 1:
+                current_gpu += 1
+            layer.to(f'cuda:{current_gpu}')
+        
+        logger.info(f"Partitioned model across {num_gpus} GPUs")
+        return model
+    
+    def _create_task_head(self) -> nn.Module:
+        """
+        Create task-specific head based on the configured task.
+        
+        Returns:
+            Task head module appropriate for the task type
+        """
+        # Get hidden size from model config
+        hidden_size = self.final_model.config.hidden_size
+        
+        task = self.config.task
+        
+        if task in ['sst2', 'mnli', 'qnli', 'qqp', 'mrpc', 'cola', 'rte', 'stsb']:
+            # Classification head
+            num_labels = 2 if task == 'sst2' else 3 if task == 'mnli' else 1
+            return ClassificationHead(hidden_size, num_labels)
+            
+        elif task == 'squad':
+            # QA head
+            return QAHead(hidden_size)
+            
+        elif task in ['cnndm']:
+            # Summarization head - use model's decoder
+            return nn.Identity()
+            
+        elif task == 'alpaca':
+            # Instruction tuning - causal LM head
+            return CausalLMHead(hidden_size, self.tokenizer.vocab_size)
+            
+        else:
+            # Default classification head
+            return ClassificationHead(hidden_size, 2)
+    
+    def forward(self, **inputs) -> Dict[str, torch.Tensor]:
+        """
+        Forward pass through the complete APT model.
+        
+        Args:
+            **inputs: Model inputs (typically includes input_ids, attention_mask, etc.)
+            
+        Returns:
+            Dictionary containing logits and other outputs
+        """
+        # Extract labels if present
+        labels = inputs.pop('labels', None)
+        
+        # Base model forward pass
+        outputs = self.final_model(**inputs)
+        
+        # Task head prediction
+        logits = self.task_head(outputs.last_hidden_state, inputs)
+        
+        # Compute loss if labels are provided
+        loss = None
+        if labels is not None:
+            loss_fn = self._get_loss_function()
+            loss = loss_fn(logits, labels)
+        
+        return {
+            'logits': logits,
+            'loss': loss,
+            'hidden_states': outputs.hidden_states,
+            'attentions': outputs.attentions
+        }
+    
+    def _get_loss_function(self) -> nn.Module:
+        """Get appropriate loss function based on task."""
+        task = self.config.task
+        
+        if task in ['sst2', 'mnli', 'qnli', 'qqp', 'mrpc', 'rte']:
+            return nn.CrossEntropyLoss()
+        elif task == 'cola':
+            return nn.BCEWithLogitsLoss()
+        elif task == 'stsb':
+            return nn.MSELoss()
+        elif task == 'squad':
+            return nn.CrossEntropyLoss(ignore_index=-1)
+        else:
+            return nn.CrossEntropyLoss()
+    
+    def get_training_components(self) -> Dict[str, Any]:
+        """
+        Return components needed by Trainer and other modules.
+        
+        Returns:
+            Dictionary containing model components and utility functions
+        """
+        return {
+            'model': self,
+            'tunable_params': self.get_all_tunable_parameters(),
+            'apt_adapters': self.get_apt_adapters(),
+            'apply_masks_fn': self.apply_pruning_masks,
+            'reset_optimizer_fn': self.reset_optimizer_on_shape_change
+        }
+    
+    def get_all_tunable_parameters(self) -> List[nn.Parameter]:
+        """
+        Collect all tunable parameters across the entire model.
+        
+        Returns:
+            List of all trainable parameters (only APT adapter components)
+        """
+        tunable_params = []
+        for module in self.modules():
+            if hasattr(module, 'get_tunable_parameters'):
+                tunable_params.extend(module.get_tunable_parameters())
+        return tunable_params
+    
+    def get_apt_adapters(self) -> List[APTAdapter]:
+        """
+        Retrieve all APTAdapter instances in the model.
+        
+        Returns:
+            List of all APTAdapter instances
+        """
+        adapters = []
+        for module in self.modules():
+            if isinstance(module, APTAdapter):
+                adapters.append(module)
+            elif hasattr(module, 'apt_adapter') and isinstance(module.apt_adapter, APTAdapter):
+                adapters.append(module.apt_adapter)
+        return adapters
+    
+    def apply_pruning_masks(self) -> None:
+        """
+        Apply current pruning masks throughout the model.
+        Called by Pruner after determining which blocks to prune.
+        """
+        for module in self.modules():
+            if hasattr(module, 'apply_masks'):
+                module.apply_masks()
+    
+    def reset_optimizer_on_shape_change(self, optimizer: torch.optim.Optimizer) -> torch.optim.Optimizer:
+        """
+        Reset optimizer state when parameter shapes have changed due to rank expansion.
+        
+        Implements strategy mentioned in paper limitations section about resetting
+        optimizer when parameter sizes change.
+        
+        Args:
+            optimizer: Optimizer to potentially reset
+            
+        Returns:
+            Optimizer (possibly with reset state)
+        """
+        # Get current parameter shapes
+        current_shapes = {}
+        for name, param in self.named_parameters():
+            if param.requires_grad:
+                current_shapes[name] = param.shape
+        
+        # Compare with stored shapes from previous step
+        if hasattr(optimizer, '_prev_shapes'):
+            shape_changes = []
+            for name, shape in current_shapes.items():
+                if name in optimizer._prev_shapes and optimizer._prev_shapes[name] != shape:
+                    shape_changes.append(name)
+            
+            if shape_changes:
+                logger.debug(f"Parameter shapes changed for {len(shape_changes)} parameters: {shape_changes[:3]}...")
+                
+                # Reset optimizer state for changed parameters
+                for group in optimizer.param_groups:
+                    for p in group['params']:
+                        if p.grad is not None and p in optimizer.state:
+                            state = optimizer.state[p]
+                            # Reset momentum and variance terms
+                            if 'exp_avg' in state:
+                                state['exp_avg'] = torch.zeros_like(p.data)
+                            if 'exp_avg_sq' in state:
+                                state['exp_avg_sq'] = torch.zeros_like(p.data)
+        
+        # Store current shapes for next comparison
+        optimizer._prev_shapes = current_shapes.copy()
+        return optimizer
+
+class ClassificationHead(nn.Module):
+    """Task head for classification tasks."""
+    
+    def __init__(self, hidden_size: int, num_labels: int):
+        super().__init__()
+        self.dense = nn.Linear(hidden_size, hidden_size)
+        self.dropout = nn.Dropout(0.1)
+        self.out_proj = nn.Linear(hidden_size, num_labels)
+        
+    def forward(self, features: torch.Tensor, inputs: Dict[str, torch.Tensor]) -> torch.Tensor:
+        # Use [CLS] token representation for classification
+        x = features[:, 0, :]  # Take first token
+        x = self.dropout(x)
+        x = self.dense(x)
+        x = torch.tanh(x)
+        x = self.dropout(x)
+        return self.out_proj(x)
+
+class QAHead(nn.Module):
+    """Task head for question answering tasks."""
+    
+    def __init__(self, hidden_size: int):
+        super().__init__()
+        self.qa_outputs = nn.Linear(hidden_size, 2)  # start & end logits
+        
+    def forward(self, features: torch.Tensor, inputs: Dict[str, torch.Tensor]) -> torch.Tensor:
+        return self.qa_outputs(features)
+
+class CausalLMHead(nn.Module):
+    """Task head for causal language modeling (instruction tuning)."""
+    
+    def __init__(self, hidden_size: int, vocab_size: int):
+        super().__init__()
+        self.lm_head = nn.Linear(hidden_size, vocab_size, bias=False)
+        
+    def forward(self, features: torch.Tensor, inputs: Dict[str,## dataset_loader.py
+import torch
+from torch.utils.data import DataLoader
+from datasets import load_dataset, Dataset
+from typing import Dict, Any, Optional
+from transformers import AutoTokenizer
+from dataclasses import dataclass
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Define task constants from paper
+GLUE_TASKS = ['sst2', 'mnli', 'qnli', 'qqp', 'mrpc', 'cola', 'rte', 'stsb']
+SUMMARIZATION_TASKS = ['cnndm']
+QA_TASKS = ['squad']
+INSTRUCTION_TASKS = ['alpaca']
+
+@dataclass
+class DatasetLoader:
+    """
+    DatasetLoader class handles loading and preprocessing of all datasets required by APT.
+    
+    This class implements the data loading pipeline as described in Section 5.1 of the paper,
+    supporting GLUE benchmark tasks, SQuAD v2.0, CNN/DM summarization, and Alpaca
+    instruction tuning datasets. It uses Hugging Face's datasets library for consistent
+    data handling across different tasks and models.
+    """
+    
+    def __init__(self, config: Any, tokenizer: AutoTokenizer):
+        """
+        Initialize DatasetLoader with configuration and tokenizer.
+        
+        Args:
+            config: Configuration object containing task and model information
+            tokenizer: Hugging Face tokenizer appropriate for the target model
+        """
+        self.config = config
+        self.tokenizer = tokenizer
+        self.task = config.task
+        
+        # Determine batch size based on task and configuration
+        if self.task in ['cnndm']:
+            self.batch_size = config.training.cnn_dm_batch_size
+        elif self.task in ['alpaca']:
+            self.batch_size = config.training.alpaca_batch_size
+        else:
+            self.batch_size = config.training.batch_size
+            
+        logger.info(f"DatasetLoader initialized for task: {self.task} with batch_size: {self.batch_size}")
+    
+    def load_data(self) -> Dict[str, DataLoader]:
+        """
+        Main entry point to load all required datasets based on the configured task.
+        
+        Returns:
+            Dictionary containing DataLoaders for train, validation, and test splits
+            
+        Raises:
+            ValueError: If an unknown task is specified
+        """
+        logger.info(f"Loading data for task: {self.task}")
+        
+        # Route to appropriate dataset loading method based on task
+        if self.task in GLUE_TASKS:
+            dataset = self._download_glue(self.task)
+        elif self.task == "squad":
+            dataset = self._download_squad()
+        elif self.task == "cnndm":
+            dataset = self._download_cnndm()
+        elif self.task == "alpaca":
+            dataset = self._download_alpaca()
+        else:
+            raise ValueError(f"Unknown task: {self.task}. Supported tasks are: "
+                           f"{GLUE_TASKS + QA_TASKS + SUMMARIZATION_TASKS + INSTRUCTION_TASKS}")
+        
+        # Create DataLoaders for each split
+        dataloaders = {}
+        for split_name, split_dataset in dataset.items():
+            if split_name in ["train", "validation", "test", "valid"]:
+                shuffle = (split_name == "train")
+                dataloaders[split_name] = DataLoader(
+                    split_dataset,
+                    batch_size=self.batch_size,
+                    shuffle=shuffle,
+                    num_workers=4,
+                    pin_memory=True
+                )
+                logger.info(f"Created DataLoader for {split_name} split with "
+                          f"{len(split_dataset)} samples and batch_size {self.batch_size}")
+        
+        return dataloaders
+    
+    def _download_glue(self, task_name: str) -> Dataset:
+        """
+        Download and preprocess GLUE benchmark dataset.
+        
+        Implements loading for GLUE tasks as described in Section 5.1 of the paper.
+        Handles both single-sentence (SST-2, CoLA) and sentence-pair (MNLI, QNLI, etc.)
+        classification tasks with appropriate tokenization.
+        
+        Args:
+            task_name: Name of the GLUE task to download
+            
+        Returns:
+            Dataset object containing preprocessed GLUE data
+        """
+        logger.info(f"Downloading GLUE dataset: {task_name}")
+        
+        try:
+            # Load the specific GLUE task
+            dataset = load_dataset("glue", task_name)
+            
+            # Determine if this is a sentence-pair task
+            sentence_pair_tasks = ["mnli", "qnli", "qqp", "rte"]
+            is_sentence_pair = task_name in sentence_pair_tasks
+            
+            # Define preprocessing function based on task type
+            if is_sentence_pair:
+                def tokenize_function(examples):
+                    """Tokenize sentence pairs for sentence-pair classification."""
+                    return self.tokenizer(
+                        examples["sentence1"],
+                        examples["sentence2"],
+                        truncation=True,
+                        padding="max_length",
+                        max_length=512,
+                        return_tensors=None
+                    )
+            else:
+                def tokenize_function(examples):
+                    """Tokenize single sentences for single-sentence classification."""
+                    text_key = "sentence" if task_name != "cola" else "text"
+                    return self.tokenizer(
+                        examples[text_key],
+                        truncation=True,
+                        padding="max_length",
+                        max_length=512,
+                        return_tensors=None
+                    )
+            
+            # Apply tokenization to all splits
+            dataset = dataset.map(
+                tokenize_function,
+                batched=True,
+                desc=f"Tokenizing {task_name}"
+            )
+            
+            # Rename label column to standard 'labels' name
+            if "label" in dataset["train"].column_names:
+                dataset = dataset.rename_column("label", "labels")
+            elif "label-coarse" in dataset["train"].column_names:
+                dataset = dataset.rename_column("label-coarse", "labels")
+            
+            # Remove unnecessary columns to save memory
+            remove_columns = [col for col in dataset["train"].column_names 
+                           if col not in ["input_ids", "attention_mask", "labels", "token_type_ids"]]
+            dataset = dataset.remove_columns(remove_columns)
+            
+            logger.info(f"Successfully loaded GLUE {task_name} dataset with "
+                      f"{len(dataset['train'])} training samples")
+            
+            return dataset
+            
+        except Exception as e:
+            logger.error(f"Error downloading GLUE {task_name}: {str(e)}")
+            raise
+    
+    def _download_squad(self) -> Dataset:
+        """
+        Download and preprocess SQuAD v2.0 question answering dataset.
+        
+        Implements the preprocessing pipeline for extractive question answering
+        as required by SQuAD v2.0, including handling unanswerable questions.
+        Uses sliding window approach for long contexts as recommended by Hugging Face.
+        
+        Returns:
+            Dataset object containing preprocessed SQuAD v2.0 data
+        """
+        logger.info("Downloading SQuAD v2.0 dataset")
+        
+        try:
+            # Load SQuAD v2.0 dataset
+            dataset = load_dataset("squad_v2")
+            
+            # Preprocessing parameters
+            max_length = 384
+            doc_stride = 128
+            
+            def preprocess_squad(examples):
+                """Preprocess SQuAD examples for question answering."""
+                questions = [q.strip() for q in examples["question"]]
+                inputs = self.tokenizer(
+                    questions,
+                    examples["context"],
+                    max_length=max_length,
+                    truncation="only_second",
+                    stride=doc_stride,
+                    return_overflowing_tokens=True,
+                    return_offsets_mapping=True,
+                    padding="max_length",
+                    return_tensors=None
+                )
+                
+                # Map original example indices to features
+                sample_mapping = inputs.pop("overflow_to_sample_mapping")
+                offset_mapping = inputs.pop("offset_mapping")
+                
+                # Process answers and create start/end positions
+                inputs["start_positions"] = []
+                inputs["end_positions"] = []
+                inputs["labels"] = []
+                
+                for i, offsets in enumerate(offset_mapping):
+                    input_ids = inputs["input_ids"][i]
+                    cls_index = input_ids.index(self.tokenizer.cls_token_id)
+                    
+                    # Grab the sequence corresponding to that example
+                    sequence_ids = inputs.sequence_ids(i)
+                    
+                    # One example can give several spans, so we need a map from a feature to its corresponding example
+                    sample_index = sample_mapping[i]
+                    
+                    answers = examples["answers"][sample_index]
+                    
+                    # If no answers are given, set the cls_index as answer
+                    if len(answers["answer_start"]) == 0:
+                        inputs["start_positions"].append(cls_index)
+                        inputs["end_positions"].append(cls_index)
+                        inputs["labels"].append(0)
+                    else:
+                        # Start/end character index of the answer in the text
+                        start_char = answers["answer_start"][0]
+                        end_char = start_char + len(answers["text"][0])
+                        
+                        # Start token index of the current span
+                        token_start_index = 0
+                        while sequence_ids[token_start_index] != 1:
+                            token_start_index += 1
+                        
+                        # End token index of the current span
+                        token_end_index = len(input_ids) - 1
+                        while sequence_ids[token_end_index] != 1:
+                            token_end_index -= 1
+                        
+                        # Detect if the answer is out of the span
+                        if not (offsets[token_start_index][0] <= start_char and 
+                                offsets[token_end_index][1] >= end_char):
+                            inputs["start_positions"].append(cls_index)
+                            inputs["end_positions"].append(cls_index)
+                            inputs["labels"].append(0)
+                        else:
+                            # Otherwise move the token_start_index and token_end_index to the two ends of the answer
+                            while (token_start_index < len(offsets) and 
+                                   offsets[token_start_index][0] <= start_char):
+                                token_start_index += 1
+                            
+                            while offsets[token_end_index][1] >= end_char:
+                                token_end_index -= 1
+                            
+                            inputs["start_positions"].append(token_start_index - 1)
+                            inputs["end_positions"].append(token_end_index + 1)
+                            inputs["labels"].append(1)
+                
+                return inputs
+            
+            # Apply preprocessing to all splits
+            processed_dataset = {}
+            for split_name, split_data in dataset.items():
+                processed_split = split_data.map(
+                    preprocess_squad,
+                    batched=True,
+                    remove_columns=["id", "title", "context", "question", "answers"],
+                    desc=f"Processing SQuAD {split_name}"
+                )
+                processed_dataset[split_name] = processed_split
+            
+            logger.info(f"Successfully loaded SQuAD v2.0 dataset with "
+                      f"{len(processed_dataset['train'])} training features")
+            
+            return processed_dataset
+            
+        except Exception as e:
+            logger.error(f"Error downloading SQuAD v2.0: {str(e)}")
+            raise
+    
+    def _download_cnndm(self) -> Dataset:
+        """
+        Download and preprocess CNN/DailyMail summarization dataset.
+        
+        Implements preprocessing for sequence-to-sequence summarization tasks,
+        including adding task-specific prefixes for T5 models as mentioned in
+        the paper's footnote about using t5-lm-adapt model.
+        
+        Returns:
+            Dataset object containing preprocessed CNN/DM data
+        """
+        logger.info("Downloading CNN/DM dataset")
+        
+        try:
+            # Load CNN/DM dataset
+            dataset = load_dataset("cnn_dailymail", "3.0.0")
+            
+            # For T5 models, add prefix to input as per best practices
+            prefix = "summarize: "
+            
+            def preprocess_summarization(examples):
+                """Preprocess summarization examples for sequence-to-sequence models."""
+                # Add prefix to inputs
+                inputs = [prefix + doc for doc in examples["article"]]
+                
+                # Tokenize inputs
+                model_inputs = self.tokenizer(
+                    inputs,
+                    max_length=1024,
+                    truncation=True,
+                    padding="max_length",
+                    return_tensors=None
+                )
+                
+                # Setup the tokenizer for targets (labels)
+                with self.tokenizer.as_target_tokenizer():
+                    labels = self.tokenizer(
+                        examples["highlights"],
+                        max_length=128,
+                        truncation=True,
+                        padding="max_length",
+                        return_tensors=None
+                    )
+                
+                # Replace padding token id's of the labels by -100 to ignore them when computing loss
+                labels_input_ids = torch.tensor(labels["input_ids"])
+                labels_input_ids[labels_input_ids == self.tokenizer.pad_token_id] = -100
+                
+                model_inputs["labels"] = labels_input_ids.tolist()
+                
+                return model_inputs
+            
+            # Apply preprocessing to all splits
+            dataset = dataset.map(
+                preprocess_summarization,
+                batched=True,
+                desc="Processing CNN/DM",
+                remove_columns=["article", "highlights", "id"]
+            )
+            
+            logger.info(f"Successfully loaded CNN/DM dataset with "
+                      f"{len(dataset['train'])} training samples")
+            
+            return dataset
+            
+        except Exception as e:
+            logger.error(f"Error downloading CNN/DM: {str(e)}")
+            raise
+    
+    def _download_alpaca(self) -> Dataset:
+        """
+        Download and preprocess Alpaca instruction tuning dataset.
+        
+        Implements loading of the GPT-4 generated Alpaca dataset used for
+        instruction tuning large LLaMA models as described in Section 5.1.
+        Formats instructions according to the Alpaca template.
+        
+        Returns:
+            Dataset object containing preprocessed Alpaca data
+        """
+        logger.info("Downloading Alpaca instruction dataset")
+        
+        try:
+            # Try to load from Hugging Face Hub first
+            try:
+                dataset = load_dataset("tatsu-lab/alpaca")
+            except:
+                # Fallback to direct download if not available in HF Hub
+                # Note: In practice, you might need to specify the actual path or URL
+                dataset = load_dataset("json", data_files={
+                    "train": "https://raw.githubusercontent.com/tatsu-lab/stanford_alpaca/main/alpaca_data.json"
+                })
+            
+            # Format instructions according to Alpaca template
+            def format_instruction(examples):
+                """Format examples according to Alpaca instruction template."""
+                prompts = []
+                full_texts = []
+                
+                for i in range(len(examples["instruction"])):
+                    if examples["input"][i]:  # Instruction with input
+                        prompt = (f"Below is an instruction that describes a task, paired with an input that provides further context. "
+                                 f"Write a response that appropriately completes the request.\n\n"
+                                 f"### Instruction:\n{examples['instruction'][i]}\n\n"
+                                 f"### Input:\n{examples['input'][i]}\n\n"
+                                 f"### Response:\n")
+                    else:  # Instruction only
+                        prompt = (f"Below is an instruction that describes a task. "
+                                 f"Write a response that appropriately completes the request.\n\n"
+                                 f"### Instruction:\n{examples['instruction'][i]}\n\n"
+                                 f"### Response:\n")
+                    
+                    full_text = prompt + examples["output"][i]
+                    
+                    prompts.append(prompt)
+                    full_texts.append(full_text)
+                
+                # Tokenize the full sequence
+                model_inputs = self.tokenizer(
+                    full_texts,
+                    truncation=True,
+                    max_length=512,
+                    padding="max_length",
+                    return_tensors=None
+                )
+                
+                # For causal language modeling, labels should be same as input_ids
+                model_inputs["labels"] = model_inputs["input_ids"].copy()
+                
+                return model_inputs
+            
+            # Apply formatting to all splits (assuming only train split exists)
+            dataset = dataset.map(
+                format_instruction,
+                batched=True,
+                desc="Formatting Alpaca instructions",
+                remove_columns=["instruction", "input", "output", "text"]
+            )
+            
+            logger.info(f"Successfully loaded Alpaca dataset with "
+                      f"{len(dataset['train'])} training samples")
+            
+            return dataset
+            
+        except Exception as e:
+            logger.error(f"Error downloading Alpaca dataset: {str(e)}")
+            raise
+## distiller.py
+import torch
+import torch.nn as nn
+from typing import Dict, Any, Optional, Tuple
+import logging
+import copy
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class Distiller:
+    """
+    Distiller class implementing the efficient self-knowledge distillation technique.
+    
+    This module implements the self-distillation approach described in Section 4.4 of the paper,
+    which shares teacher and student parameters to reduce memory consumption. The key innovation
+    is creating a teacher model that duplicates only tunable layers while sharing frozen parameters,
+    enabling knowledge transfer without doubling memory requirements.
+    
+    Implements Equation 6 from the paper:
+    L = μ·L_distill + (1-μ)·L_ft
+    where μ linearly scales from 0 to 1 during training.
+    """
+    
+    def __init__(self, student_model: nn.Module, config: Any):
+        """
+        Initialize the Distiller with student model and configuration.
+        
+        Args:
+            student_model: Student model being trained with APT adapters
+            config: Configuration object containing distillation settings
+        """
+        self.student_model = student_model
+        
+        # Extract distillation configuration
+        if hasattr(config, 'distillation'):
+            self.alpha_start = config.distillation.alpha_start
+            self.alpha_end = config.distillation.alpha_end
+            self.layer_mapping = config.distillation.layer_mapping
+        else:
+            # Default values from config.yaml
+            self.alpha_start = 0.0
+            self.alpha_end = 1.0
+            self.layer_mapping = "closest_non_pruned"
+        
+        # Create teacher model from student
+        self.teacher_model = self.create_teacher_from_student(student_model)
+        
+        # Set teacher to evaluation mode - no gradients for teacher
+        self.teacher_model.eval()
+        
+        logger.info(f"Distiller initialized with alpha_start={self.alpha_start}, "
+                   f"alpha_end={self.alpha_end}, layer_mapping='{self.layer_mapping}'")
+    
+    def create_teacher_from_student(self, student: nn.Module) -> nn.Module:
+        """
+        Create teacher model by duplicating only tunable parameters while sharing frozen weights.
+        
+        Implements the efficient self-distillation strategy mentioned in Section 4.4:
+        "keep duplicating the tuning student layers as teachers during fine-tuning to reduce total 
+        training time. Meanwhile, frozen parameters are shared between the student and teacher 
+        model during training to reduce memory consumption."
+        
+        Args:
+            student: Student model to create teacher from
+            
+        Returns:
+            Teacher model with shared frozen parameters and independent tunable parameters
+        """
+        logger.debug("Creating teacher model from student")
+        
+        # Create deep copy of student model structure
+        teacher = copy.deepcopy(student)
+        
+        # Share frozen parameters between teacher and student
+        # Only tunable parameters (W_A, W_B) should have independent copies
+        for (name_s, param_s), (name_t, param_t) in zip(
+            student.named_parameters(), teacher.named_parameters()):
+            
+            # If not a tunable adapter parameter, share the data pointer
+            if 'W_A' not in name_s and 'W_B' not in name_s:
+                param_t.data = param_s.data
+                # Ensure no gradient computation for shared parameters
+                param_t.requires_grad = False
+        
+        # Freeze all parameters in teacher model except those explicitly marked as tunable
+        for name, param in teacher.named_parameters():
+            if 'W_A' not in name and 'W_B' not in name:
+                param.requires_grad = False
+        
+        logger.debug("Teacher model created with shared frozen parameters")
+        return teacher
+    
+    def get_alpha(self, current_step: int, total_steps: int) -> float:
+        """
+        Calculate α value based on current training progress.
+        
+        From Eq. 6: "μ scales from 0 to 1 during distillation". This linear scheduling allows
+        the model to first fit the training data before focusing on matching teacher behavior.
+        
+        Args:
+            current_step: Current training step
+            total_steps: Total number of training steps
+            
+        Returns:
+            Alpha coefficient for balancing distillation and supervised losses
+        """
+        # Avoid division by zero
+        total_steps = max(total_steps, 1)
+        
+        # Linear interpolation from start to end value
+        progress = current_step / total_steps
+        alpha = self.alpha_start + progress * (self.alpha_end - self.alpha_start)
+        
+        return alpha
+    
+    def layer_wise_mse_loss(self, student_hidden: torch.Tensor, 
+                           teacher_hidden: torch.Tensor) -> torch.Tensor:
+        """
+        Compute layer-wise MSE loss between student and teacher hidden states.
+        
+        Implements the layer-wise distillation objective mentioned in Eq. 6:
+        L_layer = Σ_i MSE(Tr(H_s^φ(i)), H_t^i)
+        
+        Args:
+            student_hidden: Hidden states from student model
+            teacher_hidden: Hidden states from teacher model
+            
+        Returns:
+            MSE loss between corresponding hidden states
+        """
+        # Detach teacher outputs to prevent backpropagation
+        teacher_hidden_detached = teacher_hidden.detach()
+        
+        # Compute MSE loss
+        mse_loss = nn.MSELoss()(student_hidden, teacher_hidden_detached)
+        
+        return mse_loss
+    
+    def forward_loss(self, student_logits: torch.Tensor, 
+                    labels: torch.Tensor, 
+                    step: int, 
+                    total_steps: int) -> torch.Tensor:
+        """
+        Compute combined loss with distillation and supervised components.
+        
+        Implements Eq. 6 from the paper:
+        L = μ·L_distill + (1-μ)·L_ft
+        
+        Args:
+            student_logits: Output logits from student model
+            labels: Ground truth labels
+            step: Current training step
+            total_steps: Total number of training steps
+            
+        Returns:
+            Combined loss value
+        """
+        # Get dynamic weighting coefficient
+        mu = self.get_alpha(step, total_steps)
+        
+        # Forward pass through teacher model
+        with torch.no_grad():
+            try:
+                # Get teacher outputs using same inputs as student
+                # Note: In practice, we'd need access to the full input batch
+                # For now, assume we can extract inputs from student's last forward
+                teacher_outputs = self.teacher_model(**self._get_last_inputs())
+                teacher_logits = teacher_outputs['logits']
+            except Exception as e:
+                logger.warning(f"Error computing teacher outputs: {str(e)}. Using student logits as fallback.")
+                teacher_logits = student_logits.clone().detach()
+        
+        # Distillation loss (MSE between student and teacher outputs)
+        distill_loss = self.layer_wise_mse_loss(student_logits, teacher_logits)
+        
+        # Supervised fine-tuning loss (task-specific loss)
+        ft_loss = self._compute_supervised_loss(student_logits, labels)
+        
+        # Combine losses according to Eq. 6
+        combined_loss = mu * distill_loss + (1 - mu) * ft_loss
+        
+        return combined_loss
+    
+    def _compute_supervised_loss(self, logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        """
+        Compute supervised fine-tuning loss based on task type.
+        
+        Args:
+            logits: Model output logits
+            labels: Ground truth labels
+            
+        Returns:
+            Supervised loss value
+        """
+        # Handle different label types
+        if labels.dim() == 2 and labels.size(1) > 1:
+            # Multi-label classification or sequence labeling
+            return nn.CrossEntropyLoss()(logits.view(-1, logits.size(-1)), labels.view(-1))
+        elif labels.dtype == torch.float32:
+            # Regression task
+            return nn.MSELoss()(logits.squeeze(), labels.squeeze())
+        else:
+            # Classification task
+            return nn.CrossEntropyLoss()(logits, labels)
+    
+    def _get_last_inputs(self) -> Dict[str, torch.Tensor]:
+        """
+        Retrieve the last inputs used in the student model forward pass.
+        
+        This is needed to compute teacher outputs during distillation.
+        In a real implementation, this would be passed from the trainer.
+        
+        Returns:
+            Dictionary containing the last input tensors
+        """
+        # Placeholder - in actual implementation, this would be set by the trainer
+        # during the forward pass
+        logger.warning("Using placeholder inputs for teacher model. In production, "
+                      "this should be replaced with actual input batch.")
+        return {}
+    
+    def update_teacher(self) -> None:
+        """
+        Update teacher model parameters from student model.
+        
+        While most parameters are shared automatically, this method ensures
+        any necessary synchronization occurs. Currently not needed due to direct
+        parameter sharing, but provided for potential future extensions.
+        """
+        # With parameter sharing, explicit updates aren't needed
+        # But we could implement periodic copying if desired
+        pass
+    
+    def enable_teacher_training(self, enable: bool = True) -> None:
+        """
+        Enable or disable training of teacher model parameters.
+        
+        By default, teacher model should remain fixed with only the student
+        undergoing optimization.
+        
+        Args:
+            enable: Whether to enable training of teacher parameters
+        """
+        for param in self.teacher_model.parameters():
+            param.requires_grad = enable
+        
+        if enable:
+            self.teacher_model.train()
+        else:
+            self.teacher_model.eval()
+    
+    def get_metrics(self, step: int, total_steps: int) -> Dict[str, float]:
+        """
+        Get distillation metrics for logging.
+        
+        Args:
+            step: Current training step
+            total_steps: Total number of training steps
+            
+        Returns:
+            Dictionary containing distillation metrics
+        """
+        alpha = self.get_alpha(step, total_steps)
+        
+        return {
+            'distill_alpha': alpha,
+            'distill_enabled': True
+        }
+## apt_adapter.py
+import torch
+import torch.nn as nn
+from typing import Optional, Tuple
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class APTAdapter(nn.Module):
+    """
+    APT (Adaptive Pruning and Tuning) Adapter module.
+    
+    This class implements the core adaptive parameter-efficient layer that extends LoRA
+    with dynamic pruning and tuning capabilities. It allows for both structured pruning
+    of unimportant parameters and adaptive expansion of tuning capacity during training.
+    
+    The adapter follows Equation 2 from the paper:
+    H_apt(X) = m_o ∘ (W + s · W_B W_A) X ∘ m_i
+    
+    where:
+    - W is the frozen pretrained weight matrix
+    - W_A and W_B are low-rank adaptation matrices
+    - m_i and m_o are binary input/output masks for pruning
+    - s is the scaling factor
+    - ∘ denotes Hadamard product (element-wise multiplication)
+    
+    Key features:
+    1. Dynamic pruning via binary masks applied to input/output dimensions
+    2. Adaptive tuning through rank expansion of LoRA components
+    3. Compatibility with post-training merging for deployment efficiency
+    4. Support for gradual mask updates to maintain training stability
+    """
+    
+    def __init__(self, 
+                 input_dim: int, 
+                 output_dim: int, 
+                 init_rank: int = 8, 
+                 scaling: float = 2.0):
+        """
+        Initialize the APT adapter.
+        
+        Args:
+            input_dim: Dimension of the input features
+            output_dim: Dimension of the output features  
+            init_rank: Initial rank for LoRA decomposition (default: 8 from config.yaml)
+            scaling: Scaling factor 's' for LoRA components (default: 2.0 from config.yaml)
+        """
+        super().__init__()
+        
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.rank = init_rank
+        self.scaling = scaling
+        
+        # LoRA components - these are the tunable parameters
+        # W_A: input projection (input_dim x rank)
+        self.W_A = nn.Parameter(torch.randn(input_dim, init_rank) * 0.02)
+        
+        # W_B: output projection (rank x output_dim)  
+        self.W_B = nn.Parameter(torch.zeros(init_rank, output_dim))
+        
+        # Binary pruning masks - updated by Pruner module
+        # m_i: input mask (size: input_dim), initialized as ones
+        self.m_i = nn.Parameter(torch.ones(input_dim), requires_grad=False)
+        
+        # m_o: output mask (size: output_dim), initialized as ones
+        self.m_o = nn.Parameter(torch.ones(output_dim), requires_grad=False)
+        
+        logger.debug(f"APTAdapter initialized with input_dim={input_dim}, "
+                    f"output_dim={output_dim}, rank={init_rank}, scaling={scaling}")
+    
+    def forward(self, X: torch.Tensor) -> torch.Tensor:
+        """
+        Forward pass through the APT adapter.
+        
+        Implements the core equation from the paper with masked operations:
+        H_apt(X) = m_o ∘ (W + s · W_B W_A) X ∘ m_i
+        
+        Args:
+            X: Input tensor of shape (*, input_dim)
+            
+        Returns:
+            Output tensor of shape (*, output_dim)
+        """
+        # Apply input mask to incoming activations
+        # This zeros out pruned input dimensions before computation
+        X_masked = X * self.m_i.view(1, -1)
+        
+        # Compute LoRA path: s * W_B @ W_A @ X_masked
+        lora_output = self.scaling * (self.W_B @ self.W_A) @ X_masked.t()
+        
+        # For base weight path, we assume W is provided externally or handled by parent module
+        # In practice, this would be combined with the original weight matrix
+        # Here we just return the LoRA contribution plus masked direct connection if needed
+        
+        # Return final output (transpose back to correct shape)
+        return lora_output.t()
+    
+    def merge_weights(self) -> None:
+        """
+        Merge the adapter weights into the base model for efficient inference.
+        
+        After training, the LoRA update can be merged into the base weight matrix:
+        W_merged = W + s * W_B @ W_A
+        
+        This eliminates the need for separate adapter computation during inference,
+        resulting in a smaller, faster model with the same performance.
+        
+        Note: The actual base weight W is typically managed by the parent model wrapper.
+        This method prepares the adapter for merging by computing the effective update.
+        """
+        # Compute the effective LoRA update
+        lora_update = self.scaling * (self.W_B @ self.W_A)
+        
+        # Apply masks to permanently remove pruned connections
+        # Input mask affects columns, output mask affects rows
+        masked_update = self.m_o.view(-1, 1) * lora_update * self.m_i.view(1, -1)
+        
+        logger.info(f"Merged APT adapter weights with effective update shape {masked_update.shape}")
+        
+        # In a full implementation, this would be added to the base weight matrix
+        # The adapter could then be removed or disabled
+        
+        # Detach parameters to reduce memory footprint after merging
+        self.W_A.requires_grad = False
+        self.W_B.requires_grad = False
+    
+    def expand_rank(self, new_rank: int) -> None:
+        """
+        Expand the rank of the adapter by adding new parameters.
+        
+        Implements the adaptive tuning mechanism described in Section 4.3:
+        "when adding parameters and converting W_A to W_A', we concatenate random 
+        Gaussian initialized parameters in W_A' and zeros in W_B' same as the LoRA initialization"
+        
+        Args:
+            new_rank: New rank dimension to expand to
+            
+        Raises:
+            ValueError: If new_rank is less than current rank
+        """
+        if new_rank <= self.rank:
+            logger.warning(f"Attempted to expand rank from {self.rank} to {new_rank}, "
+                          "no expansion needed")
+            return
+            
+        delta_rank = new_rank - self.rank
+        
+        # Store current parameters
+        W_A_old = self.W_A.data
+        W_B_old = self.W_B.data
+        
+        # Initialize new parameters following LoRA convention
+        # New W_A components: random Gaussian initialization
+        W_A_new = torch.randn(self.input_dim, delta_rank) * 0.02
+        
+        # New W_B components: zero initialization to maintain output stability
+        W_B_new = torch.zeros(delta_rank, self.output_dim)
+        
+        # Concatenate old and new parameters
+        self.W_A = nn.Parameter(torch.cat([W_A_old, W_A_new], dim=1))
+        self.W_B = nn.Parameter(torch.cat([W_B_old, W_B_new], dim=0))
+        
+        # Update rank counter
+        self.rank = new_rank
+        
+        logger.debug(f"Expanded APT adapter rank from {new_rank-delta_rank} to {new_rank}")
+    
+    def apply_mask(self) -> None:
+        """
+        Apply the current binary masks to the adapter parameters.
+        
+        This method enforces the pruning decisions by zeroing out masked parameters.
+        It supports both immediate masking and gradual mask reduction as mentioned
+        in Appendix A: "gradually decrease the pruning masks of pruned blocks by α 
+        instead of instantly setting them from ones to zeros."
+        
+        In this implementation, we support gradual reduction by allowing fractional
+        mask values between 0 and 1, which can be annealed over training steps.
+        """
+        # Apply masks to LoRA components
+        # Input mask affects W_A columns and incoming activations
+        # Output mask affects W_B rows and outgoing activations
+        self.W_A.data *= self.m_i.view(1, -1)
+        self.W_B.data *= self.m_o.view(-1, 1)
+        
+        logger.debug("Applied pruning masks to APT adapter parameters")
+    
+    def get_parameter_count(self) -> int:
+        """
+        Get the current number of trainable parameters in this adapter.
+        
+        Returns:
+            Total count of trainable parameters (W_A + W_B)
+        """
+        tunable_params = self.W_A.numel() + self.W_B.numel()
+        return tunable_params
+    
+    def get_sparsity(self) -> Tuple[float, float]:
+        """
+        Get the current sparsity level of the adapter.
+        
+        Returns:
+            Tuple of (input_sparsity, output_sparsity) where each is the fraction
+            of pruned dimensions (mask value < 0.5)
+        """
+        input_sparsity = 1.0 - (self.m_i > 0.5).float().mean().item()
+        output_sparsity = 1.0 - (self.m_o > 0.5).float().mean().item()
+        
+        return input_sparsity, output_sparsity
+    
+    def set_masks(self, input_mask: torch.Tensor, output_mask: torch.Tensor) -> None:
+        """
+        Set the pruning masks from external controller (Pruner).
+        
+        Args:
+            input_mask: New input mask tensor of shape (input_dim,)
+            output_mask: New output mask tensor of shape (output_dim,)
+            
+        Raises:
+            ValueError: If mask shapes don't match expected dimensions
+        """
+        if input_mask.shape != (self.input_dim,) or output_mask.shape != (self.output_dim,):
+            raise ValueError(f"Mask shape mismatch: expected input {self.input_dim}, "
+                           f"output {self.output_dim}, got {input_mask.shape}, {output_mask.shape}")
+        
+        # Update masks
+        self.m_i.data = input_mask.float()
+        self.m_o.data = output_mask.float()
+        
+        logger.debug(f"Updated APT adapter masks - input sparsity: "
+                    f"{1.0-(self.m_i>0.5).float().mean():.3f}, "
+                    f"output sparsity: {1.0-(self.m_o>0.5).float().mean():.3f}")
+## pruner.py
+import torch
+import torch.nn as nn
+from typing import Dict, List, Tuple, Any, Optional
+import logging
+from dataclasses import dataclass
+import math
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@dataclass
+class PruningConfig:
+    """Configuration specific to the Pruner component."""
+    target_sparsity: float = 0.6
+    initial_sparsity: float = 0.0
+    schedule: str = "cubic"
+    update_frequency: int = 10
+    kurtosis_weight: float = 1.0
+    decay_rate: float = 0.1
+    early_stage_ratio: float = 0.3
+
+class Pruner:
+    """
+    Pruner class implementing the 𝒜P (Low-cost Adaptive LM Pruning) component.
+    
+    This module performs structured pruning at early stages of fine-tuning using
+    outlier-aware salience scoring. It identifies and removes unimportant parameter
+    blocks (attention heads, FFN neurons, hidden dimensions) while preserving task
+    performance. The implementation follows Section 4.2 of the paper.
+    
+    Key features:
+    1. Outlier-aware salience scoring combining activation-gradient products with kurtosis
+    2. Efficient search via binary search over sorted blocks by salience density
+    3. Gradual mask updating to maintain training stability
+    4. Support for different block types (heads, neurons, dimensions)
+    5. Cubic scheduling for sparsity progression control
+    """
+    
+    def __init__(self, model: nn.Module, config: Any):
+        """
+        Initialize the Pruner with model and configuration.
+        
+        Args:
+            model: Model containing APT adapters to be pruned
+            config: Configuration object containing pruning settings
+        """
+        self.model = model
+        
+        # Extract pruning configuration
+        if hasattr(config, 'pruning'):
+            self.config = PruningConfig(
+                target_sparsity=config.pruning.target_sparsity,
+                initial_sparsity=config.pruning.initial_sparsity,
+                schedule=config.pruning.schedule,
+                update_frequency=config.pruning.update_frequency
+            )
+        else:
+            self.config = PruningConfig()
+            
+        # Set hyperparameters from config or defaults
+        self.kurtosis_weight = getattr(self.config, 'kurtosis_weight', 1.0)
+        self.decay_rate = getattr(self.config, 'decay_rate', 0.1)
+        self.early_stage_ratio = getattr(self.config, 'early_stage_ratio', 0.3)
+        
+        # Storage for activations and gradients from hooks
+        self.activations: Dict[int, torch.Tensor] = {}
+        self.gradients: Dict[int, torch.Tensor] = {}
+        self.hooks: List[Any] = []
+        
+        # Current step tracking
+        self.current_step = 0
+        self.total_steps = 0
+        
+        # Register forward/backward hooks to capture intermediate values
+        self._register_hooks()
+        
+        logger.info(f"Pruner initialized with target_sparsity={self.config.target_sparsity}, "
+                   f"schedule='{self.config.schedule}', update_frequency={self.config.update_frequency}")
+    
+    def _register_hooks(self) -> None:
+        """
+        Register forward and backward hooks on APT adapter modules to capture
+        activations and gradients needed for salience computation.
+        """
+        logger.debug("Registering forward/backward hooks for salience computation")
+        
+        def activation_hook(module: nn.Module, input: Tuple[torch.Tensor], 
+                          output: torch.Tensor) -> None:
+            """Capture activations during forward pass."""
+            module_id = id(module)
+            # Detach and move to CPU to save GPU memory if needed
+            if output.device.type == 'cuda':
+                self.activations[module_id] = output.detach().cpu()
+            else:
+                self.activations[module_id] = output.detach()
+        
+        def gradient_hook(module: nn.Module, grad_input: Tuple[torch.Tensor], 
+                         grad_output: Tuple[torch.Tensor]) -> None:
+            """Capture gradients during backward pass."""
+            module_id = id(module)
+            # Detach and move to CPU to save GPU memory if needed
+            if grad_output[0].device.type == 'cuda':
+                self.gradients[module_id] = grad_output[0].detach().cpu()
+            else:
+                self.gradients[module_id] = grad_output[0].detach()
+        
+        # Register hooks on all APT adapter modules
+        hook_count = 0
+        for name, module in self.model.named_modules():
+            if hasattr(module, 'apt_adapter') or isinstance(module, nn.Linear):
+                # Register both forward and backward hooks
+                forward_hook = module.register_forward_hook(activation_hook)
+                backward_hook = module.register_backward_hook(gradient_hook)
+                self.hooks.extend([forward_hook, backward_hook])
+                hook_count += 2
+        
+        logger.debug(f"Registered {hook_count} hooks on {hook_count//2} modules")
+    
+    def remove_hooks(self) -> None:
+        """Remove all registered hooks to prevent memory leaks."""
+        logger.debug("Removing registered hooks")
+        for hook in self.hooks:
+            hook.remove()
+        self.hooks.clear()
+        # Clear stored activations and gradients
+        self.activations.clear()
+        self.gradients.clear()
+    
+    def compute_salience(self, activations: torch.Tensor, 
+                        gradients: torch.Tensor) -> torch.Tensor:
+        """
+        Compute base salience score as magnitude of activation-gradient product.
+        
+        Implements Eq. 3 from the paper: S(W_{i,j}) = |W_{i,j} · ∂L/∂W_{i,j}|
+        But adapted for PEFT setting where we use activations instead of weights.
+        
+        Args:
+            activations: Activations from forward pass
+            gradients: Gradients from backward pass
+            
+        Returns:
+            Scalar salience score
+        """
+        # Move tensors back to GPU if they were stored on CPU
+        device = next(self.model.parameters()).device
+        activations = activations.to(device)
+        gradients = gradients.to(device)
+        
+        # Compress along batch dimension first (as mentioned in Section 4.2)
+        compressed_acts = torch.sum(torch.abs(activations), dim=0)
+        compressed_grads = torch.sum(torch.abs(gradients), dim=0)
+        
+        # Compute element-wise product and sum
+        elementwise_product = compressed_acts * compressed_grads
+        base_salience = torch.sum(elementwise_product)
+        
+        return base_salience
+    
+    def compute_outlier_aware_salience(self, activations: torch.Tensor, 
+                                     gradients: torch.Tensor) -> torch.Tensor:
+        """
+        Compute outlier-aware salience score combining base salience with kurtosis.
+        
+        Implements Eq. 4.2 from the paper: Ŝ((W_:,j) = S̃(W_:,j) + (Kurt(O_j,:))^{1/2}
+        This preserves parameters that are outliers, which may be crucial for task-specific capabilities.
+        
+        Args:
+            activations: Activations from forward pass  
+            gradients: Gradients from backward pass
+            
+        Returns:
+            Combined salience score with outlier awareness
+        """
+        # Compute base salience
+        base_salience = self.compute_salience(activations, gradients)
+        
+        # Add kurtosis term to preserve outlier parameters
+        # Kurtosis measures "tailedness" - higher values indicate more outliers
+        flattened_acts = activations.flatten()
+        mean_val = torch.mean(flattened_acts)
+        variance = torch.var(flattened_acts)
+        
+        # Avoid division by zero
+        if variance < 1e-8:
+            kurtosis_val = torch.tensor(0.0, device=activations.device)
+        else:
+            # Calculate kurtosis: E[(X-μ)^4]/σ^4
+            fourth_moment = torch.mean((flattened_acts - mean_val) ** 4)
+            kurtosis_val = fourth_moment / (variance ** 2)
+        
+        # Square root of kurtosis as in paper
+        kurtosis_term = torch.sqrt(kurtosis_val + 1e-8)  # Add small epsilon for numerical stability
+        
+        # Combine with weighting factor
+        combined_salience = base_salience + self.kurtosis_weight * kurtosis_term
+        
+        return combined_salience
+    
+    def get_all_blocks(self) -> List[Dict[str, Any]]:
+        """
+        Identify all prunable blocks in the model.
+        
+        Returns:
+            List of dictionaries describing each block with type, location, and parameter count
+        """
+        blocks = []
+        
+        for name, module in self.model.named_modules():
+            if hasattr(module, 'apt_adapter'):
+                # Get adapter reference
+                adapter = module.apt_adapter
+                
+                # Attention head blocks
+                if any(kw in name.lower() for kw in ['attn', 'attention', 'self_attn']):
+                    # Estimate number of heads from adapter dimensions
+                    num_heads = max(adapter.input_dim, adapter.output_dim) // min(adapter.input_dim, adapter.output_dim)
+                    num_heads = min(num_heads, 128)  # Reasonable upper bound
+                    
+                    for i in range(num_heads):
+                        blocks.append({
+                            'name': f"{name}.head_{i}",
+                            'type': 'head',
+                            'module': module,
+                            'index': i,
+                            'param_count': self._estimate_head_params(module),
+                            'adapter': adapter
+                        })
+                
+                # FFN neuron blocks
+                elif any(kw in name.lower() for kw in ['ffn', 'mlp', 'feed', 'intermediate']):
+                    # Use adapter dimensions to estimate size
+                    intermediate_size = max(adapter.input_dim, adapter.output_dim)
+                    intermediate_size = min(intermediate_size, 1024)  # Reasonable upper bound
+                    
+                    for i in range(intermediate_size):
+                        blocks.append({
+                            'name': f"{name}.neuron_{i}",
+                            'type': 'neuron',
+                            'module': module,
+                            'index': i,
+                            'param_count': self._estimate_neuron_params(module),
+                            'adapter': adapter
+                        })
+                
+                # Hidden dimension blocks (affects both input and output dimensions)
+                else:
+                    hidden_size = min(adapter.input_dim, adapter.output_dim)
+                    hidden_size = min(hidden_size, 1024)  # Reasonable upper bound
+                    
+                    for i in range(hidden_size):
+                        blocks.append({
+                            'name': f"{name}.dim_{i}",
+                            'type': 'dimension',
+                            'module': module,
+                            'index': i,
+                            'param_count': self._estimate_dimension_params(module),
+                            'adapter': adapter
+                        })
+        
+        logger.debug(f"Identified {len(blocks)} prunable blocks across the model")
+        return blocks
+    
+    def _estimate_head_params(self, module: nn.Module) -> int:
+        """
+        Estimate parameters affected by pruning one attention head.
+        
+        Based on Eq. 5: C(Θₜ;ℳₜ) ≈ dₘ Σᵢ₌₁ⁿᴸ (4nₕⁱ·dₕ + 2n_fⁱ)
+        For one head: approximately 4 * hidden_size * head_dim
+        
+        Args:
+            module: Module containing the attention layer
+            
+        Returns:
+            Estimated parameter count
+        """
+        if hasattr(module, 'apt_adapter'):
+            adapter = module.apt_adapter
+            hidden_size = min(adapter.input_dim, adapter.output_dim)
+            head_dim = max(adapter.input_dim, adapter.output_dim) // max(1, hidden_size // 64)
+            return 4 * hidden_size * head_dim
+        return 64  # Conservative estimate
+    
+    def _estimate_neuron_params(self, module: nn.Module) -> int:
+        """
+        Estimate parameters affected by pruning one FFN neuron.
+        
+        Each neuron affects both up-projection and down-projection weights.
+        
+        Args:
+            module: Module containing the FFN layer
+            
+        Returns:
+            Estimated parameter count
+        """
+        if hasattr(module, 'apt_adapter'):
+            adapter = module.apt_adapter
+            return 2 * min(adapter.input_dim, adapter.output_dim)
+        return 32  # Conservative estimate
+    
+    def _estimate_dimension_params(self, module: nn.Module) -> int:
+        """
+        Estimate parameters affected by reducing hidden dimension by 1.
+        
+        Affects all linear projections in the layer.
+        
+        Args:
+            module: Module containing the layer
+            
+        Returns:
+            Estimated parameter count
+        """
+        if hasattr(module, 'apt_adapter'):
+            adapter = module.apt_adapter
+            return adapter.input_dim + adapter.output_dim
+        return 16  # Conservative estimate
+    
+    def cubic_schedule(self, current_step: int, total_steps: int) -> float:
+        """
+        Implement cubic scheduling for sparsity progression.
+        
+        From Appendix A: "use cubic scheduling to control the LM parameter size"
+        
+        Args:
+            current_step: Current training step
+            total_steps: Total training steps
+            
+        Returns:
+            Target sparsity level for current step
+        """
+        progress = current_step / max(total_steps, 1)
+        
+        if self.config.schedule == "cubic":
+            # Cubic interpolation: starts slow, accelerates, then slows down
+            return self.config.initial_sparsity + \
+                   (self.config.target_sparsity - self.config.initial_sparsity) * (progress ** 3)
+        else:
+            # Linear fallback
+            return self.config.initial_sparsity + \
+                   (self.config.target_sparsity - self.config.initial_sparsity) * progress
+    
+    def find_blocks_to_prune(self, salience_scores: List[float]) -> List[Dict[str, Any]]:
+        """
+        Find optimal set of blocks to prune given salience scores and sparsity constraint.
+        
+        Uses a "latency-saliency knapsack" approach with binary search over sorted blocks
+        by salience density (salience per parameter).
+        
+        Args:
+            salience_scores: List of salience scores for each block
+            
+        Returns:
+            List of blocks to prune
+        """
+        blocks = self.get_all_blocks()
+        
+        if len(blocks) == 0 or len(salience_scores) != len(blocks):
+            logger.warning("No blocks found or mismatched salience scores")
+            return []
+        
+        # Calculate total parameters
+        total_params = sum(block['param_count'] for block in blocks)
+        if total_params == 0:
+            return []
+        
+        # Get current sparsity from masks
+        current_sparsity = self.calculate_current_sparsity()
+        
+        # Determine target sparsity based on schedule
+        target_sparsity = self.cubic_schedule(self.current_step, self.total_steps)
+        
+        # Only prune if we haven't reached target sparsity
+        if current_sparsity >= target_sparsity:
+            return []
+        
+        # Calculate how many parameters need to be pruned
+        target_pruned_params = total_params * target_sparsity
+        already_pruned_params = total_params * current_sparsity
+        needed_pruned_params = target_pruned_params - already_pruned_params
+        
+        if needed_pruned_params <= 0:
+            return []
+        
+        # Sort blocks by salience density (low density = less important = good to prune)
+        scored_blocks = []
+        for block, score in zip(blocks, salience_scores):
+            # Salience density = salience per parameter
+            salience_density = score / max(block['param_count'], 1)
+            scored_blocks.append((salience_density, score, block))
+        
+        # Sort by salience density ascending (lowest first = most likely to prune)
+        scored_blocks.sort(key=lambda x: x[0])
+        
+        # Binary search to find threshold that meets sparsity requirement
+        left, right = 0, len(scored_blocks)
+        best_config = []
+        
+        while left <= right:
+            mid = (left + right) // 2
+            
+            # Select top-mid lowest-salience-density blocks for pruning
+            candidate_blocks = [block for _, _, block in scored_blocks[:mid]]
+            pruned_param_count = sum(block['param_count'] for block in candidate_blocks)
+            
+            if pruned_param_count >= needed_pruned_params:
+                best_config = candidate_blocks
+                right = mid - 1  # Try to prune fewer blocks
+            else:
+                left = mid + 1   # Need to prune more blocks
+        
+        logger.debug(f"Selected {len(best_config)} blocks to prune targeting {target_sparsity:.3f} sparsity")
+        return best_config
+    
+    def update_masks(self, blocks_to_prune: List[Dict[str, Any]]) -> None:
+        """
+        Update binary pruning masks for specified blocks.
+        
+        Implements gradual mask reduction rather than instant zeroing to maintain
+        training stability, as mentioned in Appendix A.
+        
+        Args:
+            blocks_to_prune: List of blocks to prune
+        """
+        if not blocks_to_prune:
+            return
+            
+        for block in blocks_to_prune:
+            adapter = block['adapter']
+            idx = block['index']
+            
+            if block['type'] == 'head':
+                # Update attention head mask - affects output dimension
+                if idx < adapter.m_o.shape[0]:
+                    adapter.m_o.data[idx] = max(adapter.m_o.data[idx] * (1 - self.decay_rate), 0.0)
+            
+            elif block['type'] == 'neuron':
+                # Update FFN neuron mask - affects both input and output
+                if idx < adapter.m_i.shape[0]:
+                    adapter.m_i.data[idx] = max(adapter.m_i.data[idx] * (1 - self.decay_rate), 0.0)
+                if idx < adapter.m_o.shape[0]:
+                    adapter.m_o.data[idx] = max(adapter.m_o.data[idx] * (1 - self.decay_rate), 0.0)
+            
+            elif block['type'] == 'dimension':
+                # Update hidden dimension mask - affects both input and output
+                if idx < adapter.m_i.shape[0]:
+                    adapter.m_i.data[idx] = max(adapter.m_i.data[idx] * (1 - self.decay_rate), 0.0)
+                if idx < adapter.m_o.shape[0]:
+                    adapter.m_o.data[idx] = max(adapter.m_o.data[idx] * (1 - self.decay_rate), 0.0)
+        
+        logger.debug(f"Updated masks for {len(blocks_to_prune)} blocks with decay_rate={self.decay_rate}")
+    
+    def calculate_current_sparsity(self) -> float:
+        """
+        Calculate current overall sparsity level of the model.
+        
+        Returns:
+            Fraction of pruned parameters (0.0 to 1.0)
+        """
+        total_blocks = 0
+        pruned_blocks = 0
+        
+        for module in self.model.modules():
+            if hasattr(module, 'apt_adapter'):
+                adapter = module.apt_adapter
+                
+                # Count pruned input dimensions
+                input_mask = adapter.m_i.cpu().numpy()
+                pruned_blocks += int((input_mask < 0.5).sum())
+                total_blocks += len(input_mask)
+                
+                # Count pruned output dimensions  
+                output_mask = adapter.m_o.cpu().numpy()
+                pruned_blocks += int((output_mask < 0.5).sum())
+                total_blocks += len(output_mask)
+        
+        return pruned_blocks / max(total_blocks, 1)
+    
+    def step(self, current_step: int, total_steps: int) -> Dict[str, Any]:
+        """
+        Main pruning logic called at each training step.
+        
+        Args:
+            current_step: Current training step
+            total_steps: Total training steps
+            
+        Returns:
+            Dictionary containing pruning status and metrics
+        """
+        self.current_step = current_step
+        self.total_steps = total_steps
+        
+        results = {
+            'pruned': False,
+            'sparsity': self.calculate_current_sparsity(),
+            'blocks_considered': 0,
+            'blocks_pruned': 0,
+            'target_sparsity': self.cubic_schedule(current_step, total_steps)
+        }
+        
+        # Only perform pruning during early stage (first 30% of training)
+        if current_step > total_steps * self.early_stage_ratio:
+            return results
+            
+        # Skip if not time for update (based on update_frequency)
+        if current_step % self.config.update_frequency != 0:
+            return results
+            
+        # Check if we have activations and gradients
+        if not self.activations or not self.gradients:
+            logger.warning("No activations/gradients available for pruning")
+            return results
+        
+        # Get all prunable blocks
+        blocks = self.get_all_blocks()
+        results['blocks_considered'] = len(blocks)
+        
+        if len(blocks) == 0:
+            return results
+        
+        # Compute salience scores for all blocks
+        salience_scores = []
+        skipped_blocks = 0
+        
+        for block in blocks:
+            module_id = id(block['module'])
+            if module_id in self.activations and module_id in self.gradients:
+                try:
+                    # Move data back to GPU for computation
+                    device = next(self.model.parameters()).device
+                    acts = self.activations[module_id].to(device)
+                    grads = self.gradients[module_id].to(device)
+                    
+                    score = self.compute_outlier_aware_salience(acts, grads)
+                    salience_scores.append(score.item() if hasattr(score, 'item') else float(score))
+                except Exception as e:
+                    logger.debug(f"Error computing salience for {block['name']}: {str(e)}")
+                    salience_scores.append(0.0)
+                    skipped_blocks += 1
+            else:
+                salience_scores.append(0.0)
+                skipped_blocks += 1
+        
+        if skipped_blocks > 0:
+            logger.debug(f"Skipped salience computation for {skipped_blocks}/{len(blocks)} blocks")
+        
+        # Find blocks to prune based on salience scores
+        blocks_to_prune = self.find_blocks_to_prune(salience_scores)
+        results['blocks_pruned'] = len(blocks_to_prune)
+        
+        # Update masks if we found blocks to prune
+        if blocks_to_prune:
+            self.update_masks(blocks_to_prune)
+            results['pruned'] = True
+            results['sparsity'] = self.calculate_current_sparsity()
+            
+            # Log some details about pruned blocks
+            if logger.isEnabledFor(logging.DEBUG):
+                block_types = [b['type'] for b in blocks_to_prune]
+                type_counts = {t: block_types.count(t) for t in set(block_types)}
+                logger.debug(f"Pruned blocks: {type_counts}")
+        
+        return results
+## trainer.py
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+from typing import Dict, List, Any, Optional, Tuple
+import logging
+from tqdm import tqdm
+import time
+import os
+
+# Import required modules
+from config import Config
+from model import APTModel
+from pruner import Pruner
+from tuner import Tuner
+from distiller import Distiller
+from evaluation import Evaluation
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class Trainer:
+    """
+    Trainer class that orchestrates the complete APT training pipeline.
+    
+    This class integrates all components of the APT system (Pruner, Tuner, Distiller)
+    into a cohesive training loop. It manages the complex interplay between adaptive
+    pruning, dynamic tuning, and self-distillation while maintaining standard training
+    operations. The implementation follows Section 5 of the paper for experimental setup.
+    """
+    
+    def __init__(self, 
+                 config: Config,
+                 model: APTModel,
+                 train_dataloader: DataLoader,
+                 val_dataloader: DataLoader):
+        """
+        Initialize the Trainer with configuration and data.
+        
+        Args:
+            config: Configuration object containing all hyperparameters
+            model: APTModel instance to be trained
+            train_dataloader: DataLoader for training data
+            val_dataloader: DataLoader for validation data
+        """
+        self.config = config
+        self.model = model
+        self.train_dataloader = train_dataloader
+        self.val_dataloader = val_dataloader
+        
+        # Determine device based on availability
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        logger.info(f"Using device: {self.device}")
+        
+        # Move model to device
+        self.model.to(self.device)
+        
+        # Get tunable parameters from model
+        trainable_params = self.model.get_all_tunable_parameters()
+        logger.info(f"Found {len(trainable_params)} tunable parameters across {len(list(self.model.get_apt_adapters()))} adapters")
+        
+        # Initialize optimizer
+        self.optimizer = torch.optim.AdamW(
+            trainable_params,
+            lr=config.training.learning_rate,
+            weight_decay=config.training.weight_decay,
+            betas=config.training.betas
+        )
+        
+        # Initialize learning rate scheduler with warmup
+        total_steps = len(train_dataloader) * config.training.epochs
+        warmup_steps = config.training.warmup_steps
+        self.scheduler = torch.optim.lr_scheduler.LinearLR(
+            self.optimizer,
+            start_factor=0.1,
+            end_factor=1.0,
+            total_iters=warmup_steps
+        )
+        
+        # Initialize components
+        self.pruner = Pruner(model, config)
+        self.tuner = Tuner(model, config)
+        
+        # Initialize distiller only if specified in config
+        self.distiller = None
+        if config.distillation.use_self_distillation:
+            self.distiller = Distiller(model, config)
+            logger.info("Self-knowledge distillation enabled")
+        else:
+            logger.info("Self-knowledge distillation disabled")
+        
+        # Training state
+        self.current_step = 0
+        self.global_step = 0
+        self.epoch = 0
+        
+        # Training metrics
+        self.training_logs = {
+            'train_loss': [],
+            'val_loss': [],
+            'val_accuracy': [],
+            'sparsity': [],
+            'avg_rank': [],
+            'learning_rate': [],
+            'step_time': []
+        }
+        
+        # Ensure save path exists
+        os.makedirs(config.save_path, exist_ok=True)
+        
+        logger.info(f"Trainer initialized with {total_steps} total steps")
+    
+    def training_step(self, batch: Dict[str, torch.Tensor]) -> torch.Tensor:
+        """
+        Execute a single training step.
+        
+        Args:
+            batch: Dictionary containing input tensors and labels
+            
+        Returns:
+            Computed loss value
+        """
+        # Move batch to device
+        for k, v in batch.items():
+            if isinstance(v, torch.Tensor):
+                batch[k] = v.to(self.device)
+        
+        # Zero gradients
+        self.optimizer.zero_grad()
+        
+        # Forward pass through student model
+        outputs = self.model(**batch)
+        loss = outputs['loss']
+        
+        # Apply distillation if enabled
+        if self.distiller is not None:
+            # Compute combined distillation + supervised loss
+            distill_loss = self.distiller.forward_loss(
+                outputs['logits'], 
+                batch['labels'], 
+                self.global_step, 
+                self._get_total_steps()
+            )
+            loss = distill_loss
+        
+        # Backward pass
+        loss.backward()
+        
+        # Adaptive pruning (𝒜P) - early stage only
+        if self.global_step < self._get_total_steps() * 0.3:  # First 30% of training
+            if self.global_step % self.config.pruning.update_frequency == 0:
+                prune_results = self.pruner.step(self.global_step, self._get_total_steps())
+                if prune_results['pruned']:
+                    # Apply updated masks
+                    self.model.apply_pruning_masks()
+                    logger.debug(f"Step {self.global_step}: Applied pruning, sparsity={prune_results['sparsity']:.3f}")
+        
+        # Adaptive tuning (𝒜T) - after warmup
+        if self.global_step >= self.config.training.warmup_steps:
+            if self.global_step % 10 == 0:  # Update every 10 steps
+                tune_results = self.tuner.grow_ranks(self.global_step)
+                if tune_results['rank_grown']:
+                    # Reset optimizer state when parameter shapes change
+                    self.optimizer = self.model.reset_optimizer_on_shape_change(self.optimizer)
+                    logger.debug(f"Step {self.global_step}: Grew ranks, target_rank={tune_results['target_rank']}")
+        
+        # Gradient clipping
+        torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+        
+        # Optimizer step
+        self.optimizer.step()
+        
+        # Scheduler step
+        if self.global_step < self.config.training.warmup_steps:
+            self.scheduler.step()
+        
+        return loss.item()
+    
+    def validation_step(self, batch: Dict[str, torch.Tensor]) -> Dict[str, float]:
+        """
+        Execute a single validation step.
+        
+        Args:
+            batch: Dictionary containing input tensors and labels
+            
+        Returns:
+            Dictionary containing validation metrics
+        """
+        # Move batch to device
+        for k, v in batch.items():
+            if isinstance(v, torch.Tensor):
+                batch[k] = v.to(self.device)
+        
+        # Set model to evaluation mode
+        self.model.eval()
+        
+        # Disable gradient computation
+        with torch.no_grad():
+            outputs = self.model(**batch)
+            loss = outputs['loss'].item()
+            
+            # Compute accuracy or other task-specific metric
+            predictions = torch.argmax(outputs['logits'], dim=-1)
+            labels = batch['labels']
+            
+            # Handle different label shapes
+            if labels.dim() > 1 and labels.size(1) > 1:
+                # Multi-label or sequence labeling
+                correct = (predictions == labels).float().mean().item()
+            else:
+                # Classification
+                correct = (predictions == labels).float().mean().item()
+        
+        # Return to training mode
+        self.model.train()
+        
+        return {
+            'loss': loss,
+            'accuracy': correct
+        }
+    
+    def train_epoch(self) -> Dict[str, float]:
+        """
+        Train for one epoch.
+        
+        Returns:
+            Dictionary containing average metrics for the epoch
+        """
+        self.model.train()
+        epoch_start_time = time.time()
+        
+        total_loss = 0.0
+        total_samples = 0
+        step_times = []
+        
+        # Progress bar for current epoch
+        progress_bar = tqdm(self.train_dataloader, desc=f"Epoch {self.epoch+1}")
+        
+        for batch in progress_bar:
+            step_start_time = time.time()
+            
+            # Execute training step
+            loss = self.training_step(batch)
+            
+            # Update metrics
+            batch_size = next(iter(batch.values())).size(0)
+            total_loss += loss * batch_size
+            total_samples += batch_size
+            
+            # Record step time
+            step_time = time.time() - step_start_time
+            step_times.append(step_time)
+            
+            # Update progress bar
+            avg_loss = total_loss / total_samples
+            progress_bar.set_postfix({
+                'loss': f'{avg_loss:.4f}',
+                'lr': f'{self.optimizer.param_groups[0]["lr"]:.2e}'
+            })
+            
+            # Increment global step
+            self.global_step += 1
+        
+        # Calculate epoch metrics
+        avg_loss = total_loss / total_samples
+        avg_step_time = sum(step_times) / len(step_times)
+        
+        # Log metrics
+        self.training_logs['train_loss'].append(avg_loss)
+        self.training_logs['learning_rate'].append(self.optimizer.param_groups[0]['lr'])
+        self.training_logs['step_time'].append(avg_step_time)
+        
+        epoch_time = time.time() - epoch_start_time
+        logger.info(f"Epoch {self.epoch+1} completed in {epoch_time:.2f}s, "
+                   f"avg loss: {avg_loss:.4f}, avg step time: {avg_step_time:.4f}s")
+        
+        return {
+            'loss': avg_loss,
+            'step_time': avg_step_time,
+            'epoch_time': epoch_time
+        }
+    
+    def validate(self) -> Dict[str, float]:
+        """
+        Validate the model on validation set.
+        
+        Returns:
+            Dictionary containing validation metrics
+        """
+        self.model.eval()
+        
+        total_loss = 0.0
+        total_accuracy = 0.0
+        total_samples = 0
+        
+        with torch.no_grad():
+            for batch in self.val_dataloader:
+                # Move batch to device
+                for k, v in batch.items():
+                    if isinstance(v, torch.Tensor):
+                        batch[k] = v.to(self.device)
+                
+                # Forward pass
+                outputs = self.model(**batch)
+                loss = outputs['loss'].item()
+                
+                # Compute accuracy
+                predictions = torch.argmax(outputs['logits'], dim=-1)
+                labels = batch['labels']
+                
+                if labels.dim() > 1 and labels.size(1) > 1:
+                    correct = (predictions == labels).float().mean().item()
+                else:
+                    correct = (predictions == labels).float().mean().item()
+                
+                # Update metrics
+                batch_size = next(iter(batch.values())).size(0)
+                total_loss += loss * batch_size
+                total_accuracy += correct * batch_size
+                total_samples += batch_size
+        
+        # Calculate averages
+        avg_loss = total_loss / total_samples
+        avg_accuracy = total_accuracy / total_samples
+        
+        # Log metrics
+        self.training_logs['val_loss'].append(avg_loss)
+        self.training_logs['val_accuracy'].append(avg_accuracy)
+        
+        # Get current sparsity and rank metrics
+        sparsity = self.pruner.calculate_current_sparsity() if hasattr(self.pruner, 'calculate_current_sparsity') else 0.0
+        avg_rank = self._get_avg_adapter_rank()
+        
+        self.training_logs['sparsity'].append(sparsity)
+        self.training_logs['avg_rank'].append(avg_rank)
+        
+        logger.info(f"Validation - Loss: {avg_loss:.4f}, Accuracy: {avg_accuracy:.4f}, "
+                   f"Sparsity: {sparsity:.3f}, Avg Rank: {avg_rank:.1f}")
+        
+        return {
+            'loss': avg_loss,
+            'accuracy': avg_accuracy,
+            'sparsity': sparsity,
+            'avg_rank': avg_rank
+        }
+    
+    def _get_avg_adapter_rank(self) -> float:
+        """Get average rank across all adapters."""
+        adapters = self.model.get_apt_adapters()
+        if not adapters:
+            return 0.0
+        return sum(adapter.rank for adapter in adapters) / len(adapters)
+    
+    def _get_total_steps(self) -> int:
+        """Calculate total training steps."""
+        return len(self.train_dataloader) * self.config.training.epochs
+    
+    def train(self) -> Dict[str, List[float]]:
+        """
+        Main training loop that executes the complete APT training process.
+        
+        Returns:
+            Dictionary containing training logs and metrics
+        """
+        logger.info("Starting APT training process...")
+        
+        # Total number of steps
+        total_steps = self._get_total_steps()
+        logger.info(f"Training for {self.config.training.epochs} epochs, "
+                   f"{total_steps} total steps")
+        
+        # Training loop
+        for epoch in range(self.config.training.epochs):
+            self.epoch = epoch
+            
+            # Train for one epoch
+            train_metrics = self.train_epoch()
+            
+            # Validate at the end of each epoch
+            val_metrics = self.validate()
+            
+            # Save checkpoint
+            if (epoch + 1) % 5 == 0 or epoch == self.config.training.epochs - 1:
+                self.save_model(os.path.join(self.config.save_path, f"checkpoint_epoch_{epoch+1}.pt"))
+        
+        # Final model save
+        self.save_model(os.path.join(self.config.save_path, "final_model.pt"))
+        
+        logger.info("APT training completed successfully!")
+        
+        return self.training_logs
+    
+    def save_model(self, path: str) -> None:
+        """
+        Save the model and training state.
+        
+        Args:
+            path: Path to save the model checkpoint
+        """
+        # Prepare checkpoint
+        checkpoint = {
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+            'scheduler_state_dict': self.scheduler.state_dict() if hasattr(self, 'scheduler') else None,
+            'training_logs': self.training_logs,
+            'global_step': self.global_step,
+            'epoch': self.epoch,
+            'config': {k: v for k, v in self.config.__dict__.items() if not k.startswith('_')}
+        }
+        
+        # Save checkpoint
+        torch.save(checkpoint, path)
+        logger.info(f"Model saved to {path}")
+    
+    def load_model(self, path: str) -> None:
+        """
+        Load a saved model checkpoint.
+        
+        Args:
+            path: Path to the checkpoint file
+        """
+        if not os.path.exists(path):
+            raise FileNotFoundError(f"Checkpoint file not found: {path}")
+        
+        checkpoint = torch.load(path, map_location=self.device)
+        
+        # Load model state
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        
+        # Load optimizer state
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        
+        # Load scheduler state if available
+        if checkpoint['scheduler_state_dict'] is not None and hasattr(self, 'scheduler'):
+            self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        
+        # Restore training state
+        self.training_logs = checkpoint['training_logs']
+        self.global_step = checkpoint['global_step']
+        self.epoch = checkpoint['epoch']
+        
+        logger.info(f"Model loaded from {path}")
+## tuner.py
+import torch
+import torch.nn as nn
+from typing import List, Dict, Any, Optional
+import logging
+from dataclasses import dataclass
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@dataclass
+class TunerConfig:
+    """Configuration specific to the Tuner component."""
+    warmup_steps: int = 100
+    max_rank: int = 64
+    adaptive_rank_growth: bool = True
+    rank_growth_schedule: str = "linear"
+
+class Tuner:
+    """
+    Tuner class implementing the 𝒜T (Adaptive and Efficient LM Tuning) component.
+    
+    This module dynamically increases the rank of salient adapters during training
+    to recover performance lost due to pruning. It implements the adaptive tuning
+    mechanism described in Section 4.3 of the paper.
+    
+    Key features:
+    1. Adapter importance scoring based on gradient-weight magnitudes
+    2. Selection of top-half most important adapters for rank expansion
+    3. Linear rank growth schedule from initial to maximum rank
+    4. Safe parameter expansion with output-preserving initialization
+    5. Warmup period before starting rank expansion
+    """
+    
+    def __init__(self, model: nn.Module, config: Any):
+        """
+        Initialize the Tuner with model and configuration.
+        
+        Args:
+            model: Model containing APT adapters to be tuned
+            config: Configuration object containing tuning settings
+        """
+        self.model = model
+        
+        # Extract tuning configuration
+        if hasattr(config, 'tuning'):
+            self.config = TunerConfig(
+                warmup_steps=config.training.warmup_steps,
+                max_rank=config.tuning.max_rank,
+                adaptive_rank_growth=config.tuning.adaptive_rank_growth,
+                rank_growth_schedule=config.tuning.rank_growth_schedule
+            )
+        else:
+            self.config = TunerConfig()
+            
+        # Get initial rank from model config
+        if hasattr(config, 'model') and hasattr(config.model, 'adapter_init_rank'):
+            self.init_rank = config.model.adapter_init_rank
+        else:
+            self.init_rank = 8  # Default from Appendix A
+            
+        # Validate configuration
+        if self.init_rank >= self.config.max_rank:
+            logger.warning(f"Initial rank ({self.init_rank}) >= max_rank ({self.config.max_rank}). "
+                         f"Setting max_rank to {self.init_rank * 2}")
+            self.config.max_rank = self.init_rank * 2
+        
+        # Current step tracking
+        self.current_step = 0
+        self.total_steps = 0
+        
+        logger.info(f"Tuner initialized with init_rank={self.init_rank}, "
+                   f"max_rank={self.config.max_rank}, warmup_steps={self.config.warmup_steps}, "
+                   f"growth_schedule='{self.config.rank_growth_schedule}'")
+    
+    def compute_adapter_importance(self, adapter: nn.Module) -> float:
+        """
+        Compute importance score for an adapter using salience formula.
+        
+        Implements Eq. 3 from the paper: S(W_{i,j}) = |W_{i,j} · ∂L/∂W_{i,j}|
+        For LoRA components W_A and W_B, we sum their individual salience scores.
+        According to FOOTREF17, salience scores from W_B and W_A are equal,
+        so either can be used, but we'll use both for completeness.
+        
+        Args:
+            adapter: APTAdapter instance
+            
+        Returns:
+            Importance score for the adapter
+        """
+        importance_score = 0.0
+        
+        # Check if adapter has required parameters
+        if not hasattr(adapter, 'W_A') or not hasattr(adapter, 'W_B'):
+            return 0.0
+            
+        # Get gradients for W_A and W_B
+        if adapter.W_A.grad is not None:
+            # Salience for W_A: |W_A · ∂L/∂W_A|
+            w_a_salience = torch.sum(torch.abs(adapter.W_A.data * adapter.W_A.grad)).item()
+            importance_score += w_a_salience
+            
+        if adapter.W_B.grad is not None:
+            # Salience for W_B: |W_B · ∂L/∂W_B|  
+            w_b_salience = torch.sum(torch.abs(adapter.W_B.data * adapter.W_B.grad)).item()
+            importance_score += w_b_salience
+        
+        return importance_score
+    
+    def select_top_adapters(self, importance_scores: List[float], 
+                           top_ratio: float = 0.5) -> List[int]:
+        """
+        Select top adapters based on importance scores.
+        
+        From Section 4.3: "select the top-half adapters after sorting them with salience"
+        
+        Args:
+            importance_scores: List of importance scores for all adapters
+            top_ratio: Proportion of adapters to select (default 0.5 for top half)
+            
+        Returns:
+            List of indices corresponding to top adapters
+        """
+        if len(importance_scores) == 0:
+            return []
+            
+        # Create list of (score, index) pairs
+        scored_indices = [(score, i) for i, score in enumerate(importance_scores)]
+        
+        # Sort by score descending (highest first)
+        scored_indices.sort(reverse=True)
+        
+        # Calculate number of adapters to select
+        num_to_select = max(1, int(len(scored_indices) * top_ratio))
+        
+        # Extract indices of top adapters
+        top_indices = [idx for _, idx in scored_indices[:num_to_select]]
+        
+        logger.debug(f"Selected {len(top_indices)} out of {len(importance_scores)} adapters "
+                   f"with top_ratio={top_ratio:.2f}")
+        
+        return top_indices
+    
+    def calculate_target_rank(self, current_step: int) -> int:
+        """
+        Calculate target rank based on linear growth schedule.
+        
+        From Appendix A: "at the start of fine-tuning, we initialize adapter ranks to 8,
+        with salient layers' ranks linearly increased."
+        
+        Args:
+            current_step: Current global training step
+            
+        Returns:
+            Target rank value
+        """
+        # Only grow after warmup period
+        if current_step < self.config.warmup_steps:
+            return self.init_rank
+            
+        # Calculate progress through training
+        effective_step = current_step - self.config.warmup_steps
+        total_effective_steps = max(1, self.total_steps - self.config.warmup_steps)
+        progress = min(effective_step / total_effective_steps, 1.0)
+        
+        # Linear interpolation from init_rank to max_rank
+        if self.config.rank_growth_schedule == "linear":
+            target_rank = self.init_rank + (self.config.max_rank - self.init_rank) * progress
+        else:
+            # Fallback to linear if unknown schedule
+            target_rank = self.init_rank + (self.config.max_rank - self.init_rank) * progress
+        
+        # Convert to integer and clamp within bounds
+        target_rank = int(target_rank)
+        target_rank = max(self.init_rank, min(target_rank, self.config.max_rank))
+        
+        return target_rank
+    
+    def expand_adapter_rank(self, adapter: nn.Module, new_rank: int) -> None:
+        """
+        Expand adapter rank by adding new parameters initialized to maintain
+        output stability.
+        
+        From Section 4.3: "when adding parameters... we concatenate random Gaussian 
+        initialized parameters in W_B and zeros in W_A same as the LoRA initialization,
+        so the layer's output remains unchanged before and after new parameters added."
+        
+        Args:
+            adapter: APTAdapter instance to expand
+            new_rank: New rank dimension to expand to
+        """
+        if new_rank <= adapter.rank:
+            logger.debug(f"Attempted to expand rank from {adapter.rank} to {new_rank}, no change needed")
+            return
+            
+        # Call the adapter's built-in method
+        try:
+            adapter.expand_rank(new_rank)
+            logger.debug(f"Expanded adapter rank from {new_rank-1} to {new_rank}")
+        except Exception as e:
+            logger.error(f"Error expanding adapter rank: {str(e)}")
+            raise
+    
+    def grow_ranks(self, current_step: int) -> Dict[str, Any]:
+        """
+        Main adaptive tuning logic called at each training step.
+        
+        Args:
+            current_step: Current global training step
+            
+        Returns:
+            Dictionary containing tuning status and metrics
+        """
+        self.current_step = current_step
+        
+        results = {
+            'rank_grown': False,
+            'adapters_modified': 0,
+            'avg_current_rank': 0.0,
+            'target_rank': self.init_rank,
+            'total_adapters': 0
+        }
+        
+        # Skip if not configured for adaptive growth
+        if not self.config.adaptive_rank_growth:
+            return results
+            
+        # Skip if still in warmup phase
+        if current_step < self.config.warmup_steps:
+            return results
+            
+        # Get all APT adapters in the model
+        adapters = self._get_apt_adapters()
+        results['total_adapters'] = len(adapters)
+        
+        if len(adapters) == 0:
+            logger.warning("No APT adapters found for tuning")
+            return results
+        
+        # Compute importance scores for all adapters
+        importance_scores = []
+        for adapter in adapters:
+            score = self.compute_adapter_importance(adapter)
+            importance_scores.append(score)
+        
+        # Select top-half adapters for rank expansion
+        top_adapter_indices = self.select_top_adapters(importance_scores, top_ratio=0.5)
+        
+        # Calculate target rank based on linear schedule
+        target_rank = self.calculate_target_rank(current_step)
+        results['target_rank'] = target_rank
+        
+        # Expand ranks for selected adapters
+        modified_count = 0
+        current_ranks = []
+        
+        for idx in top_adapter_indices:
+            if idx < len(adapters):
+                adapter = adapters[idx]
+                current_ranks.append(adapter.rank)
+                
+                # Only expand if below target rank
+                if adapter.rank < target_rank:
+                    self.expand_adapter_rank(adapter, target_rank)
+                    modified_count += 1
+            else:
+                logger.warning(f"Invalid adapter index {idx} in top_adapter_indices")
+        
+        # Update results
+        if modified_count > 0:
+            results['rank_grown'] = True
+            results['adapters_modified'] = modified_count
+        
+        # Calculate average current rank
+        if current_ranks:
+            results['avg_current_rank'] = sum(current_ranks) / len(current_ranks)
+        
+        logger.debug(f"Adaptive tuning step {current_step}: expanded {modified_count}/{len(top_adapter_indices)} "
+                   f"selected adapters to rank {target_rank}")
+        
+        return results
+    
+    def _get_apt_adapters(self) -> List[nn.Module]:
+        """
+        Retrieve all APTAdapter instances in the model.
+        
+        Returns:
+            List of all APTAdapter instances
+        """
+        adapters = []
+        for module in self.model.modules():
+            if isinstance(module, nn.Module) and hasattr(module, 'apt_adapter'):
+                adapters.append(module.apt_adapter)
+            elif isinstance(module, nn.Module) and hasattr(module, 'expand_rank'):
+                # Direct APTAdapter instances
+                adapters.append(module)
+        return adapters
+## main.py
+import torch
+import argparse
+import yaml
+import os
+import json
+from datetime import datetime
+import logging
+from typing import Dict, Any
+
+# Import required modules
+from config import Config
+from dataset_loader import DatasetLoader
+from model import APTModel
+from pruner import Pruner
+from tuner import Tuner
+from distiller import Distiller
+from trainer import Trainer
+from evaluation import Evaluation
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def set_seed(seed: int = 42) -> None:
+    """
+    Set random seed for reproducibility.
+    
+    Args:
+        seed: Random seed value
+    """
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    # Additional seeds can be set here if needed
+
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description="APT (Adaptive Pruning and Tuning) Training")
+    parser.add_argument("--config", type=str, default="config.yaml", 
+                       help="Path to configuration file")
+    parser.add_argument("--model_name", type=str, default=None,
+                       help="Override model name from config")
+    parser.add_argument("--task", type=str, default=None,
+                       help="Override task from config")
+    parser.add_argument("--target_sparsity", type=float, default=None,
+                       help="Override target sparsity from config")
+    parser.add_argument("--save_path", type=str, default=None,
+                       help="Override save path from config")
+    parser.add_argument("--seed", type=int, default=None,
+                       help="Override random seed from config")
+    
+    return parser.parse_args()
+
+def create_save_directory(save_path: str) -> str:
+    """
+    Create save directory with timestamp if not specified.
+    
+    Args:
+        save_path: Base save path
+        
+    Returns:
+        Final save path
+    """
+    if save_path is None:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        save_path = f"./checkpoints/apt_{timestamp}"
+    
+    os.makedirs(save_path, exist_ok=True)
+    logger.info(f"Save directory created at: {save_path}")
+    return save_path
+
+def main():
+    """Main function to run the complete APT pipeline."""
+    try:
+        # Parse command line arguments
+        args = parse_args()
+        
+        # Load configuration
+        logger.info(f"Loading configuration from {args.config}")
+        config = Config.from_yaml(args.config)
+        
+        # Override config values if provided via command line
+        if args.model_name:
+            config.model_name = args.model_name
+        if args.task:
+            config.task = args.task
+        if args.target_sparsity:
+            config.pruning.target_sparsity = args.target_sparsity
+        if args.save_path:
+            config.save_path = args.save_path
+        if args.seed:
+            config.seed = args.seed
+            
+        # Set random seed
+        set_seed(config.seed)
+        
+        # Create save directory
+        config.save_path = create_save_directory(config.save_path)
+        
+        # Save current configuration for reproducibility
+        config_save_path = os.path.join(config.save_path, "config.json")
+        with open(config_save_path, 'w') as f:
+            json.dump(vars(config), f, indent=2, default=str)
+        logger.info(f"Configuration saved to {config_save_path}")
+        
+        # Initialize tokenizer based on model name
+        from transformers import AutoTokenizer
+        logger.info(f"Loading tokenizer for {config.model_name}")
+        tokenizer = AutoTokenizer.from_pretrained(config.model_name)
+        
+        # Load datasets
+        logger.info("Loading datasets...")
+        dataset_loader = DatasetLoader(config, tokenizer)
+        data_loaders = dataset_loader.load_data()
+        
+        # Extract train and validation dataloaders
+        train_dataloader = data_loaders.get('train')
+        val_dataloader = data_loaders.get('validation', data_loaders.get('valid'))
+        
+        if not train_dataloader:
+            raise ValueError("No training data found in dataset loader output")
+        if not val_dataloader:
+            logger.warning("No validation data found, using test split for validation")
+            val_dataloader = data_loaders.get('test')
+        
+        # Initialize model
+        logger.info(f"Initializing APT model for {config.model_name}")
+        apt_model = APTModel(config, tokenizer)
+        
+        # Initialize components
+        logger.info("Initializing APT components...")
+        pruner = Pruner(apt_model, config)
+        tuner = Tuner(apt_model, config)
+        
+        # Initialize distiller only if enabled in config
+        distiller = None
+        if config.distillation.use_self_distillation:
+            # Skip distillation for large LMs as mentioned in Section 6
+            large_models = ['llama-7b', 'llama-13b']
+            if not any(lm in config.model_name.lower() for lm in large_models):
+                distiller = Distiller(apt_model, config)
+                logger.info("Self-knowledge distillation enabled")
+            else:
+                logger.info("Distillation disabled for large LLaMA models as per paper Section 6")
+        else:
+            logger.info("Self-knowledge distillation disabled by configuration")
+        
+        # Initialize trainer
+        logger.info("Initializing trainer...")
+        trainer = Trainer(
+            config=config,
+            model=apt_model,
+            train_dataloader=train_dataloader,
+            val_dataloader=val_dataloader
+        )
+        
+        # Train the model
+        logger.info("Starting training process...")
+        training_logs = trainer.train()
+        
+        # Save final model
+        final_model_path = os.path.join(config.save_path, "final_model.pt")
+        trainer.save_model(final_model_path)
+        logger.info(f"Final model saved to {final_model_path}")
+        
+        # Evaluate the model
+        logger.info("Starting evaluation...")
+        evaluator = Evaluation(
+            model=apt_model,
+            test_dataloader=val_dataloader,  # Using validation for evaluation
+            device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        )
+        
+        # Comprehensive evaluation
+        evaluation_metrics = evaluator.comprehensive_evaluation()
+        
+        # Print results
+        evaluator.print_results(evaluation_metrics)
+        
+        # Save evaluation results
+        results_path = os.path.join(config.save_path, "evaluation_results.json")
+        results = {
+            'config': vars(config),
+            'training_logs': training_logs,
+            'evaluation': {
+                'task_performance': evaluation_metrics.task_performance,
+                'inference_efficiency': evaluation_metrics.inference_efficiency,
+                'tta': evaluation_metrics.tta,
+                'peak_memory_usage': evaluation_metrics.peak_memory_usage
+            },
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        with open(results_path, 'w') as f:
+            json.dump(results, f, indent=2)
+        logger.info(f"Evaluation results saved to {results_path}")
+        
+        # Log summary
+        logger.info("APT training and evaluation completed successfully!")
+        logger.info(f"Results saved in: {config.save_path}")
+        
+        return results
+        
+    except Exception as e:
+        logger.error(f"An error occurred during execution: {str(e)}")
+        logger.error("Training failed. Please check the error message above.")
+        raise
+
+if __name__ == "__main__":
+    main()

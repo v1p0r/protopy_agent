@@ -1,0 +1,81 @@
+----------------------------------------
+[file_list]
+- main.py
+- env/besiegefield.py
+- env/simulation.py
+- env/block_registry.py
+- representation/construction_tree.py
+- representation/xml_converter.py
+- agent/single_agent.py
+- agent/hierarchical_design.py
+- agent/iterative_editing.py
+- agent/querier.py
+- agent/refiner.py
+- agent/designer.py
+- agent/meta_designer.py
+- reward/calculator.py
+- dataset/curation.py
+- dataset/loader.py
+- rl/trainer.py
+- rl/grpo.py
+- rl/verl_wrapper.py
+- eval/metrics.py
+- eval/visualizer.py
+- utils/config.py
+- utils/logger.py
+- utils/validator.py
+- utils/parallel_sim.py
+
+----------------------------------------
+[plan]
+Step 1: Implement the BesiegeField environment in Unity3D as a plugin with 27 predefined blocks, attachment rules, and state logging at 0.2s intervals. Step 2: Build the Construction Tree representation module to parse and validate JSON machine designs with parent-child-ID relationships. Step 3: Implement XML-to-ConstrutionTree converter for baseline representation. Step 4: Implement block registry with physics properties and attachment face indexing. Step 5: Implement single-agent module that generates construction trees from prompts using LLM API. Step 6: Implement Meta-Designer, Designer, Inspector+Refiner, ActiveEnvQuerier, and Refiner agents as modular LLM wrappers with prompt templates. Step 7: Implement hierarchical design workflow: Meta-Designer → Designer → parallel builders. Step 8: Implement iterative editing workflow with MCTS (10 rounds, 5 candidates/round, 5 retries). Step 9: Implement simulation engine that runs 5s physics simulation, computes R_valid and R_task (car: distance, catapult: height×distance with >3m threshold). Step 10: Implement ActiveEnvQuerier with selective feedback heuristic (query blocks based on failure patterns). Step 11: Curate cold-start dataset (9,984 samples) from Gemini 2.5 Pro prompts and store as JSONL. Step 12: Implement DatasetLoader to load train/test splits. Step 13: Implement QOFT-based cold-start finetuning (Qwen2.5-14B-Instruct, 12 epochs, 8-bit AdamW, LR=1e-6). Step 14: Implement GRPO RL trainer with LoRA (rank=64), KL penalty (0.001), gradient clipping (0.5), and verl framework integration. Step 15: Implement Pass@k rollout evaluation (k=64). Step 16: Implement metrics calculator for file validity, spatial validity, machine validity, mean/max scores. Step 17: Implement visualizer to render 3D models from construction tree. Step 18: Implement parallel simulation launcher (8 processes) for RL training. Step 19: Integrate all components into main.py with CLI for agent evaluation and RL training. Step 20: Run ablation studies: MCTS vs Best-of-N vs Random Search; hierarchical vs iterative; Pass@1 vs Pass@64.
+
+----------------------------------------
+[Code structure]
+- {'name': 'env/besiegefield', 'classes': [{'name': 'BesiegeFieldSimulator', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['block_list: list[str]', 'physics_config: dict'], 'returns': 'None'}, {'name': 'build_from_tree', 'args': ['construction_tree: list[dict]'], 'returns': 'bool'}, {'name': 'simulate', 'args': [], 'returns': 'dict'}, {'name': 'get_state_log', 'args': [], 'returns': 'list[dict]'}, {'name': 'check_self_collision', 'args': [], 'returns': 'bool'}]}]}
+- {'name': 'representation/construction_tree', 'classes': [{'name': 'ConstructionTree', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['json_data: list[dict]'], 'returns': 'None'}, {'name': 'validate', 'args': [], 'returns': 'tuple[bool, str]'}, {'name': 'to_json', 'args': [], 'returns': 'list[dict]'}, {'name': 'to_global_position', 'args': [], 'returns': 'list[dict]'}, {'name': 'get_root_block', 'args': [], 'returns': 'dict'}]}]}
+- {'name': 'representation/xml_converter', 'classes': [{'name': 'XMLConverter', 'base_class': 'object', 'methods': [{'name': 'from_xml_to_tree', 'args': ['xml_str: str'], 'returns': 'ConstructionTree'}, {'name': 'from_tree_to_xml', 'args': ['tree: ConstructionTree'], 'returns': 'str'}]}]}
+- {'name': 'env/block_registry', 'classes': [{'name': 'BlockRegistry', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': [], 'returns': 'None'}, {'name': 'get_block_info', 'args': ['block_type: str'], 'returns': 'dict'}, {'name': 'is_special_block', 'args': ['block_type: str'], 'returns': 'bool'}, {'name': 'get_attachable_faces', 'args': ['block_type: str'], 'returns': 'int'}]}]}
+- {'name': 'agent/single_agent', 'classes': [{'name': 'SingleAgent', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['llm_model: str', 'prompt_template: str'], 'returns': 'None'}, {'name': 'generate', 'args': ['task: str'], 'returns': 'ConstructionTree'}]}]}
+- {'name': 'agent/meta_designer', 'classes': [{'name': 'MetaDesigner', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['llm_model: str'], 'returns': 'None'}, {'name': 'generate_blueprint', 'args': ['task: str'], 'returns': 'str'}]}]}
+- {'name': 'agent/designer', 'classes': [{'name': 'Designer', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['llm_model: str'], 'returns': 'None'}, {'name': 'generate_design', 'args': ['blueprint: str'], 'returns': 'ConstructionTree'}]}]}
+- {'name': 'agent/inspector_refiner', 'classes': [{'name': 'InspectorRefiner', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['llm_model: str'], 'returns': 'None'}, {'name': 'critique', 'args': ['design: ConstructionTree', 'feedback: dict'], 'returns': 'list[ConstructionTree]'}]}]}
+- {'name': 'agent/refiner', 'classes': [{'name': 'Refiner', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['llm_model: str'], 'returns': 'None'}, {'name': 'refine', 'args': ['design: ConstructionTree', 'feedback: dict'], 'returns': 'list[ConstructionTree]'}]}]}
+- {'name': 'agent/querier', 'classes': [{'name': 'ActiveEnvQuerier', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['simulator: BesiegeFieldSimulator'], 'returns': 'None'}, {'name': 'get_minimal_feedback', 'args': ['task: str', 'state_log: list[dict]'], 'returns': 'dict'}, {'name': 'selective_query', 'args': ['design: ConstructionTree', 'state_log: list[dict]'], 'returns': 'dict'}]}]}
+- {'name': 'reward/calculator', 'classes': [{'name': 'RewardCalculator', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['task: str'], 'returns': 'None'}, {'name': 'compute', 'args': ['state_log: list[dict]'], 'returns': 'tuple[float, bool]'}]}]}
+- {'name': 'dataset/curation', 'classes': [{'name': 'DatasetCurator', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['prompt_file: str', 'llm_api: str'], 'returns': 'None'}, {'name': 'generate_and_filter', 'args': [], 'returns': 'list[dict]'}]}]}
+- {'name': 'dataset/loader', 'classes': [{'name': 'DatasetLoader', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['data_path: str'], 'returns': 'None'}, {'name': 'load_train_val_test', 'args': [], 'returns': 'tuple[list[dict], list[dict], list[dict]]'}]}]}
+- {'name': 'rl/trainer', 'classes': [{'name': 'RLTrainer', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['model_name: str', 'config: dict'], 'returns': 'None'}, {'name': 'cold_start_finetune', 'args': ['dataset: list[dict]', 'epochs: int'], 'returns': 'None'}, {'name': 'rl_finetune', 'args': ['dataset: list[dict]', 'steps: int'], 'returns': 'None'}, {'name': 'evaluate_pass_k', 'args': ['prompts: list[str]', 'k: int'], 'returns': 'dict'}]}]}
+- {'name': 'rl/grpo', 'classes': [{'name': 'GRPO', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['model: nn.Module', 'lr: float', 'kl_coef: float', 'clip_ratio: float', 'lora_rank: int'], 'returns': 'None'}, {'name': 'update', 'args': ['batch: dict'], 'returns': 'dict'}]}]}
+- {'name': 'rl/verl_wrapper', 'classes': [{'name': 'VERLWrapper', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['model: nn.Module', 'config: dict'], 'returns': 'None'}, {'name': 'rollout', 'args': ['prompt: str', 'num_rollouts: int'], 'returns': 'list[tuple[ConstructionTree, float]]'}]}]}
+- {'name': 'eval/metrics', 'classes': [{'name': 'EvaluationMetrics', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': [], 'returns': 'None'}, {'name': 'compute_all', 'args': ['designs: list[ConstructionTree]', 'tasks: list[str]'], 'returns': 'dict'}, {'name': 'compute_validity_rates', 'args': ['designs: list[ConstructionTree]'], 'returns': 'dict'}, {'name': 'compute_scores', 'args': ['designs: list[ConstructionTree]', 'tasks: list[str]'], 'returns': 'dict'}]}]}
+- {'name': 'eval/visualizer', 'classes': [{'name': 'Visualizer', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': [], 'returns': 'None'}, {'name': 'render_machine', 'args': ['tree: ConstructionTree', 'output_path: str'], 'returns': 'None'}]}]}
+- {'name': 'utils/config', 'classes': [{'name': 'Config', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['config_file: str'], 'returns': 'None'}, {'name': 'get', 'args': ['key: str'], 'returns': 'Any'}]}]}
+- {'name': 'utils/logger', 'classes': [{'name': 'Logger', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['log_file: str'], 'returns': 'None'}, {'name': 'info', 'args': ['msg: str'], 'returns': 'None'}, {'name': 'error', 'args': ['msg: str'], 'returns': 'None'}, {'name': 'debug', 'args': ['msg: str'], 'returns': 'None'}]}]}
+- {'name': 'utils/validator', 'classes': [{'name': 'JSONValidator', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': [], 'returns': 'None'}, {'name': 'validate_construction_tree', 'args': ['json_data: list[dict]'], 'returns': 'tuple[bool, str]'}]}]}
+- {'name': 'utils/parallel_sim', 'classes': [{'name': 'ParallelSimulator', 'base_class': 'object', 'methods': [{'name': '__init__', 'args': ['num_workers: int'], 'returns': 'None'}, {'name': 'simulate_batch', 'args': ['trees: list[ConstructionTree]'], 'returns': 'list[dict]'}]}]}
+
+----------------------------------------
+[relationships]
+- {'from': 'BesiegeFieldSimulator', 'to': 'BlockRegistry', 'type': 'uses'}
+- {'from': 'ConstructionTree', 'to': 'XMLConverter', 'type': 'uses'}
+- {'from': 'SingleAgent', 'to': 'ConstructionTree', 'type': 'produces'}
+- {'from': 'MetaDesigner', 'to': 'Designer', 'type': 'uses'}
+- {'from': 'InspectorRefiner', 'to': 'ActiveEnvQuerier', 'type': 'uses'}
+- {'from': 'ActiveEnvQuerier', 'to': 'BesiegeFieldSimulator', 'type': 'uses'}
+- {'from': 'RewardCalculator', 'to': 'BesiegeFieldSimulator', 'type': 'uses'}
+- {'from': 'RLTrainer', 'to': 'GRPO', 'type': 'uses'}
+- {'from': 'RLTrainer', 'to': 'VERLWrapper', 'type': 'uses'}
+- {'from': 'RLTrainer', 'to': 'DatasetLoader', 'type': 'uses'}
+- {'from': 'EvaluationMetrics', 'to': 'ConstructionTree', 'type': 'uses'}
+- {'from': 'Visualizer', 'to': 'ConstructionTree', 'type': 'uses'}
+- {'from': 'Main', 'to': 'SingleAgent', 'type': 'instantiates'}
+- {'from': 'Main', 'to': 'HierarchicalDesign', 'type': 'instantiates'}
+- {'from': 'Main', 'to': 'IterativeEditing', 'type': 'instantiates'}
+- {'from': 'Main', 'to': 'RLTrainer', 'type': 'instantiates'}
+- {'from': 'Main', 'to': 'EvaluationMetrics', 'type': 'instantiates'}
+
+----------------------------------------
+[pipeline or workflow]
+The system follows a hierarchical agent workflow: User query → Meta-Designer generates high-level blueprint → Designer generates detailed construction tree → Inspector+Refiner validates and critiques → ActiveEnvQuerier simulates and extracts feedback → Refiner proposes revisions → loop until convergence or max iterations. For RL, cold-start dataset is used to finetune Qwen2.5-14B-Instruct via QOFT, then GRPO with LoRA is applied using verl framework with Pass@k rollouts. Simulation is parallelized across 8 GPUs. Evaluation metrics (validity, mean/max scores) are computed on 100 held-out prompts. Visualization renders final designs from construction trees. All components are modular and configurable via YAML config files.
+
